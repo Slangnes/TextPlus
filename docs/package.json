@@ -1,0 +1,16 @@
+{
+  "name": "@textplus/docs",
+  "version": "0.0.1",
+  "description": "TextPlus Documentation Site (VitePress)",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "echo 'Docs build setup pending'",
+    "dev": "echo 'Docs dev setup pending'",
+    "lint": "echo 'No linting needed for docs'",
+    "clean": "rm -rf dist .vitepress/cache .vitepress/dist"
+  },
+  "devDependencies": {
+    "vitepress": "^1.0.0"
+  }
+}

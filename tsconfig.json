@@ -1,0 +1,39 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "lib": ["ES2020", "DOM"],
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "allowJs": true,
+    "checkJs": false,
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "outDir": "./dist",
+    "baseUrl": ".",
+    "paths": {
+      "@textplus/core": ["packages/core/src"],
+      "@textplus/core/*": ["packages/core/src/*"],
+      "@textplus/author": ["packages/author/src"],
+      "@textplus/author/*": ["packages/author/src/*"],
+      "@textplus/map": ["packages/map/src"],
+      "@textplus/map/*": ["packages/map/src/*"],
+      "@textplus/convert": ["packages/convert/src"],
+      "@textplus/convert/*": ["packages/convert/src/*"]
+    }
+  },
+  "include": [
+    "packages/*/src/**/*.ts",
+    "packages/*/test/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "coverage"
+  ]
+}

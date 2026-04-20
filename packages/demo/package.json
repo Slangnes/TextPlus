@@ -1,0 +1,13 @@
+{
+  "name": "@textplus/demo",
+  "version": "0.0.1",
+  "description": "TextPlus Demo - Example games and learning materials",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "echo 'Demo builds as part of main build'",
+    "dev": "echo 'Demo is part of dev'",
+    "lint": "echo 'No linting needed for demo'",
+    "clean": "rm -rf dist"
+  }
+}

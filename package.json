@@ -1,0 +1,52 @@
+{
+  "name": "textplus",
+  "version": "0.0.1",
+  "description": "TextPlus - Modernizing Interactive Fiction Tools",
+  "type": "module",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "test": "vitest run --coverage --coverage.provider=v8 --coverage.reporter=text --coverage.reporter=json --coverage.reporter=html",
+    "test:watch": "vitest --watch",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage",
+    "test:all": "npm run lint && npm run test && npm run build",
+    "test:core": "vitest run packages/core --coverage",
+    "test:core:watch": "vitest packages/core --watch",
+    "test:core:e2e": "vitest run packages/core/test/e2e",
+    "test:author": "vitest run packages/author --coverage",
+    "test:author:watch": "vitest packages/author --watch",
+    "test:author:e2e": "vitest run packages/author/test/e2e",
+    "test:map": "vitest run packages/map --coverage",
+    "test:map:watch": "vitest packages/map --watch",
+    "test:map:e2e": "vitest run packages/map/test/e2e",
+    "test:convert": "vitest run packages/convert --coverage",
+    "test:convert:watch": "vitest packages/convert --watch",
+    "test:convert:e2e": "vitest run packages/convert/test/e2e",
+    "lint": "npm run --workspaces lint",
+    "build": "npm run --workspaces build",
+    "dev": "npm run --workspaces dev",
+    "clean": "npm run --workspaces clean && rm -rf coverage"
+  },
+  "keywords": [
+    "interactive-fiction",
+    "if",
+    "hypertext",
+    "parser-if",
+    "choose-your-own-adventure",
+    "text-adventure"
+  ],
+  "author": "TextPlus Contributors",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.10.6",
+    "@vitest/ui": "^1.1.0",
+    "@vitest/coverage-v8": "^1.1.0",
+    "terser": "^5.29.2",
+    "typescript": "^5.3.3",
+    "vite": "^5.0.8",
+    "vitest": "^1.1.0"
+  }
+}
