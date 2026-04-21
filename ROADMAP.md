@@ -12,7 +12,7 @@ This document tracks the features, deliverables, and milestones for the TextPlus
 | Milestone | Status | Progress | Target |
 |-----------|--------|----------|--------|
 | **M0: Bootstrap** | ✅ COMPLETE | 100% | Project setup infrastructure |
-| **M1: Core** | 🚧 IN PROGRESS | 15% | 5-6 weeks (80%+ test coverage) |
+| **M1: Core** | 🚧 IN PROGRESS | 40% | 5-6 weeks (80%+ test coverage) |
 | **M2: Author** | ⏳ BLOCKED | 0% | Depends on M1 completion |
 | **M3: Map** | ⏳ PENDING | 0% | Can start after M1+M2 |
 | **M4: Convert** | ⏳ PENDING | 0% | Can start after M1 |
@@ -26,10 +26,12 @@ This document tracks the features, deliverables, and milestones for the TextPlus
 - **No Roadmap Clones**: Do not create new roadmap summary files for routine updates.
 - **Update Pattern**: Use in-place deltas in the status table and milestone checkboxes.
 - **Change Log Location**: Keep a short in-file changelog section instead of separate update documents.
+- **Package Audit Docs**: Keep a short `README.md` in each workspace package with public surface, module inventory, verification commands, and known gaps.
 
 ### Roadmap Changelog
 
 - **2026-04-21**: Consolidated duplicated milestone sections, added module/component architecture, and formalized contract-first workflow.
+- **2026-04-21**: Updated M1 status to reflect implemented core/dom/storage work, corrected coverage tracking to package-scoped values, and added package-level audit docs.
 
 ---
 
@@ -147,7 +149,7 @@ Required phase gates:
 - `npm run build` — All packages build successfully
 - `npm run test:all` — Full verification workflow PASS
 
-**Documentation**: See [BOOTSTRAP_COMPLETE.md](./BOOTSTRAP_COMPLETE.md) and [BOOTSTRAP.md](./BOOTSTRAP.md)
+**Historical Note**: Bootstrap snapshots still exist in `BOOTSTRAP.md` and `BOOTSTRAP_COMPLETE.md`, but they are archival only and should not be used for live tracking.
 
 ---
 
@@ -158,62 +160,62 @@ Required phase gates:
 **Status**: In progress
 
 ### Phase 1A: Core Engine Implementation
-**Placeholder Tests**: 14 tests in `packages/core/test/unit/engine.test.ts`
+**Current Status**: Implemented with real unit coverage across engine, qualities, and situation subsystems.
 
-- [ ] **Implement GameEngine class** (`packages/core/src/engine.ts`)
-  - [ ] Situation state management (current situation, history)
-  - [ ] Quality system (track and mutate game qualities)
-  - [ ] Situation transitions with validation
-  - [ ] Event system for situation changes and quality mutations
-  - [ ] Game initialization from configuration
-  - Tests: 8-10 unit tests covering all engine logic
+- [x] **Implement GameEngine class** (`packages/core/src/engine.ts`)
+  - [x] Situation state management (current situation, history)
+  - [x] Quality system (track and mutate game qualities)
+  - [x] Situation transitions with validation
+  - [x] Event system for situation changes and quality mutations
+  - [x] Game initialization from configuration
+  - Tests: implemented and covered by real unit tests
 
-- [ ] **Implement Quality system** (`packages/core/src/qualities.ts`)
-  - [ ] Quality definition (name, type, min/max, default)
-  - [ ] Quality tracking and mutation
+- [x] **Implement Quality system** (`packages/core/src/qualities.ts`)
+  - [x] Quality definition (name, type, min/max, default)
+  - [x] Quality tracking and mutation
   - [ ] Quality history for undo/branching
-  - [ ] Constraint validation (min/max bounds)
-  - Tests: 5-6 unit tests for quality logic
+  - [x] Constraint validation (min/max bounds)
+  - Tests: implemented and covered by real unit tests
 
-- [ ] **Implement Situation system** (`packages/core/src/situation.ts`)
-  - [ ] Situation definition (id, title, content, tags)
-  - [ ] Situation lookup and routing
-  - [ ] Conditional text evaluation
-  - [ ] Link generation (situation-aware navigation)
-  - Tests: 6-8 unit tests for situation logic
+- [x] **Implement Situation system** (`packages/core/src/situation.ts`)
+  - [x] Situation definition (id, title, content, tags)
+  - [x] Situation lookup and routing
+  - [x] Conditional text evaluation
+  - [x] Link generation (situation-aware navigation)
+  - Tests: implemented and covered by real unit tests
 
 ### Phase 1B: DOM & Rendering
-**Placeholder Tests**: 13 tests in `packages/core/test/integration/dom.test.ts`
+**Current Status**: DOM renderer implemented with real integration tests; dedicated `themes/*` module still pending.
 
-- [ ] **Implement DOM utilities** (`packages/core/src/dom.ts`, no jQuery)
-  - [ ] Element creation and manipulation
-  - [ ] Event listener attachment (situation links, buttons)
-  - [ ] Content rendering (append, replace, clear)
-  - [ ] CSS class application (situation-specific styling)
-  - [ ] Accessibility attributes (ARIA, semantic HTML)
-  - Tests: 8-10 integration tests for DOM operations
+- [x] **Implement DOM utilities** (`packages/core/src/dom.ts`, no jQuery)
+  - [x] Element creation and manipulation
+  - [x] Event listener attachment (situation links, buttons)
+  - [x] Content rendering (append, replace, clear)
+  - [x] CSS class application (situation-specific styling)
+  - [x] Accessibility attributes (ARIA, semantic HTML)
+  - Tests: implemented and covered by real integration tests
 
 - [ ] **Implement Theming System** (`packages/core/src/themes/`)
   - [ ] CSS custom properties (CSS variables) for theming
   - [ ] Theme switching (light, dark, custom)
   - [ ] Theme persistence to localStorage
   - [ ] Root element theme application
-  - Tests: 5-6 integration tests for theme switching
+  - Tests: dedicated themes module tests still pending; current DOM integration tests cover theme helpers in `dom.ts`
 
 ### Phase 1C: Persistence & Storage
-**Placeholder Tests**: 13 tests in `packages/core/test/integration/storage.test.ts`
+**Current Status**: Storage layer implemented with real multi-slot and corruption-handling coverage.
 
-- [ ] **Implement Storage layer** (`packages/core/src/storage.ts`)
-  - [ ] Serialize game state to JSON
-  - [ ] Deserialize game state from JSON
-  - [ ] Save to localStorage (multiple slots)
-  - [ ] Load from localStorage
-  - [ ] Validate save file version and integrity
-  - [ ] Handle corrupted or incomplete saves gracefully
-  - Tests: 10-12 integration tests covering all storage scenarios
+- [x] **Implement Storage layer** (`packages/core/src/storage.ts`)
+  - [x] Serialize game state to JSON
+  - [x] Deserialize game state from JSON
+  - [x] Save to localStorage (multiple slots)
+  - [x] Load from localStorage
+  - [x] Validate save file version and integrity
+  - [x] Handle corrupted or incomplete saves gracefully
+  - Tests: implemented and covered by real integration tests
 
 ### Phase 1D: Example Game & E2E Tests
-**Placeholder Tests**: 13 tests in `packages/core/test/e2e/hello-world.test.ts`
+**Current Status**: E2E coverage is still scaffolded; demo game has not been created yet.
 
 - [ ] **Create Hello World example game** (`packages/demo/hello-world/`)
   - [ ] DSL game definition (minimal valid game)
@@ -234,13 +236,13 @@ Required phase gates:
 ### Phase 1E: TypeScript Types & Public API
 **No placeholder tests — part of code structure**
 
-- [ ] **Create types definitions** (`packages/core/src/types.ts`)
-  - [ ] `GameConfig` interface (configuration)
-  - [ ] `GameEngine` interface (public API)
-  - [ ] `Situation` interface
-  - [ ] `Quality` interface
-  - [ ] `GameState` interface (for serialization)
-  - [ ] Export `.d.ts` files in build
+- [x] **Create types definitions** (`packages/core/src/types.ts`)
+  - [x] `GameConfig` interface (configuration)
+  - [x] `GameEngine` interface (public API)
+  - [x] `Situation` interface
+  - [x] `Quality` interface
+  - [x] `GameState` interface (for serialization)
+  - [x] Export `.d.ts` files in build
 
 - [ ] **Update package.json exports**
   - [ ] Register `types` field pointing to `.d.ts`
@@ -256,46 +258,34 @@ Required phase gates:
 
 **Testing Requirements**:
 - [x] Write 40+ unit tests (engine, quality, situation logic) — **48 implemented**
-- [ ] Write 30+ integration tests (DOM, storage, themes) — **0/30 real; template files still present**
-- [ ] Write 3+ E2E test scenarios (full playthrough) — **template scaffolding only**
-- [ ] Achieve ≥80% code coverage — **current: 50.68% statements / 50.68% lines**
+- [x] Write 30+ integration tests (DOM, storage, themes) — **30 real tests implemented across DOM and storage; dedicated themes module still pending**
+- [ ] Write 3+ E2E test scenarios (full playthrough) — **`packages/core/test/e2e/hello-world.test.ts` is still scaffolded**
+- [x] Achieve ≥80% code coverage — **current package-scoped `packages/core/src/**` coverage: 93.94% statements / 93.94% lines / 88.38% branches / 89.04% functions**
 
 **Deliverables**:
 - [ ] Working Hello World example game (playable HTML)
-- [ ] Save/load functionality (localStorage)
-- [ ] Full TypeScript types
+- [x] Save/load functionality (localStorage)
+- [x] Full TypeScript types
 
 ### Should Have (Polish)
 - [ ] CSS custom properties theming system
 - [ ] ARIA roles and keyboard navigation
 - [ ] Mobile-responsive default stylesheet
-- [ ] Type definitions exported
+- [x] Type definitions exported
 
 ### Nice to Have (Future)
 - [ ] Dark-mode theme variant
 - [ ] Audio hooks (placeholder for music/SFX)
 - [ ] i18n support for UI strings
 
-### Files to Create/Modify
+### Remaining Files To Create/Modify
 
 **Source Code** (`packages/core/src/`):
-- `index.ts` — Main exports (update placeholder)
-- `engine.ts` — GameEngine class (**NEW**)
-- `types.ts` — TypeScript definitions (**NEW**)
-- `situation.ts` — Situation management (**NEW**)
-- `qualities.ts` — Quality system (**NEW**)
-- `dom.ts` — DOM utilities (no jQuery) (**NEW**)
-- `storage.ts` — Save/load logic (**NEW**)
 - `themes/index.ts` — CSS variable theming (**NEW**)
 - `themes/light.css` — Default light theme (**NEW**)
 - `themes/dark.css` — Default dark theme (**NEW**)
 
 **Tests** (`packages/core/test/`):
-- `unit/engine.test.ts` — Replace 14 placeholder tests
-- `unit/qualities.test.ts` — New (5-6 tests)
-- `unit/situation.test.ts` — New (6-8 tests)
-- `integration/dom.test.ts` — Replace 13 placeholder tests
-- `integration/storage.test.ts` — Replace 13 placeholder tests
 - `e2e/hello-world.test.ts` — Replace 13 placeholder tests
 
 **Demo** (`packages/demo/hello-world/`):
@@ -308,8 +298,8 @@ Required phase gates:
 
 ### Implementation Checklist
 
-- [ ] **Week 1**: GameEngine + Situation + Quality classes (unit tested)
-- [ ] **Week 2**: DOM rendering + event handling (integration tested)
+- [x] **Week 1**: GameEngine + Situation + Quality classes (unit tested)
+- [x] **Week 2**: DOM rendering + event handling (integration tested)
 - [ ] **Week 3**: Storage (save/load) + theming (integration tested)
 - [ ] **Week 4**: Hello World example game + E2E tests
 - [ ] **Week 5**: Polish, accessibility, mobile responsiveness
@@ -474,19 +464,20 @@ Before marking M1 complete:
 To begin M1 implementation:
 
 ```bash
-# Verify bootstrap is working
+# Verify current repo state
 cd /workspaces/TextPlus
 npm run test:all
 
 # Watch mode for active development
 npm run test:core:watch
 
-# Start implementing core engine
-# Edit: packages/core/src/engine.ts
-# Tests: packages/core/test/unit/engine.test.ts
+# Current next slice
+# Implement: packages/core/test/e2e/hello-world.test.ts
+# Add: packages/demo/hello-world/
+# Then: packages/core/src/themes/
 ```
 
-See [BOOTSTRAP_COMPLETE.md](./BOOTSTRAP_COMPLETE.md) for command reference.
+Use the package README files and this roadmap for current command and status references.
 
 ---
 

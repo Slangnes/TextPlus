@@ -36,7 +36,10 @@ Parser IF game → Transcript (Transmatte) → Hypertext HTML (Undum/Raconteur) 
 
 ## Status
 
-This project is in early planning and scaffolding. See [ROADMAP.md](ROADMAP.md) for the current feature plan.
+Phase 0 bootstrap is complete and Phase 1 core implementation is in progress.
+
+- Use [ROADMAP.md](./ROADMAP.md) for live milestone status, coverage targets, and remaining work.
+- Use package-level READMEs under `packages/*/README.md` for module inventory, verification commands, and current gaps.
 
 ---
 

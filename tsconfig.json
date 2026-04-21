@@ -14,17 +14,17 @@
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
+    "rootDir": "./packages",
     "outDir": "./dist",
-    "baseUrl": ".",
     "paths": {
-      "@textplus/core": ["packages/core/src"],
-      "@textplus/core/*": ["packages/core/src/*"],
-      "@textplus/author": ["packages/author/src"],
-      "@textplus/author/*": ["packages/author/src/*"],
-      "@textplus/map": ["packages/map/src"],
-      "@textplus/map/*": ["packages/map/src/*"],
-      "@textplus/convert": ["packages/convert/src"],
-      "@textplus/convert/*": ["packages/convert/src/*"]
+      "@textplus/core": ["./packages/core/src"],
+      "@textplus/core/*": ["./packages/core/src/*"],
+      "@textplus/author": ["./packages/author/src"],
+      "@textplus/author/*": ["./packages/author/src/*"],
+      "@textplus/map": ["./packages/map/src"],
+      "@textplus/map/*": ["./packages/map/src/*"],
+      "@textplus/convert": ["./packages/convert/src"],
+      "@textplus/convert/*": ["./packages/convert/src/*"]
     }
   },
   "include": [
