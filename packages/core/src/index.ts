@@ -1,34 +1,52 @@
 /**
  * TextPlus Core - Modern Undum Runtime
- * 
+ *
  * Main entry point for TextPlus Core library.
- * This will export the game engine, DOM utilities, and public API.
- * 
- * Milestone 1 Implementation will add:
- * - GameEngine class
- * - Situation and Quality management
- * - DOM rendering and event handling
- * - localStorage persistence
- * - Theme system with CSS custom properties
- * - Accessibility features (ARIA, keyboard navigation)
- * - TypeScript type definitions
+ *
+ * Exports game engine, types, and utilities for creating interactive fiction games.
  */
 
-// Placeholder - will be implemented in Milestone 1
+// Export types
+export type {
+  GameConfig,
+  GameEngine,
+  GameState,
+  SituationDefinition,
+  SituationLink,
+  QualityDefinition,
+  QualityValue,
+  QualityChangeEvent,
+  SituationChangeEvent,
+  EventListener,
+  SituationRenderer,
+  StorageHandler
+} from './types';
+
+// Export main engine
+export { TextPlusGameEngine, createGame } from './engine';
+
+// Export subsystems
+export { Quality, QualitySystem } from './qualities';
+export { SituationSystem } from './situation';
+
+// Export DOM utilities
+export {
+  DomRenderer,
+  domRenderer,
+  renderQualities,
+  applyTheme,
+  getSavedTheme
+} from './dom';
+export type { ThemeVariables } from './dom';
+
+// Export storage utilities
+export {
+  LocalStorageHandler,
+  createLocalStorageHandler,
+  SaveNotFoundError,
+  StorageQuotaExceededError
+} from './storage';
+
+// Version info
 export const VERSION = '0.0.1';
-
-export interface GameConfig {
-  title?: string;
-  initialSituation?: string;
-  qualities?: Record<string, any>;
-  situations?: Record<string, any>;
-}
-
-export interface GameEngine {
-  // Will be defined in M1
-}
-
-// Export placeholder types and functions
-export function createGame(_config: GameConfig): GameEngine {
-  throw new Error('Not yet implemented - placeholder for M1');
-}
+export const SAVE_VERSION = 1;
