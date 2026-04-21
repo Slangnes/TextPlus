@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hello World - TextPlus Adventure</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Georgia', serif;
+      line-height: 1.6;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #f5f1e8;
+      color: #333;
+    }
+
+    .tp-content {
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+
+    .tp-title {
+      font-size: 28px;
+      font-weight: bold;
+      margin: 0 0 20px 0;
+      color: #2c1810;
+    }
+
+    .tp-body {
+      font-size: 16px;
+      margin-bottom: 20px;
+      color: #555;
+    }
+
+    .tp-body p {
+      margin: 0 0 12px 0;
+    }
+
+    .tp-body p:last-child {
+      margin-bottom: 0;
+    }
+
+    .tp-links {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .tp-link {
+      padding: 12px 20px;
+      font-size: 14px;
+      border: 2px solid #d4a574;
+      background: #fef5e7;
+      color: #2c1810;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+
+    .tp-link:hover {
+      background: #d4a574;
+      color: white;
+    }
+
+    .tp-link:active {
+      transform: scale(0.98);
+    }
+
+    .tp-qualities {
+      background: #f9f9f9;
+      padding: 15px 20px;
+      border-radius: 4px;
+      border-left: 4px solid #d4a574;
+      margin-top: 20px;
+    }
+
+    .tp-qualities h3 {
+      margin: 0 0 10px 0;
+      font-size: 12px;
+      text-transform: uppercase;
+      color: #999;
+    }
+
+    .tp-quality {
+      display: flex;
+      justify-content: space-between;
+      margin: 8px 0;
+      font-size: 14px;
+    }
+
+    .tp-quality__name {
+      font-weight: 600;
+      color: #555;
+    }
+
+    .tp-quality__value {
+      color: #2c1810;
+      font-weight: bold;
+    }
+
+    .status {
+      text-align: center;
+      color: #999;
+      font-size: 12px;
+      margin-top: 30px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      body {
+        background: #2c2420;
+        color: #e0ddd9;
+      }
+
+      .tp-content {
+        background: #3d3935;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+      }
+
+      .tp-title {
+        color: #fef5e7;
+      }
+
+      .tp-body {
+        color: #c0bbb3;
+      }
+
+      .tp-link {
+        background: #4a4540;
+        border-color: #8b6f47;
+        color: #fef5e7;
+      }
+
+      .tp-link:hover {
+        background: #8b6f47;
+      }
+
+      .tp-qualities {
+        background: #3d3935;
+        border-left-color: #8b6f47;
+      }
+
+      .tp-quality__name {
+        color: #c0bbb3;
+      }
+
+      .tp-quality__value {
+        color: #fef5e7;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="game"></div>
+  <div class="status">
+    <p>TextPlus Hello World - A minimal interactive fiction game</p>
+    <p><small>Built with TextPlus Core API</small></p>
+  </div>
+
+  <script type="module">
+    import { createGame, DomRenderer, renderQualities, applyTheme } from '../../core/dist/index.js';
+    import { helloWorldConfig } from './game.js';
+
+    // Initialize game
+    const engine = createGame(helloWorldConfig);
+    const renderer = new DomRenderer();
+    const gameContainer = document.getElementById('game');
+
+    // Apply light theme
+    applyTheme({
+      '--tp-color-primary': '#2c1810',
+      '--tp-color-accent': '#d4a574',
+      '--tp-color-bg': '#f5f1e8',
+      '--tp-color-text': '#333'
+    }, 'light');
+
+    // Helper to re-render
+    function updateDisplay() {
+      const situation = engine.getCurrentSituation();
+      if (situation) {
+        renderer.render(situation, engine, gameContainer);
+        
+        // Show qualities below content
+        const qualities = engine.getAllQualities();
+        if (Object.keys(qualities).length > 0) {
+          renderQualities(qualities, gameContainer);
+        }
+      }
+    }
+
+    // Set up event listeners
+    engine.onSituationChange(() => {
+      updateDisplay();
+    });
+
+    engine.onQualityChange(() => {
+      updateDisplay();
+    });
+
+    // Initial render
+    updateDisplay();
+  </script>
+</body>
+</html>
