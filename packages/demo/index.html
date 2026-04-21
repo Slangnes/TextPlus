@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TextPlus Demo Games - Learn by Playing</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Georgia', serif;
+      line-height: 1.7;
+      background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+      color: #f0f0f0;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+    }
+
+    .header {
+      background: rgba(0,0,0,0.3);
+      padding: 40px 20px;
+      text-align: center;
+      border-bottom: 2px solid #00ff00;
+    }
+
+    .header h1 {
+      margin: 0;
+      font-size: 36px;
+      color: #00ff00;
+    }
+
+    .header p {
+      margin: 10px 0 0 0;
+      color: #aaa;
+      font-size: 16px;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+
+    .intro {
+      background: rgba(0,0,0,0.3);
+      border: 1px solid #00ff00;
+      padding: 30px;
+      margin-bottom: 40px;
+      border-radius: 8px;
+    }
+
+    .intro h2 {
+      color: #00ff00;
+      margin-top: 0;
+    }
+
+    .intro p {
+      color: #ddd;
+      line-height: 1.8;
+    }
+
+    .games-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 30px;
+      margin-bottom: 40px;
+    }
+
+    .game-card {
+      background: rgba(0,0,0,0.4);
+      border: 2px solid #666;
+      border-radius: 8px;
+      padding: 30px;
+      transition: all 0.3s;
+      overflow: hidden;
+    }
+
+    .game-card:hover {
+      border-color: #00ff00;
+      box-shadow: 0 0 20px rgba(0,255,0,0.3);
+      transform: translateY(-5px);
+    }
+
+    .game-card h3 {
+      color: #00ff00;
+      margin: 0 0 10px 0;
+      font-size: 20px;
+    }
+
+    .level {
+      display: inline-block;
+      background: #00aa00;
+      color: #000;
+      padding: 4px 12px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: bold;
+      margin-bottom: 15px;
+    }
+
+    .level-1 { background: #00ff00; }
+    .level-2 { background: #ffaa00; }
+    .level-3 { background: #ff3333; }
+
+    .features {
+      list-style: none;
+      padding: 0;
+      margin: 15px 0;
+      font-size: 13px;
+      color: #ddd;
+    }
+
+    .features li {
+      padding: 6px 0;
+      border-bottom: 1px dotted #444;
+    }
+
+    .features li:before {
+      content: "✓ ";
+      color: #00ff00;
+      font-weight: bold;
+    }
+
+    .description {
+      color: #bbb;
+      font-size: 13px;
+      margin: 15px 0;
+      line-height: 1.6;
+    }
+
+    .play-button {
+      display: inline-block;
+      background: #00ff00;
+      color: #000;
+      padding: 12px 24px;
+      border-radius: 4px;
+      text-decoration: none;
+      font-weight: bold;
+      margin-top: 15px;
+      transition: all 0.2s;
+    }
+
+    .play-button:hover {
+      background: #00aa00;
+      transform: scale(1.05);
+    }
+
+    .api-demos {
+      background: rgba(0,0,0,0.3);
+      border: 1px solid #00aa00;
+      padding: 30px;
+      margin-bottom: 40px;
+      border-radius: 8px;
+    }
+
+    .api-demos h2 {
+      color: #00aa00;
+      margin-top: 0;
+    }
+
+    .api-column {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+    }
+
+    .api-item {
+      background: rgba(0,0,0,0.2);
+      padding: 15px;
+      border-left: 3px solid #00ff00;
+      border-radius: 4px;
+    }
+
+    .api-item h4 {
+      color: #00ff00;
+      margin: 0 0 8px 0;
+      font-size: 12px;
+    }
+
+    .api-item p {
+      margin: 0;
+      font-size: 12px;
+      color: #bbb;
+    }
+
+    .footer {
+      text-align: center;
+      padding: 40px 20px;
+      color: #888;
+      border-top: 1px solid #444;
+      margin-top: 40px;
+    }
+
+    @media (max-width: 600px) {
+      .header h1 {
+        font-size: 24px;
+      }
+
+      .games-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>TextPlus Demo Games</h1>
+    <p>Learn by Playing — Progressive Tutorial for TextPlus Core</p>
+  </div>
+
+  <div class="container">
+    <!-- Introduction -->
+    <div class="intro">
+      <h2>How to Use These Demos</h2>
+      <p>
+        TextPlus is a framework for creating interactive fiction games. These three demo games 
+        are designed to teach you how to use the TextPlus Core API by example.
+      </p>
+      <p>
+        <strong>Play in order:</strong> Start with Hello World, progress to The Detective's Case, 
+        then try The Memory Keeper. Each game demonstrates more advanced features than the last.
+      </p>
+      <p>
+        As you play, look at the game code in your editor (game.ts and index.html) to understand 
+        how features like save/load, event listeners, and theming work in practice.
+      </p>
+    </div>
+
+    <!-- Game Cards -->
+    <div class="games-grid">
+      <!-- Hello World -->
+      <div class="game-card">
+        <h3>Hello World</h3>
+        <div class="level level-1">Level 1 - Beginner</div>
+        <div class="description">
+          A minimal interactive fiction game that teaches the fundamentals.
+        </div>
+        <ul class="features">
+          <li>Situation transitions</li>
+          <li>Quality tracking</li>
+          <li>Conditional text</li>
+          <li>Multiple endings</li>
+          <li>DOM rendering</li>
+        </ul>
+        <p style="font-size: 12px; color: #999;">
+          Perfect starting point. Demonstrates core concept: situations as game states, 
+          qualities as player attributes, links as choices.
+        </p>
+        <a href="hello-world/index.html" class="play-button">Play Now →</a>
+      </div>
+
+      <!-- Detective's Case -->
+      <div class="game-card">
+        <h3>The Detective's Case</h3>
+        <div class="level level-2">Level 2 - Intermediate</div>
+        <div class="description">
+          An investigation game teaching event handling and state management.
+        </div>
+        <ul class="features">
+          <li>Event listeners (onQualityChange)</li>
+          <li>History tracking</li>
+          <li>Save/load gameplay</li>
+          <li>Multiple quality types</li>
+          <li>Evidence-gated progression</li>
+        </ul>
+        <p style="font-size: 12px; color: #999;">
+          Introduces real-time event handling. Watch the investigation progress bar update 
+          as you gather clues. Save your progress mid-case.
+        </p>
+        <a href="detective-case/index.html" class="play-button">Play Now →</a>
+      </div>
+
+      <!-- Memory Keeper -->
+      <div class="game-card">
+        <h3>The Memory Keeper</h3>
+        <div class="level level-3">Level 3 - Advanced</div>
+        <div class="description">
+          A psychological journey teaching themes, constraints, and callbacks.
+        </div>
+        <ul class="features">
+          <li>Theme switching (light/dark)</li>
+          <li>Quality constraints</li>
+          <li>State-based theming</li>
+          <li>Multiple save slots</li>
+          <li>Complex conditionals</li>
+        </ul>
+        <p style="font-size: 12px; color: #999;">
+          Advanced features: watch the theme shift based on your sanity level. 
+          Experience how game state can control visual presentation.
+        </p>
+        <a href="memory-keeper/index.html" class="play-button">Play Now →</a>
+      </div>
+    </div>
+
+    <!-- API Features Demonstrated -->
+    <div class="api-demos">
+      <h2>Core API Features Demonstrated</h2>
+      <div class="api-column">
+        <div>
+          <h4>Level 1: Hello World</h4>
+          <p>
+            <strong>Engine:</strong> createGame, goToSituation, followLink<br>
+            <strong>State:</strong> getQuality, setQuality, mutateQuality<br>
+            <strong>Info:</strong> getCurrentSituation, getSituation
+          </p>
+        </div>
+
+        <div>
+          <h4>Level 2: Detective Case</h4>
+          <p>
+            <strong>Events:</strong> onQualityChange, onSituationChange<br>
+            <strong>History:</strong> getSituationHistory, hasSituationBeenVisited<br>
+            <strong>Persistence:</strong> getSaveState, loadState
+          </p>
+        </div>
+
+        <div>
+          <h4>Level 3: Memory Keeper</h4>
+          <p>
+            <strong>Theming:</strong> applyTheme, theme CSS variables<br>
+            <strong>State:</strong> Quality constraints (min/max)<br>
+            <strong>Lifecycle:</strong> onEnter/onExit callbacks, reset
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Learning Path -->
+    <div class="intro">
+      <h2>Recommended Learning Path</h2>
+      <ol style="color: #ddd; line-height: 2;">
+        <li>
+          <strong>Play Hello World</strong> — Understand the basic model: situations, qualities, links.
+          Open hello-world/game.ts and read the code while playing.
+        </li>
+        <li>
+          <strong>Read Detective Case code</strong> — Look at detective-case/game.ts. Notice the event 
+          listeners in index.html. See how `onQualityChange` tracks investigation progress in real-time.
+        </li>
+        <li>
+          <strong>Play Detective Case</strong> — Experience save/load. Notice how your investigation 
+          score and evidence change based on your choices.
+        </li>
+        <li>
+          <strong>Read Memory Keeper code</strong> — Study how quality constraints work. See how the 
+          theme changes based on sanity level.
+        </li>
+        <li>
+          <strong>Play Memory Keeper</strong> — Experience theme switching and complex state management. 
+          Experiment with save slots.
+        </li>
+        <li>
+          <strong>Build your own game</strong> — Use one of these as a template. Copy the folder, 
+          modify game.ts and index.html, and create your own interactive fiction!
+        </li>
+      </ol>
+    </div>
+
+    <!-- Resources -->
+    <div style="background: rgba(0,0,0,0.3); padding: 20px; border-radius: 8px; margin-bottom: 40px;">
+      <h3 style="color: #00aa00; margin-top: 0;">Resources</h3>
+      <ul style="color: #ddd;">
+        <li><strong>Core API Reference:</strong> See packages/core/src/index.ts and types.ts</li>
+        <li><strong>Game Configuration:</strong> Each game.ts file has detailed comments</li>
+        <li><strong>Examples:</strong> Look at the links and quality definitions in game.ts</li>
+        <li><strong>UI Integration:</strong> Study how index.html wires the engine to DOM</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="footer">
+    <p>TextPlus — Modernizing Interactive Fiction • <a href="../../README.md" style="color: #00ff00;">Project Docs</a></p>
+  </div>
+</body>
+</html>

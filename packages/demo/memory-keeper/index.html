@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Memory Keeper - TextPlus Tutorial</title>
+  <style>
+    :root {
+      --theme-bg: #f5f1e8;
+      --theme-text: #2c1810;
+      --theme-accent: #e8d4a0;
+      --theme-border: #c8a882;
+      --sanity-color: #00aa00;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html[data-theme="dark"] {
+      --theme-bg: #1a1a2e;
+      --theme-text: #e0ddd9;
+      --theme-accent: #16213e;
+      --theme-border: #0f3460;
+      --sanity-color: #ff3333;
+    }
+
+    body {
+      font-family: 'Georgia', serif;
+      line-height: 1.7;
+      background: var(--theme-bg);
+      color: var(--theme-text);
+      margin: 0;
+      padding: 0;
+      transition: all 0.5s ease;
+    }
+
+    .container {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      width: 280px;
+      background: var(--theme-accent);
+      padding: 25px;
+      border-right: 2px solid var(--theme-border);
+      overflow-y: auto;
+    }
+
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .game-area {
+      flex: 1;
+      padding: 50px;
+      overflow-y: auto;
+    }
+
+    .controls {
+      background: var(--theme-accent);
+      padding: 20px 50px;
+      border-top: 2px solid var(--theme-border);
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    h1 {
+      color: var(--theme-text);
+      font-size: 18px;
+      margin: 0 0 20px 0;
+      border-bottom: 2px solid var(--theme-border);
+      padding-bottom: 10px;
+    }
+
+    h2 {
+      color: var(--theme-text);
+      font-size: 16px;
+      margin: 15px 0 10px 0;
+    }
+
+    .meter {
+      width: 100%;
+      height: 24px;
+      background: rgba(0,0,0,0.1);
+      border: 1px solid var(--theme-border);
+      margin: 8px 0 5px 0;
+      position: relative;
+      overflow: hidden;
+      border-radius: 4px;
+    }
+
+    .meter-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #00ff00 0%, #ffff00 50%, #ff3333 100%);
+      width: 0%;
+      transition: width 0.3s, background 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      color: white;
+      font-weight: bold;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+    }
+
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      margin: 8px 0;
+      font-size: 12px;
+      padding: 5px 0;
+      border-bottom: 1px dotted rgba(0,0,0,0.1);
+    }
+
+    .memory-item {
+      background: rgba(255,255,255,0.3);
+      border: 1px solid var(--theme-border);
+      padding: 8px;
+      margin: 5px 0;
+      font-size: 11px;
+      border-radius: 3px;
+      transition: all 0.2s;
+    }
+
+    .memory-item.active {
+      background: rgba(0,255,0,0.2);
+      border-color: #00ff00;
+      font-weight: bold;
+    }
+
+    .situation {
+      max-width: 700px;
+    }
+
+    .situation-title {
+      color: var(--theme-text);
+      font-size: 28px;
+      margin: 0 0 20px 0;
+      border-bottom: 2px solid var(--theme-border);
+      padding-bottom: 15px;
+    }
+
+    .situation-content {
+      color: var(--theme-text);
+      margin: 30px 0;
+      line-height: 1.9;
+      font-size: 15px;
+    }
+
+    .situation-content p {
+      margin: 15px 0;
+    }
+
+    .links {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 30px;
+    }
+
+    .link-button {
+      padding: 14px 24px;
+      background: var(--theme-accent);
+      border: 2px solid var(--theme-border);
+      color: var(--theme-text);
+      cursor: pointer;
+      font-family: 'Georgia', serif;
+      font-size: 14px;
+      transition: all 0.2s;
+      border-radius: 4px;
+    }
+
+    .link-button:hover {
+      background: var(--theme-border);
+      transform: translateX(5px);
+    }
+
+    .link-button:active {
+      transform: scale(0.98);
+    }
+
+    .control-button {
+      padding: 10px 16px;
+      background: var(--theme-bg);
+      border: 1px solid var(--theme-border);
+      color: var(--theme-text);
+      cursor: pointer;
+      font-family: 'Georgia', serif;
+      font-size: 12px;
+      transition: all 0.2s;
+      border-radius: 3px;
+    }
+
+    .control-button:hover {
+      background: var(--theme-border);
+      color: var(--theme-bg);
+    }
+
+    .control-button.theme-toggle {
+      margin-left: auto;
+    }
+
+    .save-slots {
+      margin-top: 15px;
+      font-size: 11px;
+    }
+
+    .save-slot {
+      background: rgba(255,255,255,0.2);
+      border: 1px solid var(--theme-border);
+      padding: 8px;
+      margin: 5px 0;
+      border-radius: 3px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .save-slot:hover {
+      background: rgba(255,255,255,0.4);
+    }
+
+    .save-slot-empty {
+      opacity: 0.5;
+      font-style: italic;
+    }
+
+    .api-hint {
+      background: rgba(0,0,0,0.05);
+      border-left: 3px solid var(--theme-border);
+      padding: 10px;
+      margin: 15px 0;
+      font-size: 11px;
+      border-radius: 3px;
+    }
+
+    @media (max-width: 1000px) {
+      .sidebar {
+        width: 200px;
+      }
+      .game-area {
+        padding: 30px;
+      }
+      .controls {
+        padding: 15px 30px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Left Sidebar: Memory Status -->
+  <div class="sidebar">
+    <h1>Memory Status</h1>
+
+    <h2>Sanity</h2>
+    <div class="meter">
+      <div class="meter-fill" id="sanityBar">100%</div>
+    </div>
+    <div class="stat-row">
+      <span>Level:</span>
+      <span id="sanityValue" style="font-weight: bold;">100/100</span>
+    </div>
+
+    <h2>Clarity</h2>
+    <div class="meter">
+      <div class="meter-fill" id="clarityBar" style="background: linear-gradient(90deg, #ff3333 0%, #ffaa00 50%, #00ff00 100%);">50%</div>
+    </div>
+    <div class="stat-row">
+      <span>Understanding:</span>
+      <span id="clarityValue" style="font-weight: bold;">50/100</span>
+    </div>
+
+    <h2>Progress</h2>
+    <div class="stat-row">
+      <span>Memories:</span>
+      <span id="memoriesValue" style="font-weight: bold;">0/10</span>
+    </div>
+
+    <h2>Discoveries</h2>
+    <div id="discoveries" style="font-size: 11px;"></div>
+
+    <div class="api-hint">
+      💡 <strong>API Demo:</strong> Watch the theme shift as your sanity changes! Scroll right to see the theme toggle.
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main">
+    <!-- Game Display -->
+    <div class="game-area">
+      <div class="situation" id="game"></div>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls">
+      <button class="control-button" id="saveBtn">💾 Save (Slot 1)</button>
+      <button class="control-button" id="load1Btn">📂 Slot 1</button>
+      <button class="control-button" id="load2Btn">📂 Slot 2</button>
+      <button class="control-button" id="load3Btn">📂 Slot 3</button>
+      <button class="control-button" id="resetBtn">🔄 Reset</button>
+      <button class="control-button theme-toggle" id="themeBtn">🌙 Dark Theme</button>
+      <span style="margin-left: auto; font-size: 11px;">
+        <a href="../index.html" style="text-decoration: none;">← Back</a>
+      </span>
+    </div>
+  </div>
+
+  <script type="module">
+    import { createGame, applyTheme } from '@textplus/core';
+    import { memoryKeeperConfig } from './game.ts';
+
+    // Initialize game
+    const engine = createGame(memoryKeeperConfig);
+    const gameContainer = document.getElementById('game');
+    
+    // Theme and save management
+    let isDarkTheme = false;
+    const saveSlots = [null, null, null];
+    let currentSlot = 0;
+
+    // Apply theme based on sanity
+    function updateTheme() {
+      const sanity = engine.getQuality('sanity') || 0;
+      const isDark = sanity < 40;
+      
+      if (isDark !== isDarkTheme) {
+        isDarkTheme = isDark;
+        const html = document.documentElement;
+        html.setAttribute('data-theme', isDarkTheme ? 'dark' : 'light');
+        document.getElementById('themeBtn').textContent = isDarkTheme ? '☀️ Light Theme' : '🌙 Dark Theme';
+      }
+    }
+
+    // Render game state
+    function renderSituation() {
+      const situation = engine.getCurrentSituation();
+      gameContainer.innerHTML = `
+        <div class="situation-title">${situation.title}</div>
+        <div class="situation-content">${situation.content}</div>
+        <div class="links" id="links"></div>
+      `;
+
+      const linksContainer = document.getElementById('links');
+      const links = engine.getAvailableLinks();
+
+      links.forEach(link => {
+        const btn = document.createElement('button');
+        btn.className = 'link-button';
+        btn.textContent = link.text;
+        btn.onclick = () => {
+          engine.followLink(link);
+          renderSituation();
+        };
+        linksContainer.appendChild(btn);
+      });
+    }
+
+    // Update sidebar
+    function updateSidebar() {
+      // Sanity
+      const sanity = engine.getQuality('sanity') || 0;
+      const sanityBar = document.getElementById('sanityBar');
+      sanityBar.style.width = sanity + '%';
+      sanityBar.textContent = Math.round(sanity) + '%';
+      document.getElementById('sanityValue').textContent = Math.round(sanity) + '/100';
+
+      // Clarity
+      const clarity = engine.getQuality('clarity') || 0;
+      const clarityBar = document.getElementById('clarityBar');
+      clarityBar.style.width = clarity + '%';
+      clarityBar.textContent = Math.round(clarity) + '%';
+      document.getElementById('clarityValue').textContent = Math.round(clarity) + '/100';
+
+      // Memories
+      const memories = engine.getQuality('memoriesRecovered') || 0;
+      document.getElementById('memoriesValue').textContent = memories + '/10';
+
+      // Discoveries
+      const isTraumatic = engine.getQuality('traumaticMemoriesVisited');
+      const foundHope = engine.getQuality('foundHopeRitual');
+      const discoveries = [];
+      if (isTraumatic) discoveries.push('✓ Faced trauma');
+      if (foundHope) discoveries.push('✓ Found hope ritual');
+      document.getElementById('discoveries').innerHTML = discoveries.length > 0 
+        ? discoveries.map(d => `<div class="memory-item active">${d}</div>`).join('')
+        : '<div class="memory-item save-slot-empty">None yet</div>';
+
+      // Theme based on sanity
+      updateTheme();
+    }
+
+    // Event listeners
+    engine.onQualityChange(() => {
+      updateSidebar();
+    });
+
+    // Controls
+    document.getElementById('saveBtn').onclick = () => {
+      saveSlots[0] = engine.getSaveState();
+      alert('✓ Saved to Slot 1\nSanity: ' + Math.round(engine.getQuality('sanity')) + '/100');
+    };
+
+    document.getElementById('load1Btn').onclick = () => {
+      if (saveSlots[0]) {
+        engine.loadState(saveSlots[0]);
+        renderSituation();
+        updateSidebar();
+      }
+    };
+
+    document.getElementById('load2Btn').onclick = () => {
+      if (saveSlots[1]) {
+        engine.loadState(saveSlots[1]);
+        renderSituation();
+        updateSidebar();
+      }
+    };
+
+    document.getElementById('load3Btn').onclick = () => {
+      if (saveSlots[2]) {
+        engine.loadState(saveSlots[2]);
+        renderSituation();
+        updateSidebar();
+      }
+    };
+
+    document.getElementById('resetBtn').onclick = () => {
+      if (confirm('Restart the journey?')) {
+        engine.reset();
+        isDarkTheme = false;
+        document.documentElement.setAttribute('data-theme', 'light');
+        renderSituation();
+        updateSidebar();
+      }
+    };
+
+    document.getElementById('themeBtn').onclick = () => {
+      const newTheme = isDarkTheme ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', newTheme);
+      isDarkTheme = !isDarkTheme;
+      document.getElementById('themeBtn').textContent = isDarkTheme ? '☀️ Light Theme' : '🌙 Dark Theme';
+    };
+
+    // Initial render
+    renderSituation();
+    updateSidebar();
+  </script>
+</body>
+</html>

@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Detective's Case - TextPlus Tutorial</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Courier New', monospace;
+      line-height: 1.6;
+      background: #1a1a1a;
+      color: #e0e0e0;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      width: 250px;
+      background: #2a2a2a;
+      padding: 20px;
+      border-right: 2px solid #444;
+      overflow-y: auto;
+      box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+    }
+
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .game-area {
+      flex: 1;
+      padding: 40px;
+      background: #151515;
+      overflow-y: auto;
+    }
+
+    .controls {
+      background: #2a2a2a;
+      padding: 20px 40px;
+      border-top: 2px solid #444;
+    }
+
+    h1 {
+      color: #00ff00;
+      font-size: 18px;
+      margin: 0 0 20px 0;
+      border-bottom: 1px solid #00ff00;
+      padding-bottom: 10px;
+    }
+
+    h2 {
+      color: #00ff00;
+      font-size: 16px;
+      margin: 15px 0 10px 0;
+    }
+
+    h3 {
+      color: #00aa00;
+      font-size: 14px;
+      margin: 10px 0 5px 0;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 20px;
+      background: #333;
+      border: 1px solid #666;
+      margin: 10px 0;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #00ff00, #00aa00);
+      width: 0%;
+      transition: width 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      color: #000;
+      font-weight: bold;
+    }
+
+    .stat {
+      margin: 8px 0;
+      font-size: 12px;
+    }
+
+    .stat-name {
+      color: #aaa;
+    }
+
+    .stat-value {
+      color: #00ff00;
+      font-weight: bold;
+    }
+
+    .evidence-item {
+      background: #222;
+      border: 1px solid #444;
+      padding: 8px;
+      margin: 5px 0;
+      font-size: 11px;
+      border-left: 3px solid #00ff00;
+    }
+
+    .evidence-item.hidden {
+      border-left-color: #666;
+      color: #888;
+    }
+
+    .evidence-item.active {
+      border-left-color: #00ff00;
+      color: #00ff00;
+    }
+
+    .situation-title {
+      color: #00ff00;
+      font-size: 20px;
+      margin: 0 0 20px 0;
+      border-bottom: 2px solid #00ff00;
+      padding-bottom: 10px;
+    }
+
+    .situation-content {
+      color: #e0e0e0;
+      margin: 20px 0;
+      line-height: 1.8;
+    }
+
+    .situation-content p {
+      margin: 10px 0;
+    }
+
+    .links {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .link-button {
+      padding: 12px 20px;
+      background: #222;
+      border: 1px solid #444;
+      color: #00ff00;
+      cursor: pointer;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      transition: all 0.2s;
+    }
+
+    .link-button:hover {
+      background: #00ff00;
+      color: #000;
+      border-color: #00ff00;
+    }
+
+    .link-button:active {
+      transform: scale(0.98);
+    }
+
+    .controls {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .control-button {
+      padding: 10px 20px;
+      background: #333;
+      border: 1px solid #666;
+      color: #00ff00;
+      cursor: pointer;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      transition: all 0.2s;
+    }
+
+    .control-button:hover {
+      background: #444;
+      border-color: #00ff00;
+    }
+
+    .history-list {
+      font-size: 11px;
+      color: #aaa;
+    }
+
+    .history-item {
+      margin: 3px 0;
+      padding: 3px 0;
+      border-bottom: 1px dotted #444;
+    }
+
+    .tutorial-hint {
+      background: #222;
+      border-left: 3px solid #ffaa00;
+      padding: 10px;
+      margin: 10px 0;
+      font-size: 11px;
+      color: #ffaa00;
+    }
+
+    @media (max-width: 1000px) {
+      .sidebar {
+        width: 150px;
+      }
+      .game-area {
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Left Sidebar: Investigation Status -->
+    <div class="sidebar">
+      <h1>Investigation</h1>
+
+      <h2>Score</h2>
+      <div class="stat">
+        <span class="stat-name">Progress:</span>
+        <div class="progress-bar">
+          <div class="progress-fill" id="scoreBar">0%</div>
+        </div>
+      </div>
+
+      <h2>Evidence</h2>
+      <div id="evidence" style="font-size: 11px;"></div>
+
+      <h2>Suspicion</h2>
+      <div class="stat">
+        <span class="stat-name">Level:</span>
+        <span class="stat-value" id="suspicion">0%</span>
+      </div>
+
+      <h2>Visited Locations</h2>
+      <div class="history-list" id="history"></div>
+
+      <div class="tutorial-hint">
+        💡 <strong>API Demo:</strong> This sidebar updates via engine events like <code>onQualityChange</code>. Watch your investigation score increase!
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main">
+      <!-- Game Display -->
+      <div class="game-area" id="game"></div>
+
+      <!-- Controls -->
+      <div class="controls">
+        <button class="control-button" id="saveBtn">💾 Save Investigation</button>
+        <button class="control-button" id="loadBtn">📂 Load Last Save</button>
+        <button class="control-button" id="resetBtn">🔄 Restart Case</button>
+        <span style="margin-left: auto; font-size: 11px; color: #888;">
+          <a href="../index.html" style="color: #888; text-decoration: none;">← Back to Games</a>
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { createGame } from '@textplus/core';
+    import { detectiveCaseConfig } from './game.ts';
+
+    // Initialize game
+    const engine = createGame(detectiveCaseConfig);
+    const gameContainer = document.getElementById('game');
+
+    // State tracking
+    let visitedLocations = [];
+    let saveData = null;
+
+    // Helper: Render situation
+    function renderSituation() {
+      const situation = engine.getCurrentSituation();
+      gameContainer.innerHTML = `
+        <div class="situation-title">${situation.title}</div>
+        <div class="situation-content">${situation.content}</div>
+        <div class="links" id="links"></div>
+      `;
+
+      const linksContainer = document.getElementById('links');
+      const links = engine.getAvailableLinks();
+
+      if (links.length === 0) {
+        linksContainer.innerHTML = '<p style="color: #888;">End of investigation.</p>';
+      } else {
+        links.forEach((link, idx) => {
+          const btn = document.createElement('button');
+          btn.className = 'link-button';
+          btn.textContent = link.text;
+          btn.onclick = () => {
+            engine.followLink(link);
+            renderSituation();
+          };
+          linksContainer.appendChild(btn);
+        });
+      }
+    }
+
+    // Helper: Update sidebar
+    function updateSidebar() {
+      const score = engine.getQuality('investigationScore');
+      const suspicion = engine.getQuality('suspicion');
+      const history = engine.getSituationHistory();
+
+      // Update score bar
+      document.getElementById('scoreBar').style.width = score + '%';
+      document.getElementById('scoreBar').textContent = Math.round(score) + '%';
+
+      // Update suspicion
+      document.getElementById('suspicion').textContent = Math.round(suspicion) + '%';
+
+      // Update evidence
+      const evidence = [
+        { name: 'Found Key', quality: 'foundWeapon' },
+        { name: 'Found Note', quality: 'foundNote' },
+        { name: 'Spoke to Janitor', quality: 'spokeToWitness' }
+      ];
+
+      const evidenceHTML = evidence.map(e => {
+        const found = engine.getQuality(e.quality);
+        return `<div class="evidence-item ${found ? 'active' : 'hidden'}">
+          ${found ? '✓' : '○'} ${e.name}
+        </div>`;
+      }).join('');
+
+      document.getElementById('evidence').innerHTML = evidenceHTML;
+
+      // Update history
+      const historyHTML = history.map(sit => {
+        const sitDef = engine.getSituation(sit);
+        return `<div class="history-item">→ ${sitDef.title}</div>`;
+      }).join('');
+
+      document.getElementById('history').innerHTML = historyHTML || '<div style="color: #666;">No visits yet</div>';
+    }
+
+    // Event listeners
+    engine.onQualityChange(() => {
+      updateSidebar();
+    });
+
+    engine.onSituationChange(() => {
+      const history = engine.getSituationHistory();
+      const currentSit = engine.getCurrentSituation();
+      console.log(`Player moved to: ${currentSit.title} | History: ${history.length} visits`);
+    });
+
+    // Control buttons
+    document.getElementById('saveBtn').onclick = () => {
+      saveData = engine.getSaveState();
+      alert(`✓ Investigation saved!\nScore: ${engine.getQuality('investigationScore')}\nSuspicion: ${engine.getQuality('suspicion')}`);
+    };
+
+    document.getElementById('loadBtn').onclick = () => {
+      if (saveData) {
+        engine.loadState(saveData);
+        renderSituation();
+        updateSidebar();
+        alert('✓ Investigation restored!');
+      } else {
+        alert('No save data found. Play a bit and save first!');
+      }
+    };
+
+    document.getElementById('resetBtn').onclick = () => {
+      if (confirm('Restart the case? You\'ll lose your progress.')) {
+        engine.reset();
+        renderSituation();
+        updateSidebar();
+      }
+    };
+
+    // Initial render
+    renderSituation();
+    updateSidebar();
+  </script>
+</body>
+</html>
