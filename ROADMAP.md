@@ -30,7 +30,11 @@ This document tracks the features, deliverables, and milestones for the TextPlus
 
 ### Roadmap Changelog
 
- **2026-04-21**: Implemented M2 workflow integration (parse→compile→lint), 15 integration tests (100% coverage), formatters for diagnostic reports and JSON output.
+- **2026-04-21**: Resolved metadata and API blockers: aligned package entrypoints to dist outputs, removed stale CLI bin declarations, and replaced placeholder Author API throws with working implementations.
+- **2026-04-21**: Implemented M2 workflow integration (parse→compile→lint), 15 integration tests (100% coverage), formatters for diagnostic reports and JSON output.
+- **2026-04-21**: Implemented M2 linter slice (AST diagnostics), 15 real test cases.
+- **2026-04-21**: Implemented M2 compiler slice (AST → GameConfig), 16 real test cases.
+- **2026-04-21**: Implemented M2 parser slice with line-aware errors and initial test coverage.
 
 ---
 
@@ -326,9 +330,9 @@ Required phase gates:
 **Dependency**: M1 Core (base library) ✓ SATISFIED  
 **Test Coverage Target**: ≥80%
 
-**Current Status**: Parser, compiler, and linter slices implemented with real unit coverage (67 tests, 91.62% coverage).  
-**Current Status Update**: Workflow integration complete with 15 integration tests.  
-**Placeholder Tests Ready**: 60 tests in `packages/author/test/unit/` (52 real, 8 scaffolded) + 15 integration tests
+**Current Status**: Parser, compiler, linter, and workflow slices implemented with real test coverage.  
+**Current Status Update**: Public API wrappers (`compileGame`, `createScaffold`) now implemented and tested.  
+**Test Inventory**: 55 unit tests in `packages/author/test/unit/` + 15 integration tests (70 total in author package)
 
 ### Planned Implementation
 - [x] DSL parser (initial line-based parser implemented)
@@ -344,7 +348,7 @@ Required phase gates:
 - [x] Workflow integration: Unified parse→compile→lint pipeline
 - [x] Report formatters: Human-readable diagnostics + JSON output
 - [x] 15 end-to-end integration tests
-- [x] 67 total real tests covering all M2A functionality
+- [x] 70 total real tests covering all M2A functionality
 - [x] 96.49% package coverage on implemented slices
 
 ### Phase 2B: Deferred (Post-M2)

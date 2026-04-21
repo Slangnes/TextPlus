@@ -2,7 +2,7 @@
 
 ## Current Status
 
-🚧 Milestone 2 has started. The initial parser slice is implemented with real unit coverage, and compiler/linter/CLI work remains pending.
+🚧 Milestone 2 is in progress. Parser, compiler, linter, and workflow integration are implemented; CLI packaging and Phase 2B features remain pending.
 
 ## Purpose
 
@@ -53,27 +53,28 @@ npm run build          # Build to dist/
 
 ### Phase 2A: Parser
 - [x] Initial line-based parser slice with line-aware errors
-- [ ] Tokenizer (lexer for richer DSL syntax)
-- [ ] Grammar parser expansion (recursive descent or parser generator)
-- [ ] 20+ unit tests
+- [x] AST → GameConfig compiler integration
+- [x] Linter diagnostics for orphaned situations and broken links
+- [x] Unified workflow (parse → compile → lint)
+- [x] 70 real tests across unit + integration coverage
 
 ### Phase 2B: Compiler
-- [ ] AST → GameConfig transformer
-- [ ] Type validation during compilation
-- [ ] Quality/situation mapping
-- [ ] 25+ unit tests
+- [x] AST → GameConfig transformer
+- [x] Type validation during compilation
+- [x] Quality/situation mapping
+- [x] Unit coverage delivered
 
 ### Phase 2C: Linter
-- [ ] Unused situation detection
-- [ ] Broken link detection
+- [x] Unused quality detection
+- [x] Broken link detection
 - [ ] Quality type consistency checks
-- [ ] 15+ unit tests
+- [x] 15+ unit tests
 
 ### Phase 2D: CLI & Integration
-- [ ] Command-line argument parsing
+- [ ] Command-line argument parsing and executable
 - [ ] File I/O (read DSL, write GameConfig JSON)
-- [ ] Project scaffolding (create new game template)
-- [ ] 10+ integration tests
+- [x] Project scaffolding API (`createScaffold`) in library surface
+- [x] 10+ integration tests (workflow)
 
 ### Phase 2E: E2E & Polish
 - [ ] 10+ E2E test scenarios (DSL → gameplay verification)
@@ -107,8 +108,8 @@ npm run build          # Build to dist/
 
 ## Next Steps (When M2 Starts)
 
-1. Move this file content into main README.md
-2. Create src/parser/, src/compiler/, src/linter/, src/cli/ directories
-3. Begin Phase 2A with Parser implementation
-4. Convert placeholder tests into real test contracts
-5. Update ROADMAP.md to reflect M2 progress
+1. Add packaged CLI executable wired to workflow functions
+2. Implement link-condition parser (currently string-based)
+3. Add markdown content compilation stage
+4. Replace adaptive-text placeholder tests with real implementation
+5. Add E2E DSL gameplay parity scenarios
