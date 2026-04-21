@@ -15,8 +15,27 @@
  * - Situation graph visualization
  */
 
-// Placeholder - will be implemented in Milestone 2
+import { parseGame } from './parser';
+import { compileAST } from './compiler';
+import { lintAST, formatDiagnostics } from './linter';
+import { workflowExecute, formatWorkflowReport, serializeWorkflowResult } from './workflow';
+
 export const VERSION = '0.0.1';
+
+export { parseGame };
+export { compileAST };
+export { lintAST, formatDiagnostics };
+export { workflowExecute, formatWorkflowReport, serializeWorkflowResult };
+export type {
+  AuthorGameAst,
+  AuthorLinkNode,
+  AuthorQualityNode,
+  AuthorQualityType,
+  AuthorSituationNode,
+} from './parser';
+export type { CompileError, CompileOutput } from './compiler';
+export type { LintDiagnostic, LintOutput, LintSeverity } from './linter';
+export type { WorkflowResult } from './workflow';
 
 export interface CompileOptions {
   markdown?: boolean;

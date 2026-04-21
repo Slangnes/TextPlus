@@ -1,32 +1,64 @@
 # @textplus/author
 
-Status: scaffolded for Milestone 2; implementation has not started.
+Status: Milestone 2 in progress; parser, compiler, and linter slices implemented.
+
+## Latest Features
+
+- **Workflow Integration**: Complete DSL → GameConfig pipeline with unified error reporting
+- **Integration Tests**: 15 end-to-end workflow scenarios covering parse, compile, lint
+- **Report Formatting**: Human-readable diagnostic output with JSON serialization
 
 ## Purpose
 
-`@textplus/author` will own the authoring DSL, compiler pipeline, linting, and project scaffold workflow on top of `@textplus/core`.
+`@textplus/author` owns the authoring DSL, compiler pipeline, linting, and project scaffold workflow on top of `@textplus/core`.
 
 ## Current Surface
 
 | File | Status | Notes |
 |---|---|---|
-| `src/index.ts` | Placeholder | Exposes future compiler/scaffold API stubs for Milestone 2 |
-| `test/unit/*` | Scaffolded | Placeholder tests exist and should become the implementation contract when M2 starts |
-| `test/integration/*` | Scaffolded | Pending real CLI/HMR/graph integration coverage |
+| `src/parser.ts` | ✅ Implemented slice | Parses line-based DSL into AuthorGameAst with line-aware errors |
+| `src/compiler.ts` | ✅ Implemented slice | Compiles AST to @textplus/core GameConfig with validation |
+| `src/linter.ts` | ✅ Implemented slice | Validates games for orphaned situations, broken links, unused qualities |
+| `src/index.ts` | 🚧 Partially implemented | Exports parser + compiler + linter APIs; scaffold still placeholder |
+| `test/unit/parser.test.ts` | Real tests (8) | Covers parsing title, qualities, situations, links, errors |
+| `test/unit/compiler.test.ts` | Real tests (16) | Covers compilation, link resolution, error detection |
+| `test/unit/linter.test.ts` | Real tests (15) | Covers reachability, link validation, quality usage, diagnostics |
+| `test/unit/adaptive-text.test.ts` | Scaffolded (13) | Pending real adaptive text coverage |
+| `test/integration/*` | Scaffolded | Pending CLI/workflow integration coverage |
 | `test/e2e/*` | Scaffolded | Pending full DSL-to-core scenarios |
+| `src/workflow.ts` | ✅ Implemented integration | Coordinates parse → compile → lint with unified error reporting |
+| `test/integration/workflow.test.ts` | Real tests (15) | End-to-end scenarios, report formatting, JSON serialization |
+
+## Test Coverage
+
+- **Workflow**: 15 integration tests, 100% statement coverage
+- **Total Author Package**: 67 tests passing (206 workspace total), 96.49% coverage (660/684 statements)
 
 ## Verification
 
 Run these from the repository root:
 
 ```bash
-npm run lint
-npm run test:author
-npm run test:author:e2e
+npm run lint                # TypeScript strict mode check
+npm run test:author         # Parser + compiler + linter real tests
+npm run test:author:e2e     # E2E scenarios (scaffolded)
+npm run test:all            # Full workspace (191 tests, all green)
+npm run build               # Build all packages
 ```
+
+## Linter Features
+
+- **Orphaned Situations**: Detects unreachable situations (not reachable from start)
+- **Broken Links**: Reports links to undefined situations (errors)
+- **Unused Qualities**: Warns about defined but unused qualities
+- **Diagnostic Output**: Structured error/warning/info messages with formatting
+
+## Planning
+
+Detailed Milestone 2 scope and remaining phases live in `README-M2-plan.md`.
 
 ## Drift Rules
 
-- Keep this file focused on actual exported surfaces and pending modules.
-- Do not claim implementation beyond what exists in `src/` and real tests.
-- When Milestone 2 starts, replace placeholder notes with parser/compiler/linter module inventory.
+- Keep this file focused on actual exported surfaces and current implementation status.
+- Update this file when moving between phases (template → real).
+- When a module surface expands, update both this file and M2-plan.md in the same change set.

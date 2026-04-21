@@ -2,7 +2,7 @@
 
 ## Current Status
 
-⏳ Ready for Milestone 2 implementation (M1 Core dependency ✅ satisfied)
+🚧 Milestone 2 has started. The initial parser slice is implemented with real unit coverage, and compiler/linter/CLI work remains pending.
 
 ## Purpose
 
@@ -52,9 +52,9 @@ npm run build          # Build to dist/
 ## M2 Implementation Phases (Planned)
 
 ### Phase 2A: Parser
-- [ ] Tokenizer (lexer for DSL syntax)
-- [ ] Grammar parser (recursive descent or parser generator)
-- [ ] Error reporting (human-readable parser errors)
+- [x] Initial line-based parser slice with line-aware errors
+- [ ] Tokenizer (lexer for richer DSL syntax)
+- [ ] Grammar parser expansion (recursive descent or parser generator)
 - [ ] 20+ unit tests
 
 ### Phase 2B: Compiler
