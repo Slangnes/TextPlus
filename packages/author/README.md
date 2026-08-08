@@ -41,7 +41,6 @@ Run these from the repository root:
 ```bash
 npm run lint                # TypeScript strict mode check
 npm run test:author         # Parser + compiler + linter + workflow + public API tests
-npm run test:author:e2e     # E2E scenarios (scaffolded)
 npm run test:all            # Full workspace (currently 209 tests, all green)
 npm run build               # Build all packages
 ```

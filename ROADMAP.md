@@ -113,7 +113,7 @@ Use tests and interfaces as the contract source before implementation.
 4. Run verification gates before moving phases:
   - `npm run lint`
   - `npm run test:core`
-  - `npm run test:coverage`
+  - `npm run test`
 
 Required phase gates:
 - No milestone checkbox closes with failing tests.
@@ -135,17 +135,17 @@ Required phase gates:
 
 ### Phase 0: Development Infrastructure (NEW)
 - [x] Set up npm monorepo with workspaces
-- [x] Create 6 workspace packages: `core`, `author`, `map`, `convert`, `demo`, `docs`
+- [x] Create 6 workspace packages: `core`, `author`, `map`, `convert`, `demo`, `docs` (the `docs` stub was later removed; recreate as a real workspace when the M5 docs site starts)
 - [x] Configure Vite for library builds (ES modules + CommonJS)
 - [x] Configure Vitest for comprehensive testing (unit/integration/E2E)
 - [x] Set up TypeScript strict mode with path aliases
-- [x] Create shared test helpers (`.test-helpers/index.ts`)
+- [x] Create shared test helpers (`.test-helpers/index.ts`; later removed as unused)
 - [x] Create test templates for all 4 main packages (156 placeholder tests)
   - Core: 53 tests (unit, integration, E2E)
   - Author: 60 tests (parser, compiler, linting, adaptive text)
   - Convert: 30 tests (parser, codegen)
   - Map: 13 tests (layout)
-- [x] Set up npm scripts: `test`, `build`, `lint`, `test:all`, `test:coverage`
+- [x] Set up npm scripts: `test`, `build`, `lint`, `test:all`
 - [x] Create individual Vite configs per package
 - [x] Create `.gitignore` for monorepo
 
@@ -322,7 +322,7 @@ Required phase gates:
 2. **Unit Tests**: `npm run test:core` → 40+ tests pass ✓
 3. **Integration Tests**: `npm run test:core` → 30+ tests pass ✓
 4. **E2E Tests**: `npm run test:core` → 18 E2E scenarios pass ✓
-5. **Coverage**: `npm run test:coverage` → 94.47% in `packages/core/` ✓
+5. **Coverage**: `npm run test` → 94.47% in `packages/core/` ✓
 6. **Build**: `npm run build` → `packages/core/dist/` built (20.93kb ESM, 11.83kb CJS) ✓
 7. **Playable**: Demo game at `packages/demo/hello-world/index.html` playable ✓
 
@@ -497,7 +497,7 @@ cd /workspaces/TextPlus
 npm run test:all
 
 # Watch mode for active development
-npm run test:core:watch
+npm run test:watch
 
 # Current next slice
 # Implement: packages/core/test/e2e/hello-world.test.ts

@@ -45,7 +45,6 @@ CLI → Parser → Compiler → Core GameConfig
 ```bash
 npm run lint           # TypeScript linting
 npm run test:author    # Unit + integration tests
-npm run test:author:e2e # E2E scenarios
 npm run build          # Build to dist/
 ```
 

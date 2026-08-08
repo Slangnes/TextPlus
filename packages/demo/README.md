@@ -1,29 +1,39 @@
 # @textplus/demo
 
-Status: empty workspace for example games and teaching materials.
+Playable example games built directly on `@textplus/core`. Each game is a
+static Vite page: an inline `<script type="module">` in its `index.html`
+imports the engine, with a documented `game.ts` config alongside it as the
+readable reference.
 
-## Purpose
+## Games
 
-`@textplus/demo` will hold playable reference games, smoke-test content, and later teaching materials that exercise the package stack in realistic combinations.
-
-## Current Surface
-
-| Path | Status | Notes |
+| Path | Game | Demonstrates |
 |---|---|---|
-| `package.json` | Minimal | Build/dev/lint scripts are placeholder shell echoes for now |
-| `hello-world/` | Missing | First required demo slice for core E2E work |
+| `index.html` | Landing page | Links to all demos with a suggested reading order |
+| `hello-world/` | Hello World | Minimal Core usage: situation transitions, quality tracking, conditional text, multiple endings |
+| `detective-case/` | The Detective's Case | Event listeners, situation history, mixed quality types, conditional links, save/load |
+| `memory-keeper/` | The Memory Keeper | Quality constraints, entry/exit callbacks, state-driven theme switching, multi-slot save/load |
+
+## Development
+
+Run from the repository root:
+
+```bash
+npm run dev --workspace=@textplus/demo   # dev server on port 5174
+npm run build                            # builds every package, demo included
+```
+
+`vite.config.ts` aliases `@textplus/core` to `../core/src/index.ts` (the same
+pattern as workbench), so demos always run against current core sources — no
+prior core build is required.
 
 ## Verification
 
-Run these from the repository root:
-
-```bash
-npm run build
-npm run test:core:e2e
-```
+Demos are exercised by the core E2E suite (`npm run test:core` includes
+`packages/core/test/e2e/hello-world.test.ts`) and compiled by `npm run build`.
 
 ## Drift Rules
 
-- Add one README section per demo once the folder exists.
+- Add one README section per demo when adding a folder.
 - Keep demos tied to real package capabilities, not aspirational features.
 - Use the repository `ROADMAP.md` for milestone sequencing and completion state.
