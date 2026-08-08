@@ -2,12 +2,12 @@
  * TextPlus Workbench - DSL Language Definition (plain data)
  *
  * The Monarch grammar and editor themes for the TextPlus DSL, kept free of
- * monaco imports so the definitions are unit-testable in Node
- * (test/unit/dsl-language.test.ts). editor.ts feeds these to Monaco.
+ * monaco imports so the definitions stay plain data. editor.ts feeds these to
+ * Monaco; tokenization is exercised by the syntax-highlighting E2E scenario
+ * (e2e/workbench.spec.ts).
  *
  * Monarch group rule contract: every capture group maps to one token, and the
- * concatenation of all groups must reproduce the whole match — the unit tests
- * enforce that property for each line rule.
+ * concatenation of all groups must reproduce the whole match.
  */
 
 export const DSL_LANGUAGE_ID = 'textplus';

@@ -40,10 +40,11 @@ Run these from the repository root:
 
 ```bash
 npm run lint                # TypeScript strict mode check
-npm run test:author         # Parser + compiler + linter + workflow + public API tests
-npm run test:all            # Full workspace (currently 209 tests, all green)
+npm run test:all            # lint + all builds + traced Playwright E2E suite
 npm run build               # Build all packages
 ```
+
+The DSL pipeline is exercised end-to-end through the workbench E2E suite: examples compile clean (`e2e/conventions.spec.ts`), and conditions, effects, adaptive text, HUD, and theme directives are verified live in the Play panel (`e2e/workbench.spec.ts`).
 
 ## Linter Features
 

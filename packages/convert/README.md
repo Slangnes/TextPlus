@@ -26,8 +26,11 @@ Status: Milestone 4 **first slice implemented** — plain-text transcript → li
 ## Verification
 
 ```bash
-npm run test:convert   # from repo root
+npm run lint    # from repo root
+npm run build
 ```
+
+Convert has no E2E surface yet — the workbench does not use it — so it is currently verified by lint and build only. Give it an E2E scenario when it gains a UI or CLI entry point.
 
 ## Drift Rules
 

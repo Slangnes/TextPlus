@@ -9,7 +9,6 @@ Status: Milestone 3 **first slice implemented** — auto-layout and the GameConf
 | `src/layout.ts` | Implemented | Layered-BFS grid auto-layout: depth columns from the start situation, unique cells, orphans parked in a trailing column, terminal (ending) flags |
 | `src/adapter.ts` | Implemented | `graphFromConfig` — `@textplus/core` GameConfig → neutral `StoryGraph` (deduplicated edges) |
 | `src/index.ts` | Implemented | Public exports; legacy `autoLayout(rooms)` surface now backed by the real engine; `importTranscript` still a placeholder |
-| `test/unit/layout.test.ts` | Real | 15 tests covering chains, branches, cycles, orphans, sizing, adapter, legacy surface |
 
 ## Trizbort Parity Gap (honest accounting)
 
@@ -30,7 +29,7 @@ Run these from the repository root:
 
 ```bash
 npm run lint
-npm run test:map
+npm run test:e2e   # layout + adapter exercised through the workbench Map panel scenarios
 ```
 
 ## Drift Rules

@@ -112,8 +112,7 @@ Use tests and interfaces as the contract source before implementation.
 3. Implement runtime modules to satisfy contracts.
 4. Run verification gates before moving phases:
   - `npm run lint`
-  - `npm run test:core`
-  - `npm run test`
+  - `npm run test:e2e`
 
 Required phase gates:
 - No milestone checkbox closes with failing tests.
@@ -492,17 +491,11 @@ Required phase gates:
 To begin M1 implementation:
 
 ```bash
-# Verify current repo state
-cd /workspaces/TextPlus
+# Verify current repo state (lint + builds + traced E2E)
 npm run test:all
 
-# Watch mode for active development
-npm run test:watch
-
-# Current next slice
-# Implement: packages/core/test/e2e/hello-world.test.ts
-# Add: packages/demo/hello-world/
-# Then: packages/core/src/themes/
+# E2E suite alone — a trace.zip per test
+npm run test:e2e
 ```
 
 Use the package README files and this roadmap for current command and status references.

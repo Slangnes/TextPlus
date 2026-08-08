@@ -29,7 +29,8 @@
   },
   "include": [
     "packages/*/src/**/*.ts",
-    "packages/*/test/**/*.ts"
+    "packages/workbench/e2e/**/*.ts",
+    "packages/workbench/playwright.config.ts"
   ],
   "exclude": [
     "node_modules",

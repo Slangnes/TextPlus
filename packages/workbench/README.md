@@ -20,7 +20,6 @@ Browser authoring environment for TextPlus: write DSL in the left pane, play the
 
 ```bash
 npm run workbench          # from repo root — dev server on http://localhost:5175
-npm run test:workbench     # from repo root — unit + integration tests (vitest)
 npm run test:e2e           # from repo root — Playwright E2E suite, traces always on
 ```
 

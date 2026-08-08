@@ -24,17 +24,10 @@ Status: ✅ Milestone 1 COMPLETE
 Run these from the repository root:
 
 ```bash
-npm run lint          # TypeScript linting
+npm run lint          # TypeScript strict check
 npm run build         # Build all packages
-npm run test:core     # Run unit, integration, and E2E tests
+npm run test:e2e      # Traced Playwright E2E suite — exercises core through the workbench Play panel
 ```
-
-## Test Coverage
-
-- **Unit Tests**: 40+ scenarios (engine, qualities, situation system)
-- **Integration Tests**: 30+ scenarios (DOM rendering, storage, state persistence)
-- **E2E Tests**: 18 real gameplay scenarios (hello-world game)
-- **Overall Coverage**: 94.47% statements (exceeds 80% target)
 
 ## Example Usage
 

@@ -1,9 +1,10 @@
 /**
  * TextPlus Workbench E2E suite.
  *
- * Every test records a Playwright trace (see playwright.config.ts) so releases
- * can be visually verified from trace.zip artifacts — a second QA vector
- * alongside the vitest unit/integration suites.
+ * Every test records a Playwright trace (see playwright.config.ts). The
+ * trace.zip artifacts are the project's release QA record, carrying both
+ * verification vectors at once: the visual film-strip/DOM snapshots and the
+ * code-level log of actions, console, and network.
  *
  * The Monaco editor is driven through the window.__workbench test hook
  * (getSource/setSource) rather than DOM typing, keeping tests fast and exact.

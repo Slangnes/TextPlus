@@ -29,8 +29,9 @@ prior core build is required.
 
 ## Verification
 
-Demos are exercised by the core E2E suite (`npm run test:core` includes
-`packages/core/test/e2e/hello-world.test.ts`) and compiled by `npm run build`.
+`npm run build` compiles every demo page against current core sources, and the
+DSL adaptations of all three games load and compile clean in the workbench E2E
+suite (`npm run test:e2e`, guarded by `e2e/conventions.spec.ts`).
 
 ## Drift Rules
 

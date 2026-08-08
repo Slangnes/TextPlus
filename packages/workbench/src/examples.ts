@@ -2,7 +2,7 @@
  * TextPlus Workbench - Example Stories
  *
  * Every example doubles as living documentation of the DSL and must always
- * compile with zero errors and zero warnings (guarded by examples.test.ts).
+ * compile with zero errors and zero warnings (guarded by e2e/conventions.spec.ts).
  *
  * The stories exercise the full Phase-A surface: `? condition` gated links,
  * `{ effects }` on links and situation entry, `[oneOf|randomly|frequently|

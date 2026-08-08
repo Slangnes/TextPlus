@@ -44,7 +44,7 @@ CLI → Parser → Compiler → Core GameConfig
 
 ```bash
 npm run lint           # TypeScript linting
-npm run test:author    # Unit + integration tests
+npm run test:e2e       # Traced Playwright E2E suite (DSL pipeline via the workbench)
 npm run build          # Build to dist/
 ```
 
