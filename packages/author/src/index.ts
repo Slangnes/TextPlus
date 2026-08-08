@@ -26,21 +26,44 @@ export { parseGame };
 export { compileAST };
 export { lintAST, formatDiagnostics };
 export { workflowExecute, formatWorkflowReport, serializeWorkflowResult };
+export {
+  tokenizeExpression,
+  parseExpression,
+  compileConditionExpr,
+  collectQualityRefs,
+  ExpressionError,
+} from './expression';
+export type { ExprNode, QualitiesRecord } from './expression';
+export { parseEffects, compileEffects, collectEffectRefs, EffectError } from './effects';
+export type { EffectNode } from './effects';
+export {
+  markdownToHtml,
+  compileContent,
+  hasDynamicContent,
+  collectInterpolationRefs,
+  createRng,
+} from './content';
+export type { CompiledContent, Rng } from './content';
 export type {
   AuthorGameAst,
+  AuthorHudNode,
   AuthorLinkNode,
+  AuthorPositions,
   AuthorQualityNode,
   AuthorQualityType,
   AuthorSituationNode,
+  AuthorThemeNode,
 } from './parser';
-export type { CompileError, CompileOutput } from './compiler';
+export type { CompileError, CompileOutput, CompileAstOptions } from './compiler';
 export type { LintDiagnostic, LintOutput, LintSeverity } from './linter';
-export type { WorkflowResult } from './workflow';
+export type { WorkflowResult, WorkflowOptions } from './workflow';
 
 export interface CompileOptions {
   markdown?: boolean;
   validate?: boolean;
   linting?: boolean;
+  /** Seed for adaptive-text randomness (tests); unseeded uses Math.random. */
+  randomSeed?: number;
 }
 
 export interface CompileResult {
@@ -49,8 +72,8 @@ export interface CompileResult {
   warnings?: string[];
 }
 
-export function compileGame(source: string, _options?: CompileOptions): CompileResult {
-  const result = workflowExecute(source);
+export function compileGame(source: string, options?: CompileOptions): CompileResult {
+  const result = workflowExecute(source, { randomSeed: options?.randomSeed });
 
   return {
     game: result.config,

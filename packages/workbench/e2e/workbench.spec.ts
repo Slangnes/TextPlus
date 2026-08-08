@@ -239,6 +239,74 @@ test.describe('workbench', () => {
     expect(p0.height).not.toBe(p2.height);
   });
 
+  test('conditions gate links until effects open them', async ({ page }) => {
+    // Teleport straight to the vault via the map — the lantern was never
+    // taken, so the gated link must be hidden.
+    await page.locator('.map-node[data-situation-id="vault"]').click();
+    await expect(page.locator('.tp-title')).toHaveText('The Vault of Returns');
+    await expect(page.locator('.tp-link', { hasText: 'Read awhile by lantern light' })).toHaveCount(0);
+
+    // Restart and walk the lantern route: the link effect sets lantern = true.
+    await page.locator('#btn-restart').click();
+    await page.locator('.tp-link', { hasText: 'Take the lantern and descend' }).click();
+    await page.locator('.tp-link', { hasText: 'Follow the sound of turning pages' }).click();
+    await expect(page.locator('.tp-title')).toHaveText('The Vault of Returns');
+    await expect(page.locator('.tp-link', { hasText: 'Read awhile by lantern light' })).toBeVisible();
+  });
+
+  test('adaptive text and interpolation render live values', async ({ page }) => {
+    await page.locator('.tp-link', { hasText: 'Take the lantern and descend' }).click();
+    await expect(page.locator('.tp-body')).toContainText(
+      /(page turns by itself|dark between the shelves breathes|settles with a sound like a sigh)/,
+    );
+    // curiosity starts at 1; the lantern link's effect raised it to 2.
+    await expect(page.locator('.tp-body')).toContainText('Your curiosity stands at 2');
+  });
+
+  test('syntax highlighting tokenizes link lines fine-grained', async ({ page }) => {
+    const linkLine = page.locator('.view-line', { hasText: '=>' }).first();
+    await expect(linkLine).toBeVisible();
+    const distinctClasses = await linkLine
+      .locator('span span')
+      .evaluateAll((spans) => [...new Set(spans.map((span) => span.className))].filter(Boolean));
+    expect(distinctClasses.length).toBeGreaterThan(3);
+  });
+
+  test('HUD meter tracks effects and the badge appears when earned', async ({ page }) => {
+    const meter = page.locator('.tp-hud__meter[data-quality-id="curiosity"] [role="progressbar"]');
+    await expect(meter).toHaveAttribute('aria-valuenow', '1');
+    await expect(page.locator('.tp-hud__badge')).toHaveCount(0);
+
+    // The lantern link's effects: lantern = true, curiosity += 1.
+    await page.locator('.tp-link', { hasText: 'Take the lantern and descend' }).click();
+    await expect(meter).toHaveAttribute('aria-valuenow', '2');
+    await expect(page.locator('.tp-hud__badge')).toHaveText('Lantern lit');
+  });
+
+  test('theme rules re-skin the preview when state crosses the threshold', async ({ page }) => {
+    await setSource(
+      page,
+      `title: Theme Test
+
+quality sanity number = 100 min 0 max 100
+
+hud sanity meter "Sanity"
+theme dark when sanity < 50
+
+:: start [start]
+The Edge
+Your sanity holds, for now.
+
+-> Stare into the void => start { sanity -= 60 }
+`,
+    );
+    await expect(page.locator('#status')).toContainText('Theme Test');
+    await expect(page.locator('#preview-game')).not.toHaveAttribute('data-theme', 'dark');
+
+    await page.locator('.tp-link', { hasText: 'Stare into the void' }).click();
+    await expect(page.locator('#preview-game')).toHaveAttribute('data-theme', 'dark');
+  });
+
   test('status bar reports cursor position', async ({ page }) => {
     await page.locator('.monaco-editor .view-lines').click();
     await expect(page.locator('#status-cursor')).toHaveText(/Ln \d+, Col \d+/);

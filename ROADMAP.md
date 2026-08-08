@@ -13,9 +13,9 @@ This document tracks the features, deliverables, and milestones for the TextPlus
 |-----------|--------|----------|--------|
 | **M0: Bootstrap** | ✅ COMPLETE | 100% | Project setup infrastructure |
 | **M1: Core** | ✅ COMPLETE | 100% | 5-6 weeks (80%+ test coverage) |
-| **M2: Author** | 🚧 IN PROGRESS | 45% | Parser + compiler + linter + workflow + workbench graph preview |
+| **M2: Author** | 🚧 IN PROGRESS | 85% | Conditions, effects, markdown, adaptive text, HUD/theme directives all live; scaffold CLI remains |
 | **M3: Map** | 🚧 IN PROGRESS | 20% | Auto-layout + config adapter done (workbench map view) |
-| **M4: Convert** | ⏳ PENDING | 0% | Can start after M1 |
+| **M4: Convert** | 🚧 IN PROGRESS | 15% | Plain-text transcript → DSL slice done; engine formats + merging remain |
 | **M5: Integration** | ⏳ PENDING | 0% | Final release, demo |
 
 ---
@@ -30,6 +30,7 @@ This document tracks the features, deliverables, and milestones for the TextPlus
 
 ### Roadmap Changelog
 
+- **2026-08-08**: Phase 2B shipped: DSL conditions now evaluate at runtime (safe expression language, no eval), links and situations mutate qualities via `{ effects }` brace blocks, markdown (escape-first, built-in) and adaptive text (`[oneOf|randomly|frequently|rarely]`, `{quality}` interpolation) compile into content. Declarative HUD (`hud <quality> meter|badge|readout`) and state-driven theming (`theme <name> when <expr>`) land in core (`renderHud`/`applyHudThemes`) and the workbench preview. Fine-grained Monarch grammar extracted to `dsl-language.ts` (unit-tested as data). M4 first slice: `transcriptToDsl` converts plain-text transcripts to compiling DSL (round-trip acceptance test). All four workbench examples now exercise the full surface.
 - **2026-08-07**: Workbench editor upgraded to Monaco (monaco-editor 0.56): TextPlus DSL syntax highlighting (Monarch grammar), palette-matched light/dark themes, line numbers that stay correct under word wrap, diagnostic squiggles from the lint pipeline. Verified Transmatte's license factually (public domain) in CREDITS.md; documented the Trizbort parity gap in `packages/map/README.md`. Added "Beyond Text" vision section (rich interfaces, HUDs).
 - **2026-08-07**: Workbench: configurable 1-4 panel layout (each panel hosts any module or nothing; drag-resizable splitters, 4-panel center handle, 3-panel solo-position control; persisted), bottom status bar (compile state / current situation / cursor), editor word wrap. Added Playwright E2E suite (16 scenarios) with tracing always on — trace.zip artifacts are the release visual-QA vector (see CLAUDE.md).
 - **2026-08-07**: Added `@textplus/workbench` browser authoring app (DSL editor | live playable preview | story map | diagnostics, in-app modals with suppressible confirmations per CLAUDE.md convention). Implemented first M3 slice in `@textplus/map`: layered-BFS auto-layout + `graphFromConfig` adapter with 15 real unit tests (replacing placeholders). Added DSL adaptations of all three demo games as workbench examples.
@@ -354,20 +355,22 @@ Required phase gates:
 - [x] 70 total real tests covering all M2A functionality
 - [x] 96.49% package coverage on implemented slices
 
-### Phase 2B: Deferred (Post-M2)
-- [ ] Condition parsing in links (currently stored as string)
-- [ ] Markdown processor (multiline content HTML conversion)
-- [ ] Adaptive text evaluation (oneOf, randomly semantics)
+### Phase 2B: Shipped 2026-08-08 (scaffold CLI remains)
+- [x] Condition parsing in links — safe expression language (`packages/author/src/expression.ts`), compiled to pure closures, evaluated by the engine at runtime
+- [x] Effects — `{ quality += n, flag = true }` brace blocks on links (onChoose) and situation entry lines (onEnter) (`packages/author/src/effects.ts`)
+- [x] Markdown processor — escape-first built-in converter (`packages/author/src/content.ts`)
+- [x] Adaptive text evaluation — `[oneOf | randomly | frequently | rarely]` spans + `{quality}` interpolation, seeded RNG for tests
+- [x] HUD + theme directives — `hud`/`theme ... when ...` compile to `GameConfig.hud` (core `renderHud`/`applyHudThemes`)
 - [ ] Project scaffold CLI tool
-- [ ] Hot module reloading for authoring workflows
+- [x] Hot module reloading for authoring workflows — workbench source aliasing
 
 ### Must Have (M2 Completion)
 - [x] Parse Raconteur-style DSL ✓
 - [x] Compile to valid TextPlus Core game objects ✓
 - [x] Detect structural problems (orphaned situations, broken links) ✓
-- [ ] Support Markdown in situation content (Phase 2B)
-- [ ] Preserve adaptive text helpers (Phase 2B)
-- [ ] 50+ unit tests (currently 52 real + 8 scaffolded) ✓ for implemented slices
+- [x] Support Markdown in situation content ✓ (escape-first built-in)
+- [x] Preserve adaptive text helpers ✓ (oneOf/randomly/frequently/rarely + interpolation)
+- [x] 50+ unit tests — 140+ real tests across the author package ✓
 - [ ] Project scaffold CLI tool (Phase 2B)
 - [ ] Backward compatibility with Raconteur games (research phase)
 
@@ -434,13 +437,13 @@ Required phase gates:
 - [ ] CLI interface (`textplus-convert`)
 
 ### Must Have
-- [ ] Parse Z-machine/Glulx transcripts
-- [ ] Output Raconteur DSL
+- [x] Parse plain-text (Z-machine-style) transcripts — first slice, `packages/convert/src/transcript.ts`
+- [x] Output TextPlus DSL — `transcriptToDsl`, round-trip compile acceptance test
 - [ ] Output standalone HTML (via Core)
 - [ ] Output Trizbort map
 - [ ] CLI tool
-- [ ] 70+ unit tests for parsing
-- [ ] Support Z-machine, Glulx, Inform 7, TADS 3
+- [ ] 70+ unit tests for parsing (13 real so far)
+- [ ] Engine-specific format support: Glulx, Inform 7, TADS 3
 
 ### Should Have
 - [ ] Multi-transcript merging
@@ -516,8 +519,8 @@ Anchor points that already exist in `@textplus/core`:
 - `applyTheme` supports state-driven re-theming (e.g. the world darkens as sanity drops — Memory Keeper already wants this).
 
 Candidate work (promote into milestones as they firm up):
-- [ ] Quality-driven HUD panel: declarative binding of qualities to meters/badges/readouts, renderable in a workbench panel and in exported games
-- [ ] DSL surface for presentation: theme/interface directives so authors reach these tools without writing TypeScript
+- [x] Quality-driven HUD panel — `hud <quality> meter|badge|readout ["label"]` → core `renderHud` (shipped 2026-08-08)
+- [x] DSL surface for presentation — `theme <name> when <expr>` state-driven theming → `applyHudThemes` (shipped 2026-08-08)
 - [ ] Situation "modes" (interface switching per situation tags — AMFV's communions/simulation jumps as a first-class idea)
 - [ ] Timed/dynamic text and scheduled events (beyond click-driven transitions)
 - [ ] Media situations: illustrations, ambient audio hooks, soundscapes

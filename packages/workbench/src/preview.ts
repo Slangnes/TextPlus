@@ -6,7 +6,7 @@
  * current state across when the edited story still supports it.
  */
 
-import { createGame, DomRenderer, renderQualities } from '@textplus/core';
+import { createGame, DomRenderer, renderQualities, renderHud, applyHudThemes } from '@textplus/core';
 import type { GameConfig, GameEngine } from '@textplus/core';
 
 export interface MountOptions {
@@ -71,7 +71,13 @@ export class PreviewHost {
     this.renderer.render(situation, this.engine, this.container);
 
     const qualities = this.engine.getAllQualities();
-    if (Object.keys(qualities).length > 0) {
+    const hud = this.engine.config.hud;
+    if (hud) {
+      renderHud(hud, qualities, this.container);
+      if (hud.themes) {
+        applyHudThemes(hud.themes, qualities, this.container);
+      }
+    } else if (Object.keys(qualities).length > 0) {
       renderQualities(qualities, this.container);
     }
 

@@ -12,8 +12,11 @@
  * - Transcript validation and repair
  */
 
-// Placeholder - will be implemented in Milestone 4
 export const VERSION = '0.0.1';
+
+// Implemented (M4 first slice): plain-text transcript → linear DSL story.
+export { parseTranscriptText, transcriptToDsl } from './transcript';
+export type { TranscriptMove, TranscriptToDslOptions } from './transcript';
 
 export interface TranscriptParseOptions {
   engine?: 'zmachine' | 'glulx' | 'inform7' | 'tads3';

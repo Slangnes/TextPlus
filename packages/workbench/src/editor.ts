@@ -11,12 +11,13 @@
 
 import * as monaco from 'monaco-editor';
 import EditorWorker from 'monaco-editor/editor/editor.worker.js?worker';
+import { DSL_LANGUAGE_ID, dslMonarchLanguage, dslThemes } from './dsl-language';
 
 self.MonacoEnvironment = {
   getWorker: () => new EditorWorker(),
 };
 
-const LANGUAGE_ID = 'textplus';
+const LANGUAGE_ID = DSL_LANGUAGE_ID;
 
 export interface EditorMarker {
   line: number;
@@ -45,46 +46,12 @@ function registerLanguage(): void {
   languageReady = true;
 
   monaco.languages.register({ id: LANGUAGE_ID });
-  monaco.languages.setMonarchTokensProvider(LANGUAGE_ID, {
-    tokenizer: {
-      root: [
-        [/^title:.*/, 'keyword'],
-        [/^quality\b.*/, 'type'],
-        [/^::.*/, 'metatag'],
-        [/^\s*->.*?=>.*/, 'string'],
-      ],
-    },
-  });
-
-  monaco.editor.defineTheme('textplus-light', {
-    base: 'vs',
-    inherit: true,
-    rules: [
-      { token: 'metatag', foreground: '2c1810', fontStyle: 'bold' },
-      { token: 'keyword', foreground: '9a6d1f' },
-      { token: 'type', foreground: '3f7d4e' },
-      { token: 'string', foreground: '8b6f47' },
-    ],
-    colors: {
-      'editor.background': '#ffffff',
-      'editorLineNumber.foreground': '#8a8378',
-    },
-  });
-
-  monaco.editor.defineTheme('textplus-dark', {
-    base: 'vs-dark',
-    inherit: true,
-    rules: [
-      { token: 'metatag', foreground: 'fef5e7', fontStyle: 'bold' },
-      { token: 'keyword', foreground: 'd9b36a' },
-      { token: 'type', foreground: '8cc39a' },
-      { token: 'string', foreground: 'd4a574' },
-    ],
-    colors: {
-      'editor.background': '#3d3935',
-      'editorLineNumber.foreground': '#9a938a',
-    },
-  });
+  monaco.languages.setMonarchTokensProvider(
+    LANGUAGE_ID,
+    dslMonarchLanguage as unknown as monaco.languages.IMonarchLanguage,
+  );
+  monaco.editor.defineTheme('textplus-light', dslThemes['textplus-light']);
+  monaco.editor.defineTheme('textplus-dark', dslThemes['textplus-dark']);
 }
 
 export function createEditor(container: HTMLElement, initial: string): WorkbenchEditor {

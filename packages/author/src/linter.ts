@@ -6,6 +6,9 @@
  */
 
 import type { AuthorGameAst } from './parser';
+import { parseExpression, collectQualityRefs } from './expression';
+import { parseEffects, collectEffectRefs } from './effects';
+import { collectInterpolationRefs } from './content';
 
 export type LintSeverity = 'error' | 'warning' | 'info';
 
@@ -15,6 +18,8 @@ export interface LintDiagnostic {
   message: string;
   situation?: string;
   link?: string;
+  /** 1-based source line, when known. */
+  line?: number;
 }
 
 export interface LintOutput {
@@ -98,6 +103,127 @@ export function lintAST(ast: AuthorGameAst): LintOutput {
     });
   });
 
+  // Validate conditions and effects (parse errors, unknown/mistyped qualities)
+  const declaredQualities = new Set(Object.keys(ast.qualities));
+  const structuredRefs = new Set<string>();
+
+  const lineOf = (kind: 'links' | 'entryEffects', situationId: string, index: number): number | undefined =>
+    ast.positions?.[kind]?.[situationId]?.[index];
+  const prefix = (line: number | undefined): string => (line !== undefined ? `Line ${line}: ` : '');
+
+  const checkEffects = (source: string, line: number | undefined, situationId: string): void => {
+    let nodes;
+    try {
+      nodes = parseEffects(source);
+    } catch (error) {
+      diagnostics.push({
+        severity: 'error',
+        code: 'effect-parse-error',
+        message: `${prefix(line)}invalid effects "{ ${source} }": ${(error as Error).message}`,
+        situation: situationId,
+        line,
+      });
+      return;
+    }
+    collectEffectRefs(nodes).forEach((ref) => structuredRefs.add(ref));
+    nodes.forEach((node) => {
+      if (!declaredQualities.has(node.qualityId)) {
+        diagnostics.push({
+          severity: 'warning',
+          code: 'unknown-quality-in-effect',
+          message: `${prefix(line)}effect references undeclared quality "${node.qualityId}"`,
+          situation: situationId,
+          line,
+        });
+      } else if (node.kind === 'mutate' && ast.qualities[node.qualityId].type !== 'number') {
+        diagnostics.push({
+          severity: 'error',
+          code: 'effect-type-mismatch',
+          message: `${prefix(line)}cannot apply += or -= to non-number quality "${node.qualityId}"`,
+          situation: situationId,
+          line,
+        });
+      }
+    });
+  };
+
+  Object.entries(ast.situations).forEach(([situationId, situation]) => {
+    situation.links.forEach((link, index) => {
+      const line = lineOf('links', situationId, index);
+      if (link.condition) {
+        try {
+          collectQualityRefs(parseExpression(link.condition)).forEach((ref) => {
+            structuredRefs.add(ref);
+            if (!declaredQualities.has(ref)) {
+              diagnostics.push({
+                severity: 'warning',
+                code: 'unknown-quality-in-condition',
+                message: `${prefix(line)}condition references undeclared quality "${ref}"`,
+                situation: situationId,
+                line,
+              });
+            }
+          });
+        } catch (error) {
+          diagnostics.push({
+            severity: 'error',
+            code: 'condition-parse-error',
+            message: `${prefix(line)}invalid condition "${link.condition}": ${(error as Error).message}`,
+            situation: situationId,
+            line,
+          });
+        }
+      }
+      if (link.effects) {
+        checkEffects(link.effects, line, situationId);
+      }
+    });
+
+    (situation.onEnterEffects ?? []).forEach((source, index) => {
+      checkEffects(source, lineOf('entryEffects', situationId, index), situationId);
+    });
+
+    collectInterpolationRefs(situation.content).forEach((ref) => structuredRefs.add(ref));
+  });
+
+  // Validate hud declarations and theme rules
+  (ast.hud ?? []).forEach((node, index) => {
+    const line = ast.positions?.hud?.[index];
+    structuredRefs.add(node.qualityId);
+    if (!declaredQualities.has(node.qualityId)) {
+      diagnostics.push({
+        severity: 'warning',
+        code: 'unknown-quality-in-hud',
+        message: `${prefix(line)}hud references undeclared quality "${node.qualityId}"`,
+        line,
+      });
+    }
+  });
+
+  (ast.themes ?? []).forEach((node, index) => {
+    const line = ast.positions?.themes?.[index];
+    try {
+      collectQualityRefs(parseExpression(node.when)).forEach((ref) => {
+        structuredRefs.add(ref);
+        if (!declaredQualities.has(ref)) {
+          diagnostics.push({
+            severity: 'warning',
+            code: 'unknown-quality-in-condition',
+            message: `${prefix(line)}theme rule references undeclared quality "${ref}"`,
+            line,
+          });
+        }
+      });
+    } catch (error) {
+      diagnostics.push({
+        severity: 'error',
+        code: 'condition-parse-error',
+        message: `${prefix(line)}invalid theme condition "${node.when}": ${(error as Error).message}`,
+        line,
+      });
+    }
+  });
+
   // Check for unused qualities (defined but never referenced)
   const usedQualities = new Set<string>();
   Object.values(ast.situations).forEach((situation) => {
@@ -113,7 +239,7 @@ export function lintAST(ast: AuthorGameAst): LintOutput {
   });
 
   Object.keys(ast.qualities).forEach((qualityId) => {
-    if (!usedQualities.has(qualityId)) {
+    if (!usedQualities.has(qualityId) && !structuredRefs.has(qualityId)) {
       diagnostics.push({
         severity: 'warning',
         code: 'unused-quality',

@@ -25,11 +25,16 @@ export interface WorkflowResult {
   warnings: string[];
 }
 
+export interface WorkflowOptions {
+  /** Seed for adaptive-text randomness (tests); unseeded uses Math.random. */
+  randomSeed?: number;
+}
+
 /**
  * Execute complete DSL → GameConfig workflow
  * Returns AST, compiled config, and all diagnostics
  */
-export function workflowExecute(source: string): WorkflowResult {
+export function workflowExecute(source: string, options: WorkflowOptions = {}): WorkflowResult {
   const result: WorkflowResult = {
     success: false,
     source,
@@ -65,7 +70,7 @@ export function workflowExecute(source: string): WorkflowResult {
 
   // Step 3: Compile (even if lint warnings exist)
   if (result.ast) {
-    const compileOutput = compileAST(result.ast);
+    const compileOutput = compileAST(result.ast, { randomSeed: options.randomSeed });
 
     if (compileOutput.errors.length > 0) {
       compileOutput.errors.forEach((err) => {

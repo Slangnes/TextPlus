@@ -36,7 +36,9 @@ describe('PreviewHost', () => {
     host.mount(compile(SAMPLE_STORY));
     expect(container.querySelector('.tp-title')?.textContent).toBe('The Reading Room');
     expect(container.querySelectorAll('.tp-link').length).toBe(2);
-    expect(container.querySelector('.tp-qualities')).not.toBeNull();
+    // The sample declares a HUD, which replaces the plain qualities list.
+    expect(container.querySelector('.tp-hud')).not.toBeNull();
+    expect(container.querySelector('.tp-hud [role="progressbar"]')).not.toBeNull();
   });
 
   it('navigates when a link is clicked', () => {

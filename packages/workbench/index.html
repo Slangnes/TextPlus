@@ -355,6 +355,101 @@
     .tp-quality__name { color: var(--wb-text-dim); }
     .tp-quality__value { font-weight: bold; }
 
+    /* --- Declarative HUD (core renderHud output) --------------------------- */
+
+    .tp-hud {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px 18px;
+      padding: 12px 16px;
+      background: var(--wb-surface-alt);
+      border-left: 4px solid var(--wb-accent);
+      border-radius: 4px;
+      margin-bottom: 16px;
+    }
+
+    .tp-hud__meter {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 180px;
+    }
+
+    .tp-hud__label {
+      font-size: 12px;
+      color: var(--wb-text-dim);
+      white-space: nowrap;
+    }
+
+    .tp-hud__track {
+      flex: 1;
+      min-width: 70px;
+      height: 10px;
+      background: var(--wb-border);
+      border-radius: 5px;
+      overflow: hidden;
+    }
+
+    .tp-hud__fill {
+      height: 100%;
+      background: var(--wb-accent);
+      border-radius: 5px;
+      transition: width 0.3s ease;
+    }
+
+    .tp-hud__value {
+      font-size: 12px;
+      font-weight: bold;
+      min-width: 2ch;
+    }
+
+    .tp-hud__badge {
+      padding: 3px 10px;
+      font-size: 12px;
+      font-weight: bold;
+      background: var(--wb-accent);
+      color: var(--wb-accent-ink);
+      border-radius: 10px;
+    }
+
+    .tp-hud__readout {
+      display: flex;
+      gap: 6px;
+      align-items: baseline;
+    }
+
+    /* State-driven theme: preview darkens when a game's theme rule matches. */
+    #preview-game[data-theme='dark'] {
+      background: #2c2420;
+      border-radius: 8px;
+      padding: 12px;
+      transition: background 0.5s ease;
+    }
+
+    #preview-game[data-theme='dark'] .tp-content {
+      background: #3d3935;
+      color: #c0bbb3;
+    }
+
+    #preview-game[data-theme='dark'] .tp-title { color: #fef5e7; }
+
+    #preview-game[data-theme='dark'] .tp-link {
+      background: #4a4540;
+      border-color: #8b6f47;
+      color: #fef5e7;
+    }
+
+    #preview-game[data-theme='dark'] .tp-hud {
+      background: #35312d;
+      border-left-color: #8b6f47;
+    }
+
+    #preview-game[data-theme='dark'] .tp-hud__value,
+    #preview-game[data-theme='dark'] .tp-hud__label {
+      color: #c0bbb3;
+    }
+
     /* --- Story map --------------------------------------------------------- */
 
     .map-svg { max-width: none; }

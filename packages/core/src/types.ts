@@ -81,6 +81,39 @@ export interface SituationDefinition {
 }
 
 /**
+ * One HUD element bound to a quality.
+ */
+export interface HudEntryConfig {
+  /** Quality this element displays */
+  qualityId: string;
+  /** meter: progress bar (uses min/max); badge: shown when truthy; readout: name+value */
+  kind: 'meter' | 'badge' | 'readout';
+  /** Display label; defaults to the quality's name */
+  label?: string;
+}
+
+/**
+ * A state-driven theme rule ("theme dark when sanity < 30").
+ * Rules are evaluated in declaration order; the last matching rule wins.
+ */
+export interface HudThemeRule {
+  /** Theme name applied as a data-theme attribute */
+  theme: string;
+  /** Pure predicate over the current qualities */
+  when: (qualities: Record<string, QualityValue>) => boolean;
+  /** Optional CSS custom properties applied alongside the theme */
+  variables?: Record<string, string>;
+}
+
+/**
+ * Declarative HUD: quality-bound display elements plus optional theme rules.
+ */
+export interface HudConfig {
+  entries: HudEntryConfig[];
+  themes?: HudThemeRule[];
+}
+
+/**
  * Complete game configuration
  */
 export interface GameConfig {
@@ -92,6 +125,8 @@ export interface GameConfig {
   qualities: Record<string, QualityDefinition>;
   /** All situations in the game */
   situations: Record<string, SituationDefinition>;
+  /** Optional declarative HUD and state-driven theming */
+  hud?: HudConfig;
   /** Optional game metadata */
   author?: string;
   version?: string;

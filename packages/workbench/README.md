@@ -32,9 +32,27 @@ E2E runs write a `trace.zip` per test to `test-results/` — the visual QA artif
 
 The Vite config aliases `@textplus/core` and `@textplus/author` to their **source** entrypoints, so edits to those packages hot-reload the workbench without a rebuild.
 
+## DSL quick reference
+
+```
+title: My Story
+quality courage number = 5 min 0 max 10
+hud courage meter "Courage"
+theme dark when courage < 3
+
+:: start [start]
+Situation Title
+{ courage += 1 }                          # entry effects
+Prose with **markdown**, {courage} interpolation,
+and [oneOf: variants | that cycle].
+
+-> Choice text => target ? courage >= 6 { courage -= 1 }
+```
+
+Conditions evaluate at runtime (links hide until true); effects mutate qualities on choose/entry; the HUD and theme rules react live in the Play panel.
+
 ## Known Gaps
 
-- Link conditions (`-> text => target ? condition`) are accepted by the parser but not evaluated (Author Phase 2B) — conditional links always show. The demo-game DSL adaptations flatten those mechanics accordingly.
-- No Markdown rendering in situation content (Author Phase 2B).
 - No DSL autocomplete or hover docs in the editor yet (Monaco makes these natural next steps).
 - Map view is read-only layout — see `packages/map/README.md` for the full Trizbort parity gap.
+- No situation "modes"/timed text/media hooks yet — see ROADMAP "Beyond Text".

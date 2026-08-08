@@ -1,0 +1,30 @@
+WEST OF HOUSE
+You are standing in an open field west of a white house, with a boarded
+front door. There is a small mailbox here.
+
+[Score: 0  Moves: 0]
+
+> open mailbox
+Opening the small mailbox reveals a leaflet.
+
+> read leaflet
+WELCOME TO THE ARCHIVE!
+This leaflet explains nothing, which is traditional. A path leads north
+toward a dusty library.
+
+> go north
+The Reading Room
+Dust motes drift through amber light. Shelves tower over you, and a brass
+lantern rests on the desk.
+-> this arrow starts a line of prose, not a link
+:: this also looks like a directive
+
+> take lantern
+Taken. The lantern is surprisingly warm.
+
+*** You are carrying a lantern ***
+
+> down
+The Lower Stacks
+Lantern light sways across leaning shelves. Somewhere below, a page turns
+by itself.

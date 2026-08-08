@@ -11,6 +11,9 @@ export type {
   GameConfig,
   GameEngine,
   GameState,
+  HudConfig,
+  HudEntryConfig,
+  HudThemeRule,
   SituationDefinition,
   SituationLink,
   QualityDefinition,
@@ -21,6 +24,9 @@ export type {
   SituationRenderer,
   StorageHandler
 } from './types';
+
+// Export HUD renderer
+export { renderHud, applyHudThemes } from './hud';
 
 // Export main engine
 export { TextPlusGameEngine, createGame } from './engine';
