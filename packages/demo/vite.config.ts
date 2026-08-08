@@ -8,7 +8,9 @@ export default defineConfig({
   root: __dirname,
   resolve: {
     alias: {
-      '@textplus/core': resolve(__dirname, '../core/dist/index.mjs'),
+      // Alias to core source (same pattern as workbench) so demos build and
+      // dev-serve against current sources with no prior core build step.
+      '@textplus/core': resolve(__dirname, '../core/src/index.ts'),
     },
   },
   build: {
@@ -22,9 +24,6 @@ export default defineConfig({
         'memory-keeper': resolve(__dirname, 'memory-keeper/index.html'),
       },
     },
-  },
-  optimizeDeps: {
-    include: ['@textplus/core'],
   },
   server: {
     port: 5174,
