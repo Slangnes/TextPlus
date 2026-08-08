@@ -1,6 +1,6 @@
 # @textplus/workbench
 
-Browser authoring environment for TextPlus: write DSL in the left pane, play the compiled game live in the right pane, with lint/compile diagnostics streaming below.
+Browser authoring environment for TextPlus: a 1–4 panel workspace where each panel hosts the Editor, live Play preview, story Map, or Diagnostics — recompiling as you type.
 
 ## Module Inventory
 
@@ -14,7 +14,7 @@ Browser authoring environment for TextPlus: write DSL in the left pane, play the
 | `src/settings.ts` | User preferences (confirmation dialogs on/off), localStorage-backed |
 | `src/modal.ts` | In-app modal dialogs (`confirmAction`, `openImportDialog`, `openSettingsDialog`) — native popups are banned project-wide, see CLAUDE.md |
 | `src/examples.ts` | Blank template + four example stories (DSL tour and adaptations of all three demo games); must always compile clean |
-| `src/main.ts` | DOM glue: editor, gutter, debounce, toolbar (New / example picker / Import / Export / Restart / Settings), Play↔Map tabs, diagnostics bar with click-to-line |
+| `src/main.ts` | DOM glue: editor, compile debounce, toolbar (New / example picker / Import / Export / Restart / Settings), 1–4 panel layout with drag splitters, status bar, diagnostics with click-to-line |
 
 ## Usage
 
@@ -55,5 +55,5 @@ Conditions evaluate at runtime (links hide until true); effects mutate qualities
 ## Known Gaps
 
 - No DSL autocomplete or hover docs in the editor yet (Monaco makes these natural next steps).
-- Map view is read-only layout — see `packages/map/README.md` for the full Trizbort parity gap.
+- Map view is read-only layout — see `packages/map/ROADMAP.md` for the full Trizbort parity gap.
 - No situation "modes"/timed text/media hooks yet — see ROADMAP "Beyond Text".

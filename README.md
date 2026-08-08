@@ -18,28 +18,61 @@ Interactive fiction has a rich history, but many of the best tools are unmaintai
 The four tools work together as a coherent pipeline:
 
 ```
-Parser IF game → Transcript (Transmatte) → Hypertext HTML (Undum/Raconteur) → Visual Map (Trizbort)
+Parser IF game → Transcript (Convert) → TextPlus DSL (Author) → Playable hypertext (Core) → Visual Map (Map)
+```
+
+…and the **Workbench** wraps the whole pipeline in a browser: paste a transcript, edit the story, play it live, and watch the map draw itself.
+
+---
+
+## Packages
+
+npm workspaces monorepo under `packages/*`. Dependency direction: `core` ← `author` ← (`map`, `convert`) ← `demo`/`workbench`.
+
+| Package | Upstream inspiration | Status | What it is |
+|---|---|---|---|
+| `@textplus/core` | [Undum](https://github.com/idmillington/undum) | ✅ M1 complete | ES-module runtime: engine, qualities, situations, DOM renderer, HUD/themes, storage |
+| `@textplus/author` | [Raconteur](https://github.com/sequitur/raconteur) | 🚧 M2 feature-complete | Authoring DSL: parser → compiler → linter → workflow, plus the `textplus-author` / `create-textplus-game` CLI |
+| `@textplus/map` | [Trizbort.io](https://github.com/henck/trizbort) | 🚧 M3 first slice | Story-graph auto-layout + GameConfig adapter (powers the Workbench map) |
+| `@textplus/convert` | [Transmatte](https://eblong.com/zarf/transmatte/) | 🚧 M4 first slice | Plain-text transcript → compiling TextPlus DSL (the Workbench Import feature) |
+| `@textplus/demo` | — | ✅ | Three playable example games built directly on core |
+| `@textplus/workbench` | — | ✅ active | Browser authoring app: Monaco editor, live preview, map, diagnostics, import/export |
+
+Each package documents its own surface, verification, and gaps in `packages/<name>/ROADMAP.md` (or a short `README.md`); repo-wide sequencing lives in [ROADMAP.md](./ROADMAP.md).
+
+---
+
+## Quick start
+
+Requires Node 20+.
+
+```bash
+npm install
+npm run workbench        # authoring app on http://localhost:5175
+```
+
+Try it: pick an example from the toolbar, edit the DSL and watch the preview/map react, or click **Import** and paste a parser-IF transcript.
+
+Other entry points:
+
+```bash
+npm run dev --workspace=@textplus/demo                        # example games on :5174
+npm run build                                                 # build every package
+node packages/author/bin/create-textplus-game.mjs MyGame .    # scaffold a starter game (after build)
+node packages/author/bin/textplus-author.mjs compile MyGame/game.tp.txt
 ```
 
 ---
 
-## Components
+## Testing
 
-| Component | Source Upstream | Goal |
-|---|---|---|
-| **TextPlus Core** | [Undum](https://github.com/idmillington/undum) | Modern ES module re-build of the Undum client-side framework |
-| **TextPlus Author** | [Raconteur](https://github.com/sequitur/raconteur) | Updated authoring DSL and build toolchain on top of TextPlus Core |
-| **TextPlus Map** | [Trizbort.io](https://github.com/henck/trizbort) | Automated room/connection inference and code-gen improvements |
-| **TextPlus Convert** | [Transmatte](https://eblong.com/zarf/transmatte/) | CLI/library to convert parser IF transcripts to Undum-style hypertext |
+The project's test layer is a **traced Playwright E2E suite** — every test records a `trace.zip` carrying both verification vectors at once: the visual film-strip/DOM snapshots and the code-level log of actions, console, and network. Traces are the release QA artifacts.
 
----
-
-## Status
-
-Phase 0 bootstrap is complete and Phase 1 core implementation is in progress.
-
-- Use [ROADMAP.md](./ROADMAP.md) for live milestone status, coverage targets, and remaining work.
-- Use package-level READMEs under `packages/*/README.md` for module inventory, verification commands, and current gaps.
+```bash
+npm run test:all         # tsc strict lint + all builds + the traced E2E suite
+npm run test:e2e         # the suite alone; traces land in packages/workbench/test-results/
+npx playwright show-trace <path>/trace.zip   # inspect a trace
+```
 
 ---
 
