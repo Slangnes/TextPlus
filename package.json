@@ -25,6 +25,10 @@
     "test:convert": "vitest run packages/convert --coverage --coverage.include=packages/convert/src/**",
     "test:convert:watch": "vitest packages/convert --watch",
     "test:convert:e2e": "vitest run packages/convert/test/e2e",
+    "test:workbench": "vitest run packages/workbench --coverage --coverage.include=packages/workbench/src/**",
+    "test:workbench:watch": "vitest packages/workbench --watch",
+    "test:e2e": "npm run test:e2e --workspace=@textplus/workbench",
+    "workbench": "npm run dev --workspace=@textplus/workbench",
     "lint": "npm run --workspaces lint",
     "build": "npm run --workspaces build",
     "dev": "npm run --workspaces dev",
@@ -41,6 +45,7 @@
   "author": "TextPlus Contributors",
   "license": "MIT",
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
     "@types/jsdom": "^28.0.1",
     "@types/node": "^20.10.6",
     "@vitest/coverage-v8": "^1.1.0",

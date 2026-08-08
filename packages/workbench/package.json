@@ -1,0 +1,21 @@
+{
+  "name": "@textplus/workbench",
+  "version": "0.0.1",
+  "description": "TextPlus Workbench - Browser authoring environment with live preview",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite",
+    "lint": "tsc --noEmit",
+    "test:e2e": "playwright test",
+    "clean": "rm -rf dist test-results playwright-report"
+  },
+  "devDependencies": {
+    "@textplus/author": "*",
+    "@textplus/core": "*",
+    "@textplus/map": "*",
+    "typescript": "^5.3.3",
+    "vite": "^5.0.8"
+  }
+}

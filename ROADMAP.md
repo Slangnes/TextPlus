@@ -13,8 +13,8 @@ This document tracks the features, deliverables, and milestones for the TextPlus
 |-----------|--------|----------|--------|
 | **M0: Bootstrap** | ✅ COMPLETE | 100% | Project setup infrastructure |
 | **M1: Core** | ✅ COMPLETE | 100% | 5-6 weeks (80%+ test coverage) |
-| **M2: Author** | 🚧 IN PROGRESS | 40% | Parser + compiler + linter + workflow integration |
-| **M3: Map** | ⏳ PENDING | 0% | Can start after M1+M2 |
+| **M2: Author** | 🚧 IN PROGRESS | 45% | Parser + compiler + linter + workflow + workbench graph preview |
+| **M3: Map** | 🚧 IN PROGRESS | 20% | Auto-layout + config adapter done (workbench map view) |
 | **M4: Convert** | ⏳ PENDING | 0% | Can start after M1 |
 | **M5: Integration** | ⏳ PENDING | 0% | Final release, demo |
 
@@ -30,6 +30,8 @@ This document tracks the features, deliverables, and milestones for the TextPlus
 
 ### Roadmap Changelog
 
+- **2026-08-07**: Workbench: configurable 1-4 panel layout (each panel hosts any module: Editor/Play/Map/Diagnostics, persisted). Added Playwright E2E suite (10 scenarios) with tracing always on — trace.zip artifacts are the release visual-QA vector (see CLAUDE.md).
+- **2026-08-07**: Added `@textplus/workbench` browser authoring app (DSL editor | live playable preview | story map | diagnostics, in-app modals with suppressible confirmations per CLAUDE.md convention). Implemented first M3 slice in `@textplus/map`: layered-BFS auto-layout + `graphFromConfig` adapter with 15 real unit tests (replacing placeholders). Added DSL adaptations of all three demo games as workbench examples.
 - **2026-04-21**: Resolved metadata and API blockers: aligned package entrypoints to dist outputs, removed stale CLI bin declarations, and replaced placeholder Author API throws with working implementations.
 - **2026-04-21**: Implemented M2 workflow integration (parse→compile→lint), 15 integration tests (100% coverage), formatters for diagnostic reports and JSON output.
 - **2026-04-21**: Implemented M2 linter slice (AST diagnostics), 15 real test cases.
@@ -369,8 +371,8 @@ Required phase gates:
 - [ ] Backward compatibility with Raconteur games (research phase)
 
 ### Should Have
-- [ ] Hot module reloading for dev server
-- [ ] Situation graph preview
+- [x] Hot module reloading for dev server — workbench aliases core/author/map sources through Vite HMR
+- [x] Situation graph preview — workbench Map tab (`packages/workbench/src/mapview.ts`)
 - [ ] Advanced linting (unreachable quality checks)
 
 ### Nice to Have
@@ -389,15 +391,15 @@ Required phase gates:
 **Placeholder Tests Ready**: 13 tests in `packages/map/test/unit/`
 
 ### Planned Implementation
-- [ ] Auto-layout algorithm (positions rooms without overlaps)
+- [x] Auto-layout algorithm (positions rooms without overlaps — layered BFS grid, orphans in trailing column)
 - [ ] Importer (parse transcripts → room definitions)
 - [ ] Code generators (Inform 7, Ink, TextPlus Author DSL)
 - [ ] Batch rename / find-replace
 - [ ] Round-trip conversion (map ↔ DSL)
 
 ### Must Have
-- [ ] Auto-layout algorithm
-- [ ] 15+ unit tests for layout
+- [x] Auto-layout algorithm
+- [x] 15+ unit tests for layout — 15 real tests in `packages/map/test/unit/layout.test.ts`
 - [ ] Import transcript output
 - [ ] Export to Trizbort format
 
