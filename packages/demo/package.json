@@ -6,12 +6,9 @@
   "private": true,
   "scripts": {
     "build": "vite build",
-    "dev": "vite",
-    "lint": "echo 'No linting needed for demo'",
-    "clean": "rm -rf dist"
+    "dev": "vite"
   },
   "devDependencies": {
-    "@textplus/core": "*",
-    "vite": "^5.0.8"
+    "@textplus/core": "*"
   }
 }

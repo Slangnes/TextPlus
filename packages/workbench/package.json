@@ -7,16 +7,13 @@
   "scripts": {
     "build": "vite build",
     "dev": "vite",
-    "lint": "tsc --noEmit",
-    "test:e2e": "playwright test",
-    "clean": "rm -rf dist test-results playwright-report"
+    "test:e2e": "playwright test"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
     "@textplus/author": "*",
     "@textplus/core": "*",
     "@textplus/map": "*",
-    "monaco-editor": "^0.56.0",
-    "typescript": "^5.3.3",
-    "vite": "^5.0.8"
+    "monaco-editor": "^0.56.0"
   }
 }
