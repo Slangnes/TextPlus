@@ -12,6 +12,10 @@
       "types": "./src/index.ts"
     }
   },
+  "bin": {
+    "textplus-author": "./bin/textplus-author.mjs",
+    "create-textplus-game": "./bin/create-textplus-game.mjs"
+  },
   "scripts": {
     "build": "vite build"
   },

@@ -91,13 +91,15 @@ export async function createScaffold(name: string, outputDir: string): Promise<v
   const dsl = `title: ${name}
 quality score number = 0 min 0 max 100
 
+hud score meter "Score"
+
 :: start [start]
 Welcome to ${name}.
 
--> Continue => next
+-> Continue => next { score += 10 }
 
 :: next
-This is your second situation.
+This is your second situation. Your score stands at {score}.
 
 -> End => end
 

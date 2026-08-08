@@ -115,6 +115,34 @@ Arrived.
     await expect(page.locator('.tp-link', { hasText: 'Boolean logic' })).toHaveCount(0);
   });
 
+  test('type mismatches error on assignment and warn on ordered comparison', async ({ page }) => {
+    await setSource(
+      page,
+      `title: Type Check
+
+quality lantern boolean = false
+
+:: start [start]
+The Door
+The lantern waits.
+
+-> Force it => start ? lantern >= 1
+-> Break it => start { lantern = 5 }
+`,
+    );
+    await expect(
+      page.locator('.diag--error', {
+        hasText: 'cannot assign number value to boolean quality "lantern"',
+      }),
+    ).toBeVisible();
+    await expect(
+      page.locator('.diag--warning', {
+        hasText: 'condition compares non-number quality "lantern" with ">="',
+      }),
+    ).toBeVisible();
+    await expect(page.locator('#status')).toContainText('✗');
+  });
+
   test('blank source shows the empty state, not an error', async ({ page }) => {
     await setSource(page, '');
     await expect(page.locator('#status')).toHaveClass(/status--empty/);

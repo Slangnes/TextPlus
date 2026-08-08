@@ -7,8 +7,38 @@
 
 import type { AuthorGameAst } from './parser';
 import { parseExpression, collectQualityRefs } from './expression';
+import type { ExprNode } from './expression';
 import { parseEffects, collectEffectRefs } from './effects';
 import { collectInterpolationRefs } from './content';
+
+const ORDERED_OPS = new Set(['<', '>', '<=', '>=']);
+
+/**
+ * Walk a condition AST reporting declared non-number qualities used in
+ * ordered comparisons (booleans/strings coerce to nonsense under < >).
+ */
+function findOrderedComparisonMisuse(
+  node: ExprNode,
+  ast: AuthorGameAst,
+  report: (qualityId: string, op: string) => void,
+): void {
+  if (node.kind === 'binary') {
+    if (ORDERED_OPS.has(node.op)) {
+      [node.left, node.right].forEach((side) => {
+        if (side.kind === 'ref') {
+          const declared = ast.qualities[side.qualityId];
+          if (declared && declared.type !== 'number') {
+            report(side.qualityId, node.op);
+          }
+        }
+      });
+    }
+    findOrderedComparisonMisuse(node.left, ast, report);
+    findOrderedComparisonMisuse(node.right, ast, report);
+  } else if (node.kind === 'unary') {
+    findOrderedComparisonMisuse(node.operand, ast, report);
+  }
+}
 
 export type LintSeverity = 'error' | 'warning' | 'info';
 
@@ -143,6 +173,14 @@ export function lintAST(ast: AuthorGameAst): LintOutput {
           situation: situationId,
           line,
         });
+      } else if (node.kind === 'set' && typeof node.value !== ast.qualities[node.qualityId].type) {
+        diagnostics.push({
+          severity: 'error',
+          code: 'effect-type-mismatch',
+          message: `${prefix(line)}cannot assign ${typeof node.value} value to ${ast.qualities[node.qualityId].type} quality "${node.qualityId}"`,
+          situation: situationId,
+          line,
+        });
       }
     });
   };
@@ -152,7 +190,8 @@ export function lintAST(ast: AuthorGameAst): LintOutput {
       const line = lineOf('links', situationId, index);
       if (link.condition) {
         try {
-          collectQualityRefs(parseExpression(link.condition)).forEach((ref) => {
+          const expr = parseExpression(link.condition);
+          collectQualityRefs(expr).forEach((ref) => {
             structuredRefs.add(ref);
             if (!declaredQualities.has(ref)) {
               diagnostics.push({
@@ -163,6 +202,15 @@ export function lintAST(ast: AuthorGameAst): LintOutput {
                 line,
               });
             }
+          });
+          findOrderedComparisonMisuse(expr, ast, (qualityId, op) => {
+            diagnostics.push({
+              severity: 'warning',
+              code: 'condition-type-mismatch',
+              message: `${prefix(line)}condition compares non-number quality "${qualityId}" with "${op}"`,
+              situation: situationId,
+              line,
+            });
           });
         } catch (error) {
           diagnostics.push({
@@ -203,7 +251,8 @@ export function lintAST(ast: AuthorGameAst): LintOutput {
   (ast.themes ?? []).forEach((node, index) => {
     const line = ast.positions?.themes?.[index];
     try {
-      collectQualityRefs(parseExpression(node.when)).forEach((ref) => {
+      const expr = parseExpression(node.when);
+      collectQualityRefs(expr).forEach((ref) => {
         structuredRefs.add(ref);
         if (!declaredQualities.has(ref)) {
           diagnostics.push({
@@ -213,6 +262,14 @@ export function lintAST(ast: AuthorGameAst): LintOutput {
             line,
           });
         }
+      });
+      findOrderedComparisonMisuse(expr, ast, (qualityId, op) => {
+        diagnostics.push({
+          severity: 'warning',
+          code: 'condition-type-mismatch',
+          message: `${prefix(line)}theme rule compares non-number quality "${qualityId}" with "${op}"`,
+          line,
+        });
       });
     } catch (error) {
       diagnostics.push({

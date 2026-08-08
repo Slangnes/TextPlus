@@ -335,17 +335,17 @@ Required phase gates:
 
 **Current Status**: Parser, compiler, linter, and workflow slices implemented with real test coverage.  
 **Current Status Update**: Public API wrappers (`compileGame`, `createScaffold`) now implemented and tested.  
-**Test Inventory**: historically 55 unit + 15 integration vitest tests (suite since removed). The DSL pipeline is now verified through the workbench Playwright suite (`e2e/diagnostics.spec.ts`, `e2e/engine.spec.ts`, `e2e/conventions.spec.ts`). Not E2E-reachable from a browser and currently unverified: `createScaffold`, `compileGame`, and the report formatters — these need the CLI (Phase 2D) to regain coverage.
+**Test Inventory**: historically 55 unit + 15 integration vitest tests (suite since removed). The DSL pipeline is verified through the workbench Playwright suite (`e2e/diagnostics.spec.ts`, `e2e/engine.spec.ts`, `e2e/conventions.spec.ts`), and the Node-only surfaces (`createScaffold`, the workflow report formatters, JSON serialization) through the CLI scenarios in `e2e/cli.spec.ts`.
 
 ### Planned Implementation
 - [x] DSL parser (initial line-based parser implemented)
 - [x] DSL compiler (to Core game objects — AST → GameConfig, validation)
 - [x] Situation linter (detect orphaned situations, broken links, unused qualities)
-- [ ] Markdown content processor
-- [ ] Adaptive text helpers (oneOf, randomly, frequently, rarely)
-- [ ] Project scaffold CLI (`create-textplus-game`)
-- [ ] Hot module reloading via Vite
-- [ ] Situation graph visualization
+- [x] Markdown content processor (Phase 2B, escape-first)
+- [x] Adaptive text helpers (oneOf, randomly, frequently, rarely) (Phase 2B)
+- [x] Project scaffold CLI (`create-textplus-game` + `textplus-author` compile/lint/scaffold, `packages/author/src/cli.ts`)
+- [x] Hot module reloading via Vite (workbench source aliasing)
+- [x] Situation graph visualization (workbench Map tab)
 
 ### Phase 2A: Parser, Compiler, & Linter (Implemented)
 - [x] Workflow integration: Unified parse→compile→lint pipeline
@@ -354,13 +354,13 @@ Required phase gates:
 - [x] 70 total real tests covering all M2A functionality
 - [x] 96.49% package coverage on implemented slices
 
-### Phase 2B: Shipped 2026-08-08 (scaffold CLI remains)
+### Phase 2B: Shipped 2026-08-08
 - [x] Condition parsing in links — safe expression language (`packages/author/src/expression.ts`), compiled to pure closures, evaluated by the engine at runtime
 - [x] Effects — `{ quality += n, flag = true }` brace blocks on links (onChoose) and situation entry lines (onEnter) (`packages/author/src/effects.ts`)
 - [x] Markdown processor — escape-first built-in converter (`packages/author/src/content.ts`)
 - [x] Adaptive text evaluation — `[oneOf | randomly | frequently | rarely]` spans + `{quality}` interpolation, seeded RNG for tests
 - [x] HUD + theme directives — `hud`/`theme ... when ...` compile to `GameConfig.hud` (core `renderHud`/`applyHudThemes`)
-- [ ] Project scaffold CLI tool
+- [x] Project scaffold CLI tool — `textplus-author` / `create-textplus-game` bins, verified by `e2e/cli.spec.ts`
 - [x] Hot module reloading for authoring workflows — workbench source aliasing
 
 ### Must Have (M2 Completion)
@@ -369,14 +369,14 @@ Required phase gates:
 - [x] Detect structural problems (orphaned situations, broken links) ✓
 - [x] Support Markdown in situation content ✓ (escape-first built-in)
 - [x] Preserve adaptive text helpers ✓ (oneOf/randomly/frequently/rarely + interpolation)
-- [x] 50+ unit tests — 140+ real tests across the author package ✓
-- [ ] Project scaffold CLI tool (Phase 2B)
+- [x] Test coverage — historically 140+ vitest tests; now the DSL pipeline, linter rules, and CLI are exercised by the traced Playwright suite ✓
+- [x] Project scaffold CLI tool ✓
 - [ ] Backward compatibility with Raconteur games (research phase)
 
 ### Should Have
 - [x] Hot module reloading for dev server — workbench aliases core/author/map sources through Vite HMR
 - [x] Situation graph preview — workbench Map tab (`packages/workbench/src/mapview.ts`)
-- [ ] Advanced linting (unreachable quality checks)
+- [x] Advanced linting — quality type consistency shipped (`effect-type-mismatch` on typed assignments, `condition-type-mismatch` on ordered comparisons of non-numbers); dead-quality reachability analysis still open
 
 ### Nice to Have
 - [ ] VS Code extension
@@ -464,7 +464,7 @@ Required phase gates:
 ### Deliverables
 - [ ] End-to-end demo (transcript → game → map)
 - [ ] Save/load slot UI in the workbench Play panel — also the missing E2E surface for core `storage.ts`, which is currently unverified
-- [ ] CLI surfaces (`create-textplus-game`, `textplus-convert`) — also the missing verification surface for `createScaffold`, `compileGame`, and the report formatters
+- [ ] `textplus-convert` CLI (the author CLI shipped in M2 — `textplus-author` / `create-textplus-game`)
 - [ ] VitePress documentation site
 - [ ] CONTRIBUTING.md guide
 - [ ] CODE_OF_CONDUCT.md
