@@ -12,9 +12,9 @@ Browser authoring environment for TextPlus: write DSL in the left pane, play the
 | `src/mapview.ts` | SVG story map from `@textplus/map` layouts: rooms, arrows, current-situation highlight, click-to-jump |
 | `src/drafts.ts` | Autosave/restore of DSL source to localStorage (injectable storage) |
 | `src/settings.ts` | User preferences (confirmation dialogs on/off), localStorage-backed |
-| `src/modal.ts` | In-app modal dialogs (`confirmAction`, `openSettingsDialog`) — native popups are banned project-wide, see CLAUDE.md |
+| `src/modal.ts` | In-app modal dialogs (`confirmAction`, `openImportDialog`, `openSettingsDialog`) — native popups are banned project-wide, see CLAUDE.md |
 | `src/examples.ts` | Blank template + four example stories (DSL tour and adaptations of all three demo games); must always compile clean |
-| `src/main.ts` | DOM glue: editor, gutter, debounce, toolbar (New / example picker / Export / Restart / Settings), Play↔Map tabs, diagnostics bar with click-to-line |
+| `src/main.ts` | DOM glue: editor, gutter, debounce, toolbar (New / example picker / Import / Export / Restart / Settings), Play↔Map tabs, diagnostics bar with click-to-line |
 
 ## Usage
 
@@ -29,7 +29,9 @@ E2E tests drive the editor through the `window.__workbench` hook (`getSource`/`s
 
 E2E runs write a `trace.zip` per test to `test-results/` — the visual QA artifact for releases. Open one with `npx playwright show-trace <path>/trace.zip`, or `npx playwright show-report` for the suite.
 
-The Vite config aliases `@textplus/core` and `@textplus/author` to their **source** entrypoints, so edits to those packages hot-reload the workbench without a rebuild.
+The Vite config aliases `@textplus/core`, `@textplus/author`, `@textplus/map`, and `@textplus/convert` to their **source** entrypoints, so edits to those packages hot-reload the workbench without a rebuild.
+
+**Import** (toolbar) opens an in-app dialog: paste a Z-machine-style play transcript and it becomes a linear story draft via `@textplus/convert`'s `transcriptToDsl` (replacing the current story through the standard confirm flow).
 
 ## DSL quick reference
 

@@ -29,6 +29,10 @@ npm run build         # Build all packages
 npm run test:e2e      # Traced Playwright E2E suite — exercises core through the workbench Play panel
 ```
 
+E2E-verified through the workbench: engine boot/transitions/events, conditional links, quality clamping, HTML-escaped rendering, ARIA contract, situation tags, HUD meters/badges and theme rules, the qualities fallback panel, entry effects, adaptive text, and save-state preservation across recompiles (`e2e/engine.spec.ts` and friends).
+
+**Not verified** (no app surface reaches them): `storage.ts` (save slots, corruption/version/quota handling — needs the M5 save/load UI), `engine.validate()`, `onExit` hooks, theme CSS variables, and the error paths the author linter rejects before compile.
+
 ## Example Usage
 
 See `packages/demo/hello-world/` for a complete example game demonstrating all Core APIs:

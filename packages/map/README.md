@@ -29,8 +29,10 @@ Run these from the repository root:
 
 ```bash
 npm run lint
-npm run test:e2e   # layout + adapter exercised through the workbench Map panel scenarios
+npm run test:e2e   # geometry + classification asserted through the workbench Map panel
 ```
+
+`e2e/map.spec.ts` asserts the layout's actual properties through the rendered SVG: shortest-path depth columns, unique cells, orphan rooms parked in the trailing column with the unreachable flag, terminal flags on endings, parallel-edge dedup, and self-loop suppression. **Not verified**: the legacy `autoLayout(rooms)` surface and custom cell sizing (nothing in the app calls either).
 
 ## Drift Rules
 

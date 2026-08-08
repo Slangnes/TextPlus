@@ -267,7 +267,7 @@ Required phase gates:
 **Testing Requirements**:
 - [x] Write 40+ unit tests (engine, quality, situation logic) — **48 implemented**
 - [x] Write 30+ integration tests (DOM, storage, themes) — **30 real tests implemented across DOM and storage; dedicated themes module still pending**
-- [x] Write 3+ E2E test scenarios (full playthrough) — **18 real scenarios implemented in `packages/core/test/e2e/hello-world.test.ts`**
+- [x] Write 3+ E2E test scenarios (full playthrough) — **originally 18 vitest scenarios; the vitest suite was later removed and core is now exercised through the workbench Playwright suite (`e2e/engine.spec.ts` and others). Note: `storage.ts` and `engine.validate()` have no E2E surface yet — see M5.**
 - [x] Achieve ≥80% code coverage — **current package-scoped `packages/core/src/**` coverage: 94.47% statements / 94.47% lines / 88.05% branches / 90.41% functions**
 
 **Deliverables**:
@@ -335,7 +335,7 @@ Required phase gates:
 
 **Current Status**: Parser, compiler, linter, and workflow slices implemented with real test coverage.  
 **Current Status Update**: Public API wrappers (`compileGame`, `createScaffold`) now implemented and tested.  
-**Test Inventory**: 55 unit tests in `packages/author/test/unit/` + 15 integration tests (70 total in author package)
+**Test Inventory**: historically 55 unit + 15 integration vitest tests (suite since removed). The DSL pipeline is now verified through the workbench Playwright suite (`e2e/diagnostics.spec.ts`, `e2e/engine.spec.ts`, `e2e/conventions.spec.ts`). Not E2E-reachable from a browser and currently unverified: `createScaffold`, `compileGame`, and the report formatters — these need the CLI (Phase 2D) to regain coverage.
 
 ### Planned Implementation
 - [x] DSL parser (initial line-based parser implemented)
@@ -391,7 +391,7 @@ Required phase gates:
 **Dependencies**: M2 Author (optional), M4 Convert (optional)  
 **Test Coverage Target**: ≥80%
 
-**Placeholder Tests Ready**: 13 tests in `packages/map/test/unit/`
+**Testing**: layout geometry and classification (depth columns, unique cells, orphan parking, terminal flags, edge dedup) are verified through the workbench map panel in `e2e/map.spec.ts`.
 
 ### Planned Implementation
 - [x] Auto-layout algorithm (positions rooms without overlaps — layered BFS grid, orphans in trailing column)
@@ -402,7 +402,7 @@ Required phase gates:
 
 ### Must Have
 - [x] Auto-layout algorithm
-- [x] 15+ unit tests for layout — 15 real tests in `packages/map/test/unit/layout.test.ts`
+- [x] Layout verification — originally 15 vitest tests (since removed); geometry now asserted via `e2e/map.spec.ts`
 - [ ] Import transcript output
 - [ ] Export to Trizbort format
 
@@ -425,7 +425,7 @@ Required phase gates:
 **Dependencies**: M1 Core (for output format)  
 **Test Coverage Target**: ≥80%
 
-**Placeholder Tests Ready**: 30 tests in `packages/convert/test/unit/`
+**Testing**: the transcript slice is verified end-to-end through the workbench Import feature (`e2e/import.spec.ts` — paste → convert → compile clean → play → map). The engine-specific parsers and generators below have no tests yet (their former `it.todo` markers were removed with the vitest suite; this list is their record).
 
 ### Planned Implementation
 - [ ] Transcript parser (Z-machine, Glulx, Inform 7, TADS 3)
@@ -437,11 +437,12 @@ Required phase gates:
 
 ### Must Have
 - [x] Parse plain-text (Z-machine-style) transcripts — first slice, `packages/convert/src/transcript.ts`
-- [x] Output TextPlus DSL — `transcriptToDsl`, round-trip compile acceptance test
+- [x] Output TextPlus DSL — `transcriptToDsl`; round-trip acceptance now runs through the app (`e2e/import.spec.ts`)
+- [x] Workbench Import UI — paste a transcript in the workbench (`Import` toolbar button) to get a compiling story draft
 - [ ] Output standalone HTML (via Core)
 - [ ] Output Trizbort map
 - [ ] CLI tool
-- [ ] 70+ unit tests for parsing (13 real so far)
+- [ ] Broad transcript-sample coverage (varied real transcripts through the Import E2E path)
 - [ ] Engine-specific format support: Glulx, Inform 7, TADS 3
 
 ### Should Have
@@ -450,7 +451,7 @@ Required phase gates:
 - [ ] 70+ unit tests across real transcript samples
 
 ### Nice to Have
-- [ ] Web UI (drag-and-drop)
+- [x] Web UI — paste-based import shipped in the workbench; drag-and-drop still open
 - [ ] Interactive diff viewer
 
 ---
@@ -462,6 +463,8 @@ Required phase gates:
 
 ### Deliverables
 - [ ] End-to-end demo (transcript → game → map)
+- [ ] Save/load slot UI in the workbench Play panel — also the missing E2E surface for core `storage.ts`, which is currently unverified
+- [ ] CLI surfaces (`create-textplus-game`, `textplus-convert`) — also the missing verification surface for `createScaffold`, `compileGame`, and the report formatters
 - [ ] VitePress documentation site
 - [ ] CONTRIBUTING.md guide
 - [ ] CODE_OF_CONDUCT.md

@@ -26,11 +26,11 @@ Status: Milestone 4 **first slice implemented** — plain-text transcript → li
 ## Verification
 
 ```bash
-npm run lint    # from repo root
-npm run build
+npm run lint       # from repo root
+npm run test:e2e   # Import-transcript scenarios exercise the full slice
 ```
 
-Convert has no E2E surface yet — the workbench does not use it — so it is currently verified by lint and build only. Give it an E2E scenario when it gains a UI or CLI entry point.
+The transcript slice is verified end-to-end through the workbench **Import** feature (`packages/workbench/e2e/import.spec.ts`): a pasted transcript must convert, compile with zero issues, play along its own command path, and map — the round-trip acceptance, running through the real app. The M4 placeholders (`parseTranscript`, `generateDSL`, `generateHTML`) throw and have no coverage.
 
 ## Drift Rules
 
