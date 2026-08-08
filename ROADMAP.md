@@ -26,7 +26,7 @@ This document tracks the features, deliverables, and milestones for the TextPlus
 - **No Roadmap Clones**: Do not create new roadmap summary files for routine updates.
 - **Update Pattern**: Use in-place deltas in the status table and milestone checkboxes.
 - **Change Log Location**: Keep a short in-file changelog section instead of separate update documents.
-- **Package Audit Docs**: Keep a short `README.md` in each workspace package with public surface, module inventory, verification commands, and known gaps.
+- **Package Audit Docs**: Each workspace package keeps a single doc covering public surface, module inventory, verification commands, and known gaps — a package-level `ROADMAP.md` (the `author` pattern, which also carries milestone status) or a short `README.md`. One doc per package; no parallel plan files.
 
 ### Roadmap Changelog
 
@@ -501,7 +501,7 @@ npm run test:all
 npm run test:e2e
 ```
 
-Use the package README files and this roadmap for current command and status references.
+Use the per-package docs (`packages/*/ROADMAP.md` or `README.md`) and this roadmap for current command and status references.
 
 ---
 
