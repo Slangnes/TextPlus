@@ -529,6 +529,27 @@
     .modal__body { font-size: 14px; }
     .modal__body p { margin: 0 0 12px 0; }
 
+    .modal--wide { max-width: 640px; }
+
+    .modal__textarea {
+      width: 100%;
+      box-sizing: border-box;
+      font-family: 'Cascadia Code', 'Consolas', monospace;
+      font-size: 12px;
+      color: var(--wb-text);
+      background: var(--wb-bg);
+      border: 1px solid var(--wb-border);
+      border-radius: 4px;
+      padding: 8px;
+      resize: vertical;
+    }
+
+    .modal__error {
+      color: #e05555;
+      font-size: 13px;
+      margin-top: 8px;
+    }
+
     .modal__suppress,
     .modal__setting {
       display: block;
@@ -575,6 +596,7 @@
       <select id="example-select" aria-label="Load example story">
         <option value="">Load example…</option>
       </select>
+      <button type="button" id="btn-import">Import</button>
       <button type="button" id="btn-export">Export</button>
       <button type="button" id="btn-restart">Restart</button>
       <select id="layout-select" aria-label="Panel layout">

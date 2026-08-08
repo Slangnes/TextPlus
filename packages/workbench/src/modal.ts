@@ -4,7 +4,7 @@
  * Project convention: never use native browser popups (window.alert /
  * window.confirm / window.prompt). These in-app modals replace them, and
  * every confirmation offers "Don't ask again", persisted via settings.
- * Enforced by test/unit/conventions.test.ts.
+ * Enforced by e2e/conventions.spec.ts.
  */
 
 import { getSettings, updateSettings } from './settings';
@@ -122,6 +122,59 @@ export function confirmAction(message: string, options: ConfirmOptions = {}): Pr
     });
     shell.actions.appendChild(confirmButton);
     confirmButton.focus();
+  });
+}
+
+export interface ImportDialogOptions {
+  /** Converts the pasted text to DSL source; expected to throw on unusable input. */
+  convert: (text: string) => string;
+}
+
+/**
+ * Import dialog: paste a play transcript, convert it to DSL source. Resolves
+ * with the converted source, or null when cancelled. Conversion errors are
+ * shown inline and keep the dialog open.
+ */
+export function openImportDialog(options: ImportDialogOptions): Promise<string | null> {
+  return new Promise<string | null>((resolve) => {
+    let shell: ModalShell;
+    const finish = (result: string | null): void => {
+      shell.close();
+      resolve(result);
+    };
+
+    shell = buildModal('Import Transcript', () => finish(null));
+    shell.dialog.classList.add('modal--wide');
+
+    const hint = document.createElement('p');
+    hint.textContent =
+      'Paste a play transcript (lines starting with ">" are commands). It becomes a linear story draft.';
+    shell.body.appendChild(hint);
+
+    const textarea = document.createElement('textarea');
+    textarea.className = 'modal__textarea';
+    textarea.rows = 12;
+    textarea.setAttribute('aria-label', 'Transcript text');
+    textarea.placeholder = '> open mailbox\nOpening the small mailbox reveals a leaflet.';
+    shell.body.appendChild(textarea);
+
+    const error = document.createElement('p');
+    error.className = 'modal__error';
+    error.hidden = true;
+    shell.body.appendChild(error);
+
+    shell.actions.appendChild(makeButton('Cancel', 'plain', () => finish(null)));
+    shell.actions.appendChild(
+      makeButton('Import', 'primary', () => {
+        try {
+          finish(options.convert(textarea.value));
+        } catch (err) {
+          error.textContent = err instanceof Error ? err.message : String(err);
+          error.hidden = false;
+        }
+      }),
+    );
+    textarea.focus();
   });
 }
 

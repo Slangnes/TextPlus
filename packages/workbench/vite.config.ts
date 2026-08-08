@@ -13,6 +13,7 @@ export default defineConfig({
       '@textplus/core': resolve(__dirname, '../core/src/index.ts'),
       '@textplus/author': resolve(__dirname, '../author/src/index.ts'),
       '@textplus/map': resolve(__dirname, '../map/src/index.ts'),
+      '@textplus/convert': resolve(__dirname, '../convert/src/index.ts'),
     },
   },
   build: {

@@ -13,7 +13,8 @@ import { createEditor } from './editor';
 import { PreviewHost } from './preview';
 import { loadDraft, saveDraft } from './drafts';
 import { BLANK_TEMPLATE, EXAMPLES, SAMPLE_STORY } from './examples';
-import { confirmAction, openSettingsDialog } from './modal';
+import { confirmAction, openImportDialog, openSettingsDialog } from './modal';
+import { transcriptToDsl } from '@textplus/convert';
 import { renderMap } from './mapview';
 import { getSettings, updateSettings, PANEL_MODULES, SOLO_POSITIONS } from './settings';
 import type { PanelModule, PanelView, SoloPosition, WorkbenchSettings } from './settings';
@@ -408,6 +409,19 @@ exampleSelect.addEventListener('change', () => {
     if (confirmed) {
       setSource(example.source);
     }
+  });
+});
+
+requireElement<HTMLButtonElement>('btn-import').addEventListener('click', () => {
+  void openImportDialog({ convert: (text) => transcriptToDsl(text) }).then((dsl) => {
+    if (dsl === null) {
+      return;
+    }
+    void confirmAction('Replace the current story with the imported transcript?').then((confirmed) => {
+      if (confirmed) {
+        setSource(dsl);
+      }
+    });
   });
 });
 

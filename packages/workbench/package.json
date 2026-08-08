@@ -12,6 +12,7 @@
   "devDependencies": {
     "@playwright/test": "^1.62.1",
     "@textplus/author": "*",
+    "@textplus/convert": "*",
     "@textplus/core": "*",
     "@textplus/map": "*",
     "monaco-editor": "^0.56.0"
