@@ -18,6 +18,8 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     emptyOutDir: true,
+    // monaco-editor is a single large chunk; that's expected.
+    chunkSizeWarningLimit: 4500,
   },
   server: {
     port: 5175,

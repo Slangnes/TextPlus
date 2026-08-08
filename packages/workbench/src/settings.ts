@@ -3,43 +3,74 @@
  *
  * Persists workbench preferences to localStorage. Storage is injectable for
  * tests. Holds the confirmation-dialog preference (no-native-popups
- * convention) and the panel layout (up to four segments, each hosting one
- * workbench module).
+ * convention), editor word wrap, and the panel layout: up to four segments,
+ * each hosting one module or nothing, with drag-adjustable split sizes.
  */
 
 const SETTINGS_KEY = 'textplus-workbench-settings';
 
-export type PanelView = 'editor' | 'play' | 'map' | 'diagnostics';
+export type PanelModule = 'editor' | 'play' | 'map' | 'diagnostics';
+/** What a panel can host: a module, or nothing. 'none' may repeat; modules may not. */
+export type PanelView = PanelModule | 'none';
 
-export const PANEL_VIEWS: readonly PanelView[] = ['editor', 'play', 'map', 'diagnostics'];
+export const PANEL_MODULES: readonly PanelModule[] = ['editor', 'play', 'map', 'diagnostics'];
+
+export interface LayoutSizes {
+  /** Height of the top row as a percentage (10-90). */
+  rows: number;
+  /** Width of the top-left panel as a percentage (10-90). */
+  topCols: number;
+  /** Width of the bottom-left panel as a percentage (10-90). */
+  bottomCols: number;
+}
+
+/** Where the full-length panel sits in the 3-panel layout. */
+export type SoloPosition = 'bottom' | 'left' | 'top' | 'right';
+
+export const SOLO_POSITIONS: readonly SoloPosition[] = ['bottom', 'left', 'top', 'right'];
 
 export interface LayoutSettings {
   /** How many panels are visible (1-4). */
   panelCount: number;
-  /** Which module each of the four panel slots hosts; always all four, unique. */
+  /** What each of the four panel slots hosts. */
   views: PanelView[];
+  sizes: LayoutSizes;
+  /** 3-panel mode only: which edge the solo (full-length) panel occupies. */
+  soloPosition: SoloPosition;
 }
 
 export interface WorkbenchSettings {
   /** Show a confirmation dialog before replacing the story. */
   confirmBeforeReplace: boolean;
+  /** Soft-wrap long lines in the editor (hides the line-number gutter). */
+  editorWordWrap: boolean;
   layout: LayoutSettings;
 }
+
+const DEFAULT_SIZES: LayoutSizes = { rows: 50, topCols: 50, bottomCols: 50 };
 
 const DEFAULT_LAYOUT: LayoutSettings = {
   panelCount: 4,
   views: ['editor', 'play', 'map', 'diagnostics'],
+  sizes: DEFAULT_SIZES,
+  soloPosition: 'bottom',
 };
 
 function defaultStorage(): Storage | null {
   return typeof localStorage !== 'undefined' ? localStorage : null;
 }
 
-function isPanelView(value: unknown): value is PanelView {
-  return typeof value === 'string' && (PANEL_VIEWS as readonly string[]).includes(value);
+function isPanelModule(value: unknown): value is PanelModule {
+  return typeof value === 'string' && (PANEL_MODULES as readonly string[]).includes(value);
 }
 
-/** Coerce any stored layout back to a valid one (count 1-4, all views once). */
+function clampPercent(value: unknown, fallback: number): number {
+  return typeof value === 'number' && Number.isFinite(value)
+    ? Math.min(90, Math.max(10, value))
+    : fallback;
+}
+
+/** Coerce any stored layout back to a valid one. */
 export function sanitizeLayout(raw: unknown): LayoutSettings {
   const candidate = (raw ?? {}) as Partial<LayoutSettings>;
 
@@ -51,27 +82,48 @@ export function sanitizeLayout(raw: unknown): LayoutSettings {
       ? candidate.panelCount
       : DEFAULT_LAYOUT.panelCount;
 
+  // Keep 'none' entries as-is; keep each module's first occurrence only.
   const views: PanelView[] = [];
   if (Array.isArray(candidate.views)) {
     candidate.views.forEach((view) => {
-      if (isPanelView(view) && !views.includes(view)) {
+      if (views.length >= 4) {
+        return;
+      }
+      if (view === 'none') {
+        views.push('none');
+      } else if (isPanelModule(view) && !views.includes(view)) {
         views.push(view);
       }
     });
   }
   DEFAULT_LAYOUT.views.forEach((view) => {
-    if (!views.includes(view)) {
+    if (views.length < 4 && !views.includes(view)) {
       views.push(view);
     }
   });
+  while (views.length < 4) {
+    views.push('none');
+  }
 
-  return { panelCount, views };
+  const rawSizes = (candidate.sizes ?? {}) as Partial<LayoutSizes>;
+  const sizes: LayoutSizes = {
+    rows: clampPercent(rawSizes.rows, DEFAULT_SIZES.rows),
+    topCols: clampPercent(rawSizes.topCols, DEFAULT_SIZES.topCols),
+    bottomCols: clampPercent(rawSizes.bottomCols, DEFAULT_SIZES.bottomCols),
+  };
+
+  const soloPosition = (SOLO_POSITIONS as readonly unknown[]).includes(candidate.soloPosition)
+    ? (candidate.soloPosition as SoloPosition)
+    : DEFAULT_LAYOUT.soloPosition;
+
+  return { panelCount, views, sizes, soloPosition };
 }
 
 function withDefaults(parsed: Partial<WorkbenchSettings>): WorkbenchSettings {
   return {
     confirmBeforeReplace:
       typeof parsed.confirmBeforeReplace === 'boolean' ? parsed.confirmBeforeReplace : true,
+    editorWordWrap: typeof parsed.editorWordWrap === 'boolean' ? parsed.editorWordWrap : true,
     layout: sanitizeLayout(parsed.layout),
   };
 }

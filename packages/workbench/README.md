@@ -6,6 +6,7 @@ Browser authoring environment for TextPlus: write DSL in the left pane, play the
 
 | Module | Responsibility |
 |--------|----------------|
+| `src/editor.ts` | Monaco editor host: TextPlus DSL Monarch grammar (syntax highlighting), palette-matched light/dark themes, wrap-safe line numbers, diagnostic squiggles via model markers |
 | `src/controller.ts` | Runs the `@textplus/author` parse→compile→lint workflow, shapes results into a display report with line-number extraction |
 | `src/preview.ts` | `PreviewHost` — mounts compiled `GameConfig`s into a playable preview via `@textplus/core`; preserves the playthrough across recompiles; `onRender` hook for observers |
 | `src/mapview.ts` | SVG story map from `@textplus/map` layouts: rooms, arrows, current-situation highlight, click-to-jump |
@@ -23,7 +24,9 @@ npm run test:workbench     # from repo root — unit + integration tests (vitest
 npm run test:e2e           # from repo root — Playwright E2E suite, traces always on
 ```
 
-The layout is 1–4 panels (toolbar selector), each hosting any module — Editor, Play, Map, or Diagnostics — via the dropdown in its corner; picking a module already shown elsewhere swaps the two panels. Layout and draft persist in localStorage.
+The layout is 1–4 panels (toolbar selector), each hosting any module — Editor, Play, Map, Diagnostics, or nothing — via the dropdown in its corner; picking a module already shown elsewhere swaps the two panels. Panels resize by dragging the splitters; in 4-panel mode the center handle moves all splits at once, and in 3-panel mode the ◒/◐/◓/◑ toolbar button cycles the large panel between bottom/left/top/right. A bottom status bar shows compile state, the preview's current situation, and the cursor position. The editor is Monaco (the VS Code editor component) with TextPlus DSL syntax highlighting, error/warning squiggles, and word wrap on by default — line numbers stay correct while wrapping, with continuations indented below their number. Everything persists in localStorage.
+
+E2E tests drive the editor through the `window.__workbench` hook (`getSource`/`setSource`/`wordWrapOn`) instead of DOM typing.
 
 E2E runs write a `trace.zip` per test to `test-results/` — the visual QA artifact for releases. Open one with `npx playwright show-trace <path>/trace.zip`, or `npx playwright show-report` for the suite.
 
@@ -33,5 +36,5 @@ The Vite config aliases `@textplus/core` and `@textplus/author` to their **sourc
 
 - Link conditions (`-> text => target ? condition`) are accepted by the parser but not evaluated (Author Phase 2B) — conditional links always show. The demo-game DSL adaptations flatten those mechanics accordingly.
 - No Markdown rendering in situation content (Author Phase 2B).
-- Plain textarea editor: no syntax highlighting or autocomplete yet.
-- Map view is read-only layout (no drag repositioning or Trizbort export yet).
+- No DSL autocomplete or hover docs in the editor yet (Monaco makes these natural next steps).
+- Map view is read-only layout — see `packages/map/README.md` for the full Trizbort parity gap.

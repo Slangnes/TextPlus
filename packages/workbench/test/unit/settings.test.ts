@@ -51,10 +51,28 @@ describe('settings', () => {
 
   it('round-trips a layout update', () => {
     const storage = makeStorage();
-    updateSettings({ layout: { panelCount: 2, views: ['play', 'editor', 'map', 'diagnostics'] } }, storage);
+    updateSettings(
+      {
+        layout: {
+          panelCount: 2,
+          views: ['play', 'editor', 'map', 'diagnostics'],
+          sizes: { rows: 30, topCols: 65, bottomCols: 50 },
+          soloPosition: 'bottom',
+        },
+      },
+      storage,
+    );
     const { layout } = getSettings(storage);
     expect(layout.panelCount).toBe(2);
     expect(layout.views[0]).toBe('play');
+    expect(layout.sizes.topCols).toBe(65);
+  });
+
+  it('defaults editor word wrap on and round-trips it', () => {
+    const storage = makeStorage();
+    expect(getSettings(storage).editorWordWrap).toBe(true);
+    updateSettings({ editorWordWrap: false }, storage);
+    expect(getSettings(storage).editorWordWrap).toBe(false);
   });
 });
 
@@ -76,5 +94,21 @@ describe('sanitizeLayout', () => {
   it('handles garbage input wholesale', () => {
     expect(sanitizeLayout(null).views).toHaveLength(4);
     expect(sanitizeLayout('nonsense').panelCount).toBe(4);
+  });
+
+  it("allows repeated 'none' entries while keeping modules unique", () => {
+    const layout = sanitizeLayout({ views: ['none', 'editor', 'none', 'editor'] });
+    expect(layout.views).toEqual(['none', 'editor', 'none', 'play']);
+  });
+
+  it('clamps split sizes to 10-90 and defaults missing ones', () => {
+    const layout = sanitizeLayout({ sizes: { rows: 5, topCols: 99, bottomCols: 'x' } });
+    expect(layout.sizes).toEqual({ rows: 10, topCols: 90, bottomCols: 50 });
+  });
+
+  it('defaults the solo panel position to bottom and rejects invalid values', () => {
+    expect(sanitizeLayout({}).soloPosition).toBe('bottom');
+    expect(sanitizeLayout({ soloPosition: 'left' }).soloPosition).toBe('left');
+    expect(sanitizeLayout({ soloPosition: 'diagonal' }).soloPosition).toBe('bottom');
   });
 });

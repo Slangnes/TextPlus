@@ -91,8 +91,8 @@ describe('openSettingsDialog', () => {
     const storage = makeStorage();
     updateSettings({ confirmBeforeReplace: false }, storage);
 
-    const pending = openSettingsDialog(storage);
-    const toggle = query<HTMLInputElement>('.modal__setting input');
+    const pending = openSettingsDialog({ storage });
+    const toggle = query<HTMLInputElement>('.modal__setting--confirm input');
     expect(toggle.checked).toBe(false);
 
     toggle.checked = true;
@@ -102,5 +102,26 @@ describe('openSettingsDialog', () => {
     query<HTMLButtonElement>('.modal__button--primary').click();
     await pending;
     expect(document.querySelector('.modal-backdrop')).toBeNull();
+  });
+
+  it('toggles editor word wrap and notifies onChange with full settings', async () => {
+    const storage = makeStorage();
+    const seen: boolean[] = [];
+
+    const pending = openSettingsDialog({
+      storage,
+      onChange: (settings) => seen.push(settings.editorWordWrap),
+    });
+
+    const wrapToggle = query<HTMLInputElement>('.modal__setting--wrap input');
+    expect(wrapToggle.checked).toBe(true);
+
+    wrapToggle.checked = false;
+    wrapToggle.dispatchEvent(new Event('change'));
+    expect(getSettings(storage).editorWordWrap).toBe(false);
+    expect(seen).toEqual([false]);
+
+    query<HTMLButtonElement>('.modal__button--primary').click();
+    await pending;
   });
 });

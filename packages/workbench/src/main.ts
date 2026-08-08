@@ -2,19 +2,21 @@
  * TextPlus Workbench - Application Bootstrap
  *
  * Wires the editor, compile controller, live preview, story map, diagnostics,
- * and toolbar into a configurable 1-4 panel layout where each panel hosts one
- * module. All logic lives in the sibling modules; this file is DOM glue only.
+ * toolbar, and bottom status bar into a configurable 1-4 panel layout with
+ * drag-resizable splits. Each panel hosts one module (or nothing). All logic
+ * lives in the sibling modules; this file is DOM glue only.
  */
 
 import { analyzeSource } from './controller';
 import type { WorkbenchReport } from './controller';
+import { createEditor } from './editor';
 import { PreviewHost } from './preview';
 import { loadDraft, saveDraft } from './drafts';
 import { BLANK_TEMPLATE, EXAMPLES, SAMPLE_STORY } from './examples';
 import { confirmAction, openSettingsDialog } from './modal';
 import { renderMap } from './mapview';
-import { getSettings, updateSettings, PANEL_VIEWS } from './settings';
-import type { PanelView } from './settings';
+import { getSettings, updateSettings, PANEL_MODULES, SOLO_POSITIONS } from './settings';
+import type { PanelModule, PanelView, SoloPosition, WorkbenchSettings } from './settings';
 import { graphFromConfig, layoutGraph } from '@textplus/map';
 import type { GameConfig } from '@textplus/core';
 
@@ -25,6 +27,7 @@ const VIEW_LABELS: Record<PanelView, string> = {
   play: 'Play',
   map: 'Map',
   diagnostics: 'Diagnostics',
+  none: '— empty —',
 };
 
 function requireElement<T extends HTMLElement>(id: string): T {
@@ -35,17 +38,17 @@ function requireElement<T extends HTMLElement>(id: string): T {
   return el as T;
 }
 
-const editor = requireElement<HTMLTextAreaElement>('editor');
-const gutter = requireElement<HTMLElement>('gutter');
 const statusEl = requireElement<HTMLElement>('status');
+const statusSituationEl = requireElement<HTMLElement>('status-situation');
+const statusCursorEl = requireElement<HTMLElement>('status-cursor');
 const diagnosticsEl = requireElement<HTMLElement>('diagnostics');
 const mapContainer = requireElement<HTMLElement>('map-container');
 const exampleSelect = requireElement<HTMLSelectElement>('example-select');
 const layoutSelect = requireElement<HTMLSelectElement>('layout-select');
-const panes = requireElement<HTMLElement>('panes');
+const viewStash = requireElement<HTMLElement>('view-stash');
 const preview = new PreviewHost(requireElement<HTMLElement>('preview-game'));
 
-const viewElements: Record<PanelView, HTMLElement> = {
+const viewElements: Record<PanelModule, HTMLElement> = {
   editor: requireElement<HTMLElement>('view-editor'),
   play: requireElement<HTMLElement>('view-play'),
   map: requireElement<HTMLElement>('view-map'),
@@ -54,65 +57,197 @@ const viewElements: Record<PanelView, HTMLElement> = {
 
 let debounceTimer: ReturnType<typeof setTimeout> | undefined;
 let lastGoodConfig: GameConfig | null = null;
-let layout = getSettings().layout;
+let settings = getSettings();
+
+const editor = createEditor(requireElement('editor-host'), loadDraft() ?? SAMPLE_STORY);
 
 // --- Panel layout ------------------------------------------------------------
 
-function applyLayout(): void {
-  panes.className = `panes panes--${layout.panelCount}`;
-  layoutSelect.value = String(layout.panelCount);
+const SOLO_GLYPHS: Record<SoloPosition, string> = {
+  bottom: '◒',
+  left: '◐',
+  top: '◓',
+  right: '◑',
+};
 
-  for (let i = 0; i < 4; i += 1) {
-    const panel = requireElement(`panel-${i}`);
-    const body = requireElement(`panel-body-${i}`);
-    const picker = requireElement<HTMLSelectElement>(`panel-picker-${i}`);
-    const view = layout.views[i];
-
-    panel.hidden = i >= layout.panelCount;
-    picker.value = view;
-    const viewEl = viewElements[view];
-    if (viewEl.parentElement !== body) {
-      body.appendChild(viewEl);
-    }
-  }
+/** True when the 3-panel solo sits on the leading edge (top or left). */
+function soloIsFirst(): boolean {
+  const { panelCount, soloPosition } = settings.layout;
+  return panelCount === 3 && (soloPosition === 'top' || soloPosition === 'left');
 }
 
-/** Assign a module to a panel; if another panel holds it, the two swap. */
+function applyLayout(): void {
+  const { panelCount, views, sizes, soloPosition } = settings.layout;
+  layoutSelect.value = String(panelCount);
+
+  const showTopSecond = panelCount >= 2;
+  const showBottomRow = panelCount >= 3;
+  const showBottomSecond = panelCount >= 4;
+  const sideways = panelCount === 3 && (soloPosition === 'left' || soloPosition === 'right');
+  const soloFirst = soloIsFirst();
+
+  const panes = requireElement('panes');
+  const rowTop = requireElement('row-top');
+  const rowBottom = requireElement('row-bottom');
+  const splitTop = requireElement('split-top');
+  const splitRows = requireElement('split-rows');
+
+  splitTop.hidden = !showTopSecond;
+  requireElement('panel-1').hidden = !showTopSecond;
+  splitRows.hidden = !showBottomRow;
+  rowBottom.hidden = !showBottomRow;
+  requireElement('split-bottom').hidden = !showBottomSecond;
+  requireElement('panel-3').hidden = !showBottomSecond;
+
+  // 3-panel orientation: the solo panel can occupy any edge.
+  panes.classList.toggle('panes--sideways', sideways);
+  rowTop.classList.toggle('pane-row--stacked', sideways);
+  splitRows.classList.toggle('splitter--h', !sideways);
+  splitRows.classList.toggle('splitter--v', sideways);
+  splitTop.classList.toggle('splitter--v', !sideways);
+  splitTop.classList.toggle('splitter--h', sideways);
+  rowTop.style.order = soloFirst ? '2' : '0';
+  splitRows.style.order = '1';
+  rowBottom.style.order = soloFirst ? '0' : '2';
+
+  rowTop.style.flex = showBottomRow ? `${sizes.rows} 1 0%` : '1 1 0%';
+  rowBottom.style.flex = `${100 - sizes.rows} 1 0%`;
+  requireElement('panel-0').style.flex = showTopSecond ? `${sizes.topCols} 1 0%` : '1 1 0%';
+  requireElement('panel-1').style.flex = `${100 - sizes.topCols} 1 0%`;
+  requireElement('panel-2').style.flex = showBottomSecond ? `${sizes.bottomCols} 1 0%` : '1 1 0%';
+  requireElement('panel-3').style.flex = `${100 - sizes.bottomCols} 1 0%`;
+
+  const soloButton = requireElement<HTMLButtonElement>('btn-solo-position');
+  soloButton.hidden = panelCount !== 3;
+  soloButton.textContent = SOLO_GLYPHS[soloPosition];
+  soloButton.title = `Large panel: ${soloPosition} (click to cycle)`;
+
+  // 4-panel center handle sits at the split intersection.
+  const centerHandle = requireElement('center-handle');
+  centerHandle.hidden = panelCount !== 4;
+  if (panelCount === 4) {
+    centerHandle.style.left = `${sizes.topCols}%`;
+    centerHandle.style.top = `${sizes.rows}%`;
+  }
+
+  for (let i = 0; i < 4; i += 1) {
+    const body = requireElement(`panel-body-${i}`);
+    const picker = requireElement<HTMLSelectElement>(`panel-picker-${i}`);
+    const view = views[i];
+    picker.value = view;
+    requireElement(`panel-empty-${i}`).hidden = view !== 'none';
+    if (view !== 'none') {
+      const viewEl = viewElements[view];
+      if (viewEl.parentElement !== body) {
+        body.appendChild(viewEl);
+      }
+    }
+  }
+
+  // Modules not assigned to any slot wait in the hidden stash.
+  PANEL_MODULES.forEach((module) => {
+    if (!views.includes(module) && viewElements[module].parentElement !== viewStash) {
+      viewStash.appendChild(viewElements[module]);
+    }
+  });
+}
+
+function persistLayout(): void {
+  settings = updateSettings({ layout: settings.layout });
+}
+
+/** Assign a module (or nothing) to a panel; a module held elsewhere swaps in. */
 function setPanelView(index: number, view: PanelView): void {
-  const current = layout.views[index];
+  const views = [...settings.layout.views];
+  const current = views[index];
   if (current === view) {
     return;
   }
-  const views = [...layout.views];
-  views[views.indexOf(view)] = current;
+  if (view !== 'none') {
+    const other = views.indexOf(view);
+    if (other !== -1) {
+      views[other] = current;
+    }
+  }
   views[index] = view;
-  layout = { ...layout, views };
-  updateSettings({ layout });
+  settings.layout.views = views;
+  persistLayout();
   applyLayout();
 }
 
 function setPanelCount(count: number): void {
-  layout = { ...layout, panelCount: count };
-  updateSettings({ layout });
+  settings.layout.panelCount = count;
+  persistLayout();
   applyLayout();
 }
 
-// --- Editor helpers ----------------------------------------------------------
+// --- Splitter dragging -------------------------------------------------------
 
-function refreshGutter(): void {
-  const count = editor.value.split('\n').length;
-  gutter.textContent = Array.from({ length: count }, (_, i) => String(i + 1)).join('\n');
+function clampPercent(value: number): number {
+  return Math.min(90, Math.max(10, value));
 }
 
-function focusLine(line: number): void {
-  const lines = editor.value.split('\n');
-  let start = 0;
-  for (let i = 0; i < line - 1 && i < lines.length; i += 1) {
-    start += lines[i].length + 1;
-  }
-  const length = lines[line - 1]?.length ?? 0;
-  editor.focus();
-  editor.setSelectionRange(start, start + length);
+/** Generic pointer-drag on a handle; reports 10-90 percentages within container. */
+function wireDrag(
+  handle: HTMLElement,
+  container: HTMLElement,
+  onDrag: (xPercent: number, yPercent: number) => void,
+): void {
+  handle.addEventListener('pointerdown', (event) => {
+    event.preventDefault();
+    handle.setPointerCapture(event.pointerId);
+    handle.classList.add('is-dragging');
+
+    const onMove = (move: PointerEvent): void => {
+      const rect = container.getBoundingClientRect();
+      const x = clampPercent(((move.clientX - rect.left) / rect.width) * 100);
+      const y = clampPercent(((move.clientY - rect.top) / rect.height) * 100);
+      onDrag(x, y);
+      applyLayout();
+    };
+
+    const onUp = (): void => {
+      handle.classList.remove('is-dragging');
+      handle.removeEventListener('pointermove', onMove);
+      persistLayout();
+    };
+
+    handle.addEventListener('pointermove', onMove);
+    handle.addEventListener('pointerup', onUp, { once: true });
+  });
+}
+
+/** Splitter axis follows its current orientation class (3-panel mode flips it). */
+function wireSplitter(splitterId: string, containerId: string, apply: (percent: number) => void): void {
+  const splitter = requireElement(splitterId);
+  wireDrag(splitter, requireElement(containerId), (x, y) => {
+    apply(splitter.classList.contains('splitter--h') ? y : x);
+  });
+}
+
+wireSplitter('split-top', 'row-top', (p) => {
+  settings.layout.sizes.topCols = p;
+});
+wireSplitter('split-bottom', 'row-bottom', (p) => {
+  settings.layout.sizes.bottomCols = p;
+});
+wireSplitter('split-rows', 'panes', (p) => {
+  // When the solo panel leads (top/left), the divider measures the solo share.
+  settings.layout.sizes.rows = soloIsFirst() ? 100 - p : p;
+});
+
+// 4-panel mode: dragging the center handle moves the row split and aligns
+// both column splits to the same axis.
+wireDrag(requireElement('center-handle'), requireElement('panes'), (x, y) => {
+  settings.layout.sizes.rows = y;
+  settings.layout.sizes.topCols = x;
+  settings.layout.sizes.bottomCols = x;
+});
+
+// --- Editor helpers ----------------------------------------------------------
+
+function applyEditorPrefs(): void {
+  editor.setWordWrap(settings.editorWordWrap);
 }
 
 // --- Status & diagnostics ----------------------------------------------------
@@ -155,7 +290,7 @@ function renderDiagnostics(report: WorkbenchReport): void {
     item.textContent = `${issue.severity === 'error' ? '✗' : '⚠'} ${issue.message}`;
     item.addEventListener('click', () => {
       if (issue.line !== null) {
-        focusLine(issue.line);
+        editor.focusLine(issue.line);
       } else {
         editor.focus();
       }
@@ -186,14 +321,22 @@ function redrawMap(): void {
   );
 }
 
-preview.onRender = () => redrawMap();
+preview.onRender = (situationId) => {
+  statusSituationEl.textContent = `@ ${situationId}`;
+  redrawMap();
+};
 
 // --- Compile pipeline --------------------------------------------------------
 
 function compileNow(): void {
-  const report = analyzeSource(editor.value);
+  const report = analyzeSource(editor.getValue());
   renderStatus(report);
   renderDiagnostics(report);
+  editor.setMarkers(
+    report.issues
+      .filter((issue) => issue.line !== null)
+      .map((issue) => ({ line: issue.line!, message: issue.message, severity: issue.severity })),
+  );
   if (report.config) {
     lastGoodConfig = report.config;
     preview.mount(report.config);
@@ -207,14 +350,13 @@ function scheduleCompile(): void {
     clearTimeout(debounceTimer);
   }
   debounceTimer = setTimeout(() => {
-    saveDraft(editor.value);
+    saveDraft(editor.getValue());
     compileNow();
   }, COMPILE_DEBOUNCE_MS);
 }
 
 function setSource(source: string): void {
-  editor.value = source;
-  refreshGutter();
+  editor.setValue(source);
   saveDraft(source);
   compileNow();
 }
@@ -222,9 +364,10 @@ function setSource(source: string): void {
 // --- Toolbar actions ---------------------------------------------------------
 
 function exportStory(): void {
-  const title = /^title:\s*(.+)$/m.exec(editor.value)?.[1]?.trim() ?? '';
+  const source = editor.getValue();
+  const title = /^title:\s*(.+)$/m.exec(source)?.[1]?.trim() ?? '';
   const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'story';
-  const blob = new Blob([editor.value], { type: 'text/plain' });
+  const blob = new Blob([source], { type: 'text/plain' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
@@ -235,13 +378,9 @@ function exportStory(): void {
 
 // --- Wiring ------------------------------------------------------------------
 
-editor.addEventListener('input', () => {
-  refreshGutter();
-  scheduleCompile();
-});
-
-editor.addEventListener('scroll', () => {
-  gutter.scrollTop = editor.scrollTop;
+editor.onChange(() => scheduleCompile());
+editor.onCursorChange((line, column) => {
+  statusCursorEl.textContent = `Ln ${line}, Col ${column}`;
 });
 
 requireElement<HTMLButtonElement>('btn-new').addEventListener('click', () => {
@@ -279,16 +418,30 @@ requireElement<HTMLButtonElement>('btn-restart').addEventListener('click', () =>
 });
 
 requireElement<HTMLButtonElement>('btn-settings').addEventListener('click', () => {
-  void openSettingsDialog();
+  void openSettingsDialog({
+    onChange: (next: WorkbenchSettings) => {
+      settings = next;
+      applyEditorPrefs();
+      applyLayout();
+    },
+  });
 });
 
 layoutSelect.addEventListener('change', () => {
   setPanelCount(Number(layoutSelect.value));
 });
 
+requireElement<HTMLButtonElement>('btn-solo-position').addEventListener('click', () => {
+  const current = settings.layout.soloPosition;
+  const next = SOLO_POSITIONS[(SOLO_POSITIONS.indexOf(current) + 1) % SOLO_POSITIONS.length];
+  settings.layout.soloPosition = next;
+  persistLayout();
+  applyLayout();
+});
+
 for (let i = 0; i < 4; i += 1) {
   const picker = requireElement<HTMLSelectElement>(`panel-picker-${i}`);
-  PANEL_VIEWS.forEach((view) => {
+  (['editor', 'play', 'map', 'diagnostics', 'none'] as PanelView[]).forEach((view) => {
     const option = document.createElement('option');
     option.value = view;
     option.textContent = VIEW_LABELS[view];
@@ -299,8 +452,25 @@ for (let i = 0; i < 4; i += 1) {
   });
 }
 
-// Restore layout, then the last draft (or seed first-timers with the sample).
+// Test/automation hooks (used by the Playwright E2E suite).
+declare global {
+  interface Window {
+    __workbench?: {
+      getSource(): string;
+      setSource(source: string): void;
+      wordWrapOn(): boolean;
+    };
+  }
+}
+window.__workbench = {
+  getSource: () => editor.getValue(),
+  setSource,
+  wordWrapOn: () => settings.editorWordWrap,
+};
+
+// Restore layout and prefs; the editor was created with the saved draft
+// (or the sample story) already loaded.
 applyLayout();
-editor.value = loadDraft() ?? SAMPLE_STORY;
-refreshGutter();
+applyEditorPrefs();
 compileNow();
+statusCursorEl.textContent = 'Ln 1, Col 1';

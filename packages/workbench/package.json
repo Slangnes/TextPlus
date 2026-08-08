@@ -15,6 +15,7 @@
     "@textplus/author": "*",
     "@textplus/core": "*",
     "@textplus/map": "*",
+    "monaco-editor": "^0.56.0",
     "typescript": "^5.3.3",
     "vite": "^5.0.8"
   }

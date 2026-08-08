@@ -8,6 +8,7 @@
  */
 
 import { getSettings, updateSettings } from './settings';
+import type { WorkbenchSettings } from './settings';
 
 export interface ConfirmOptions {
   title?: string;
@@ -124,8 +125,15 @@ export function confirmAction(message: string, options: ConfirmOptions = {}): Pr
   });
 }
 
-/** Settings dialog: currently just the confirmation toggle. */
-export function openSettingsDialog(storage?: Storage | null): Promise<void> {
+export interface SettingsDialogOptions {
+  storage?: Storage | null;
+  /** Called with the full settings after every change, for live application. */
+  onChange?: (settings: WorkbenchSettings) => void;
+}
+
+/** Settings dialog: confirmation and editor preferences. */
+export function openSettingsDialog(options: SettingsDialogOptions = {}): Promise<void> {
+  const { storage, onChange } = options;
   return new Promise<void>((resolve) => {
     let shell: ModalShell;
     const finish = (): void => {
@@ -135,17 +143,29 @@ export function openSettingsDialog(storage?: Storage | null): Promise<void> {
 
     shell = buildModal('Workbench Settings', finish);
 
-    const row = document.createElement('label');
-    row.className = 'modal__setting';
-    const toggle = document.createElement('input');
-    toggle.type = 'checkbox';
-    toggle.checked = getSettings(storage).confirmBeforeReplace;
-    toggle.addEventListener('change', () => {
-      updateSettings({ confirmBeforeReplace: toggle.checked }, storage);
-    });
-    row.appendChild(toggle);
-    row.appendChild(document.createTextNode(' Ask for confirmation before replacing the story'));
-    shell.body.appendChild(row);
+    const addToggle = (
+      label: string,
+      key: 'confirmBeforeReplace' | 'editorWordWrap',
+      className: string,
+    ): void => {
+      const row = document.createElement('label');
+      row.className = `modal__setting ${className}`;
+      const toggle = document.createElement('input');
+      toggle.type = 'checkbox';
+      toggle.checked = getSettings(storage)[key];
+      toggle.addEventListener('change', () => {
+        const next = updateSettings({ [key]: toggle.checked }, storage);
+        if (onChange) {
+          onChange(next);
+        }
+      });
+      row.appendChild(toggle);
+      row.appendChild(document.createTextNode(` ${label}`));
+      shell.body.appendChild(row);
+    };
+
+    addToggle('Ask for confirmation before replacing the story', 'confirmBeforeReplace', 'modal__setting--confirm');
+    addToggle('Wrap long lines in the editor', 'editorWordWrap', 'modal__setting--wrap');
 
     const closeButton = makeButton('Close', 'primary', finish);
     shell.actions.appendChild(closeButton);

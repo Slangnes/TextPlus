@@ -74,9 +74,19 @@
 
     .brand span { color: var(--wb-accent); }
 
+    .statusbar {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      padding: 4px 16px;
+      background: var(--wb-surface);
+      border-top: 1px solid var(--wb-border);
+      font-size: 12px;
+    }
+
     .status {
       flex: 1;
-      font-size: 13px;
+      font-size: 12px;
       color: var(--wb-text-dim);
       overflow: hidden;
       text-overflow: ellipsis;
@@ -86,6 +96,12 @@
     .status--ok { color: var(--wb-ok); }
     .status--warning { color: var(--wb-warning); }
     .status--error { color: var(--wb-error); }
+
+    .statusbar__item {
+      color: var(--wb-text-dim);
+      font-family: 'Consolas', 'Menlo', monospace;
+      white-space: nowrap;
+    }
 
     .actions { display: flex; gap: 8px; align-items: center; }
 
@@ -117,34 +133,78 @@
       cursor: pointer;
     }
 
-    /* --- Panel grid -------------------------------------------------------- */
+    /* --- Panel rows & splitters -------------------------------------------- */
+
+    [hidden] { display: none !important; }
+
+    .toolbar-spacer { flex: 1; }
 
     .panes {
       flex: 1;
-      display: grid;
+      display: flex;
+      flex-direction: column;
       min-height: 0;
-      gap: 1px;
-      background: var(--wb-border);
+      position: relative;
     }
 
-    .panes--1 { grid-template-columns: 1fr; }
-    .panes--2 { grid-template-columns: 1fr 1fr; }
-    .panes--3,
-    .panes--4 {
-      grid-template-columns: 1fr 1fr;
-      grid-template-rows: 1fr 1fr;
+    .panes--sideways { flex-direction: row; }
+
+    .pane-row {
+      display: flex;
+      min-width: 0;
+      min-height: 0;
+      flex: 1 1 0%;
     }
-    .panes--3 .panel:nth-child(3) { grid-column: 1 / -1; }
+
+    .pane-row--stacked { flex-direction: column; }
+
+    .center-handle {
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      margin: -9px 0 0 -9px;
+      border-radius: 50%;
+      background: var(--wb-border);
+      border: 2px solid var(--wb-surface);
+      cursor: move;
+      z-index: 10;
+      touch-action: none;
+      transition: background 0.15s;
+    }
+
+    .center-handle:hover,
+    .center-handle.is-dragging { background: var(--wb-accent); }
+
+    .splitter {
+      flex: 0 0 6px;
+      background: var(--wb-border);
+      transition: background 0.15s;
+      touch-action: none;
+    }
+
+    .splitter:hover,
+    .splitter.is-dragging { background: var(--wb-accent); }
+
+    .splitter--v { cursor: col-resize; }
+    .splitter--h { cursor: row-resize; }
 
     .panel {
       display: flex;
       flex-direction: column;
       min-width: 0;
       min-height: 0;
+      flex: 1 1 0%;
       background: var(--wb-bg);
     }
 
-    .panel[hidden] { display: none; }
+    .panel-empty {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      color: var(--wb-text-dim);
+    }
 
     .panel-head {
       display: flex;
@@ -186,32 +246,10 @@
       background: var(--wb-surface);
     }
 
-    #gutter {
-      margin: 0;
-      padding: 12px 8px 12px 12px;
-      font: 13px/1.5 'Consolas', 'Menlo', monospace;
-      text-align: right;
-      color: var(--wb-text-dim);
-      background: var(--wb-surface-alt);
-      border-right: 1px solid var(--wb-border);
-      overflow: hidden;
-      user-select: none;
-      min-width: 3.5ch;
-    }
-
-    #editor {
+    .editor-host {
       flex: 1;
       min-width: 0;
-      padding: 12px;
-      font: 13px/1.5 'Consolas', 'Menlo', monospace;
-      color: var(--wb-text);
-      background: var(--wb-surface);
-      border: none;
-      outline: none;
-      resize: none;
-      white-space: pre;
-      overflow-wrap: normal;
-      overflow: auto;
+      min-height: 0;
     }
 
     .view-play,
@@ -436,7 +474,7 @@
 <body>
   <header class="toolbar">
     <div class="brand">TextPlus <span>Workbench</span></div>
-    <div class="status" id="status"></div>
+    <div class="toolbar-spacer"></div>
     <div class="actions">
       <button type="button" id="btn-new">New</button>
       <select id="example-select" aria-label="Load example story">
@@ -450,43 +488,65 @@
         <option value="3">3 panels</option>
         <option value="4">4 panels</option>
       </select>
+      <button type="button" id="btn-solo-position" hidden aria-label="Large panel position"></button>
       <button type="button" id="btn-settings" aria-label="Settings">⚙</button>
     </div>
   </header>
 
-  <main class="panes panes--4" id="panes">
-    <section class="panel" id="panel-0" aria-label="Panel 1">
-      <div class="panel-head">
-        <select class="panel-picker" id="panel-picker-0" aria-label="Panel 1 module"></select>
-      </div>
-      <div class="panel-body" id="panel-body-0"></div>
-    </section>
-    <section class="panel" id="panel-1" aria-label="Panel 2">
-      <div class="panel-head">
-        <select class="panel-picker" id="panel-picker-1" aria-label="Panel 2 module"></select>
-      </div>
-      <div class="panel-body" id="panel-body-1"></div>
-    </section>
-    <section class="panel" id="panel-2" aria-label="Panel 3">
-      <div class="panel-head">
-        <select class="panel-picker" id="panel-picker-2" aria-label="Panel 3 module"></select>
-      </div>
-      <div class="panel-body" id="panel-body-2"></div>
-    </section>
-    <section class="panel" id="panel-3" aria-label="Panel 4">
-      <div class="panel-head">
-        <select class="panel-picker" id="panel-picker-3" aria-label="Panel 4 module"></select>
-      </div>
-      <div class="panel-body" id="panel-body-3"></div>
-    </section>
+  <main class="panes" id="panes">
+    <div class="pane-row" id="row-top">
+      <section class="panel" id="panel-0" aria-label="Panel 1">
+        <div class="panel-head">
+          <select class="panel-picker" id="panel-picker-0" aria-label="Panel 1 module"></select>
+        </div>
+        <div class="panel-body" id="panel-body-0">
+          <div class="panel-empty" id="panel-empty-0">Empty panel — pick a module above</div>
+        </div>
+      </section>
+      <div class="splitter splitter--v" id="split-top" role="separator" aria-orientation="vertical"></div>
+      <section class="panel" id="panel-1" aria-label="Panel 2">
+        <div class="panel-head">
+          <select class="panel-picker" id="panel-picker-1" aria-label="Panel 2 module"></select>
+        </div>
+        <div class="panel-body" id="panel-body-1">
+          <div class="panel-empty" id="panel-empty-1">Empty panel — pick a module above</div>
+        </div>
+      </section>
+    </div>
+    <div class="splitter splitter--h" id="split-rows" role="separator" aria-orientation="horizontal"></div>
+    <div class="pane-row" id="row-bottom">
+      <section class="panel" id="panel-2" aria-label="Panel 3">
+        <div class="panel-head">
+          <select class="panel-picker" id="panel-picker-2" aria-label="Panel 3 module"></select>
+        </div>
+        <div class="panel-body" id="panel-body-2">
+          <div class="panel-empty" id="panel-empty-2">Empty panel — pick a module above</div>
+        </div>
+      </section>
+      <div class="splitter splitter--v" id="split-bottom" role="separator" aria-orientation="vertical"></div>
+      <section class="panel" id="panel-3" aria-label="Panel 4">
+        <div class="panel-head">
+          <select class="panel-picker" id="panel-picker-3" aria-label="Panel 4 module"></select>
+        </div>
+        <div class="panel-body" id="panel-body-3">
+          <div class="panel-empty" id="panel-empty-3">Empty panel — pick a module above</div>
+        </div>
+      </section>
+    </div>
+    <div class="center-handle" id="center-handle" hidden role="separator"
+      aria-label="Drag to resize all four panels from the center" title="Drag to resize all four panels"></div>
   </main>
+
+  <footer class="statusbar">
+    <div class="status" id="status"></div>
+    <div class="statusbar__item" id="status-situation" title="Current situation in the preview"></div>
+    <div class="statusbar__item" id="status-cursor"></div>
+  </footer>
 
   <!-- Module views live here until applyLayout() moves them into panels. -->
   <div id="view-stash" hidden>
     <div class="view view-editor" id="view-editor">
-      <pre id="gutter" aria-hidden="true"></pre>
-      <textarea id="editor" spellcheck="false" autocapitalize="off" autocomplete="off" wrap="off"
-        aria-label="TextPlus DSL source"></textarea>
+      <div class="editor-host" id="editor-host" aria-label="TextPlus DSL source"></div>
     </div>
     <div class="view view-play" id="view-play">
       <div id="preview-game"></div>

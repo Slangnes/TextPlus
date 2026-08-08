@@ -27,14 +27,14 @@ These are the four projects that TextPlus directly builds upon or extends.
 - **Repository:** <https://github.com/henck/trizbort>
 - **Live application:** <https://www.trizbort.io>
 - **Author:** Hans Donner (henck)
-- **License:** See repository
+- **License:** MIT
 - **Description:** A TypeScript/browser-based interactive fiction map editor and code generator. It supports room drawing, connection routing, and code export for Inform 7, TADS 3, Alan 2 & 3, Quest, ZIL, and YAML. Built with Vite and the JAMstack (no server back-end).
 - **Why it matters to TextPlus:** TextPlus Map adds automated room-layout and transcript-import features to Trizbort.io.
 
 ### Transmatte
 - **Website:** <https://eblong.com/zarf/transmatte/>
 - **Author:** Andrew Plotkin ("Zarf")
-- **License:** See site
+- **License:** Public domain (the script header states: "This script is in the public domain. Do anything.")
 - **Description:** A tool that takes parser IF transcripts and converts them into a hypertext-style HTML document, giving the feel of an Undum/Raconteur-style forward experience without requiring full re-authoring.
 - **Why it matters to TextPlus:** TextPlus Convert is a CLI-first re-implementation and extension of the Transmatte workflow.
 

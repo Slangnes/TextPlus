@@ -30,7 +30,8 @@ This document tracks the features, deliverables, and milestones for the TextPlus
 
 ### Roadmap Changelog
 
-- **2026-08-07**: Workbench: configurable 1-4 panel layout (each panel hosts any module: Editor/Play/Map/Diagnostics, persisted). Added Playwright E2E suite (10 scenarios) with tracing always on — trace.zip artifacts are the release visual-QA vector (see CLAUDE.md).
+- **2026-08-07**: Workbench editor upgraded to Monaco (monaco-editor 0.56): TextPlus DSL syntax highlighting (Monarch grammar), palette-matched light/dark themes, line numbers that stay correct under word wrap, diagnostic squiggles from the lint pipeline. Verified Transmatte's license factually (public domain) in CREDITS.md; documented the Trizbort parity gap in `packages/map/README.md`. Added "Beyond Text" vision section (rich interfaces, HUDs).
+- **2026-08-07**: Workbench: configurable 1-4 panel layout (each panel hosts any module or nothing; drag-resizable splitters, 4-panel center handle, 3-panel solo-position control; persisted), bottom status bar (compile state / current situation / cursor), editor word wrap. Added Playwright E2E suite (16 scenarios) with tracing always on — trace.zip artifacts are the release visual-QA vector (see CLAUDE.md).
 - **2026-08-07**: Added `@textplus/workbench` browser authoring app (DSL editor | live playable preview | story map | diagnostics, in-app modals with suppressible confirmations per CLAUDE.md convention). Implemented first M3 slice in `@textplus/map`: layered-BFS auto-layout + `graphFromConfig` adapter with 15 real unit tests (replacing placeholders). Added DSL adaptations of all three demo games as workbench examples.
 - **2026-04-21**: Resolved metadata and API blockers: aligned package entrypoints to dist outputs, removed stale CLI bin declarations, and replaced placeholder Author API throws with working implementations.
 - **2026-04-21**: Implemented M2 workflow integration (parse→compile→lint), 15 integration tests (100% coverage), formatters for diagnostic reports and JSON output.
@@ -502,6 +503,25 @@ npm run test:core:watch
 ```
 
 Use the package README files and this roadmap for current command and status references.
+
+---
+
+## Beyond Text: Rich Interfaces (the *Plus*)
+
+TextPlus exists because hypertext IF can be more than "text, then choices." *A Mind Forever Voyaging* shipped status displays and mode-switching interfaces on 1980s Z-machine hardware; Undum's quality model and Raconteur's tooling already point past the superficial page. Modern browsers should let authors go much further, and TextPlus should expose those tools rather than keep them engine-internal.
+
+Anchor points that already exist in `@textplus/core`:
+- `SituationRenderer` is a public interface — custom renderers (split layouts, illustrated scenes, terminal/HUD chrome) can replace `DomRenderer` today.
+- Qualities + change events are the raw material for live HUDs (meters, clocks, inventories, PRISM-style status readouts).
+- `applyTheme` supports state-driven re-theming (e.g. the world darkens as sanity drops — Memory Keeper already wants this).
+
+Candidate work (promote into milestones as they firm up):
+- [ ] Quality-driven HUD panel: declarative binding of qualities to meters/badges/readouts, renderable in a workbench panel and in exported games
+- [ ] DSL surface for presentation: theme/interface directives so authors reach these tools without writing TypeScript
+- [ ] Situation "modes" (interface switching per situation tags — AMFV's communions/simulation jumps as a first-class idea)
+- [ ] Timed/dynamic text and scheduled events (beyond click-driven transitions)
+- [ ] Media situations: illustrations, ambient audio hooks, soundscapes
+- [ ] Workbench "Game" panel variants so authors preview HUD + text + map simultaneously
 
 ---
 
