@@ -190,6 +190,8 @@ export interface GameConfig {
   schedule?: ScheduleEntry[];
   /** Optional capturable tasks/scenes (see TaskDefinition) */
   tasks?: Record<string, TaskDefinition>;
+  /** Opt into a player-facing in-game map ("map dungeon" in the DSL) */
+  map?: { style: 'dungeon' };
   /** Optional game metadata */
   author?: string;
   version?: string;

@@ -94,6 +94,8 @@ export interface AuthorGameAst {
   schedule?: AuthorScheduleNode[];
   /** Task declarations in order (undefined when none). */
   tasks?: AuthorTaskNode[];
+  /** Player-facing in-game map opt-in ("map dungeon"). */
+  map?: { style: 'dungeon' };
   positions?: AuthorPositions;
 }
 
@@ -180,6 +182,7 @@ export function parseGame(source: string): AuthorGameAst {
   const worlds: AuthorWorldNode[] = [];
   const schedule: AuthorScheduleNode[] = [];
   const tasks: AuthorTaskNode[] = [];
+  let mapStyle: 'dungeon' | undefined;
 
   let currentSituation: PendingSituation | null = null;
   let expectingSituationTitle = false;
@@ -269,6 +272,15 @@ export function parseGame(source: string): AuthorGameAst {
         message,
       });
       positions.schedule.push(lineNumber);
+      continue;
+    }
+
+    if (!currentSituation && trimmed.startsWith('map ')) {
+      const match = trimmed.match(/^map\s+(dungeon)$/);
+      if (!match) {
+        throw new Error(`Line ${lineNumber}: invalid map directive (only "map dungeon" is implemented)`);
+      }
+      mapStyle = 'dungeon';
       continue;
     }
 
@@ -374,6 +386,7 @@ export function parseGame(source: string): AuthorGameAst {
     worlds: worlds.length > 0 ? worlds : undefined,
     schedule: schedule.length > 0 ? schedule : undefined,
     tasks: tasks.length > 0 ? tasks : undefined,
+    map: mapStyle ? { style: mapStyle } : undefined,
     positions,
   };
 }

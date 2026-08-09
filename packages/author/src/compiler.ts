@@ -283,6 +283,7 @@ export function compileAST(ast: AuthorGameAst, options: CompileAstOptions = {}):
     worlds,
     schedule: scheduleEntries,
     tasks: tasksRecord,
+    map: ast.map,
   };
 
   return {

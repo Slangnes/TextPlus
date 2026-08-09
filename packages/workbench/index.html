@@ -542,6 +542,8 @@
 
     .map-arrowhead { fill: var(--wb-text-dim); }
 
+    .map-edge--gated { stroke-dasharray: 5 4; opacity: 0.8; }
+
     .map-legend {
       margin: 12px 0 0 0;
       font-size: 12px;
@@ -601,6 +603,40 @@
       font-size: 11px;
       color: var(--wb-text-dim);
       margin-bottom: 4px;
+    }
+
+    /* --- In-game dungeon map ----------------------------------------------- */
+
+    .tp-gamemap-host {
+      margin-top: 14px;
+      border-top: 1px solid var(--wb-border);
+      padding-top: 10px;
+    }
+
+    .tp-gamemap { max-width: 100%; }
+
+    .tp-gamemap__room rect {
+      fill: var(--wb-surface);
+      stroke: var(--wb-border);
+      stroke-width: 1.5;
+    }
+
+    .tp-gamemap__room { cursor: pointer; }
+    .tp-gamemap__room.is-here { cursor: default; }
+
+    .tp-gamemap__room.is-here rect {
+      stroke: var(--wb-accent);
+      stroke-width: 2.5;
+    }
+
+    .tp-gamemap__label {
+      font-size: 10px;
+      fill: var(--wb-text);
+    }
+
+    .tp-gamemap__path {
+      stroke: var(--wb-text-dim);
+      stroke-width: 1.5;
     }
 
     /* --- Scheduled messages ------------------------------------------------ */

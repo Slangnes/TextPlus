@@ -45,6 +45,8 @@ export interface GraphEdge {
   to: string;
   /** Compass/spatial direction of the exit, when known. */
   direction?: Direction;
+  /** True when the link is gated by a condition (drawn dashed in dev views). */
+  conditional?: boolean;
 }
 
 export interface StoryGraph {

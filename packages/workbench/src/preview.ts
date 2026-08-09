@@ -8,6 +8,7 @@
 
 import { createGame, DomRenderer, renderQualities, renderHud, applyHudThemes } from '@textplus/core';
 import type { GameConfig, GameEngine, JournalEntry, TaskDefinition } from '@textplus/core';
+import { renderGameMap } from '@textplus/map';
 
 export interface MountOptions {
   /** Try to keep the current playthrough (situation + qualities). Default true. */
@@ -147,6 +148,15 @@ export class PreviewHost {
       }
     } else if (Object.keys(qualities).length > 0) {
       renderQualities(qualities, this.container);
+    }
+
+    // Games that opt in ship a player-facing dungeon map: fog-of-war reveal
+    // of visited rooms, fast-travel to places already seen.
+    if (this.engine.config.map?.style === 'dungeon') {
+      const host = document.createElement('div');
+      host.className = 'tp-gamemap-host';
+      this.container.appendChild(host);
+      renderGameMap(this.engine, host);
     }
 
     if (this.onRender) {

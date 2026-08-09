@@ -41,6 +41,7 @@ The Lower Stacks
 | `theme <name> when <expr>` | Sets `data-theme="<name>"` on the play surface while the expression holds; last matching rule wins |
 | `every <n> [in <world>] [{ effects }] [say "msg"]` | Fire effects and/or a message on every Nth turn of the game clock (each transition and `wait()` tick is one turn) |
 | `at <n> [in <world>] [{ effects }] [say "msg"]` | Fire exactly once when the clock reaches turn N. World-scoped entries only fire while the player is there — a missed moment stays missed. Declaring `quality turn number = 0` gets the clock engine-maintained for conditions/HUD/interpolation |
+| `map dungeon` | Ship a player-facing in-game map: fog-of-war reveal of visited rooms, a you-are-here marker, fast-travel to rooms already seen. Distinct from the workbench's developer map |
 | `task <id> ["label"]` | Declare a capturable task/scene; `{ capture <id> }` effects complete it, recording the situation's content into the journal exactly as it read at capture time |
 | `world <id> ["Label"]` | Declare a world/mode. Situations join it via qualified ids (`:: <world>:<id>`); links may target any world's situations (`=> comm:feed-a`), and crossing worlds is an ordinary transition. Each world resumes at its last-visited situation; the current world is exposed as `data-world` on the play surface and, when you declare `quality world string = ...`, mirrored into that quality for conditions/HUD/themes |
 

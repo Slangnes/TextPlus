@@ -31,6 +31,8 @@ export type {
 export { directionFromText, directionLabel } from './directions';
 export { graphToTrizbort } from './trizbort';
 export type { TrizbortOptions } from './trizbort';
+export { renderGameMap } from './gamemap';
+export type { GameMapOptions } from './gamemap';
 export { graphFromConfig } from './adapter';
 export { importTranscript } from './importer';
 export { importZilRooms } from './zil';

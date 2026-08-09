@@ -103,7 +103,7 @@ export function renderMap(layout: GraphLayout, options: MapViewOptions, target: 
     line.setAttribute('y1', String(start.y));
     line.setAttribute('x2', String(end.x));
     line.setAttribute('y2', String(end.y));
-    line.setAttribute('class', 'map-edge');
+    line.setAttribute('class', edge.conditional ? 'map-edge map-edge--gated' : 'map-edge');
     line.setAttribute('marker-end', 'url(#map-arrow)');
     root.appendChild(line);
 
