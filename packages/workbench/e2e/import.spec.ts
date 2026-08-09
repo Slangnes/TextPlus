@@ -99,7 +99,10 @@ test.describe('import transcript', () => {
     await expect(page.locator('.modal__textarea')).toHaveValue(/CHAPEL-GARDEN/);
     await page.locator('.modal__button--primary').click();
 
-    await expect(page.locator('.modal__body p').first()).toContainText('imported transcript');
+    // The confirm carries the deconstruction summary — recovered and not.
+    const summary = page.locator('.modal__body p').first();
+    await expect(summary).toContainText('Recovered 2 rooms');
+    await expect(summary).toContainText('not recovered');
     await page.locator('.modal__button--primary').click();
 
     await expect(page.locator('#status')).toContainText('✓ Chapel Garden');

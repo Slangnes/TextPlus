@@ -23,8 +23,8 @@ export { mergeTranscriptsToDsl } from './merge';
 export type { MergeOptions } from './merge';
 
 // Implemented: ZIL deconstruction — the actual program → DSL, no transcript.
-export { zilToDsl } from './zil';
-export type { ZilToDslOptions } from './zil';
+export { zilToDsl, deconstructZil, formatConversionReport } from './zil';
+export type { ZilToDslOptions, ConversionReport } from './zil';
 
 export interface TranscriptParseOptions {
   engine?: 'zmachine' | 'glulx' | 'inform7' | 'tads3';

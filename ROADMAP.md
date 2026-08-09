@@ -401,6 +401,7 @@ Required phase gates:
 ### Planned Implementation
 - [ ] Transcript parser: engine-specific formats (Glulx, Inform 7, TADS 3; the plain Z-machine-style path is shipped)
 - [x] ZIL deconstruction (2026-08-09) — `zilToDsl`: the actual program → DSL with real room prose and compass exits, no transcript needed (CLI auto-detects; the workbench Import dialog accepts pasted or file-picked ZIL). Compiled .z5 binaries remain the horizon note
+- [x] Deep deconstruction (2026-08-09 later) — gated exits (`IF FLAG` / `IF DOOR IS OPEN` → `? quality` links), `--globals` extraction, multi-file → worlds with cross-file world-switch links, and a **conversion report** (recovered / derived / not recovered) in the CLI and the Import dialog. Proven on the full AMFV set: 178 rooms / 3 worlds / 446 exits, 185 SORRY + 197 PER exits reported honestly
 - [x] Multi-transcript merging (detect branching) — `mergeTranscriptsToDsl` in `packages/convert/src/merge.ts`
 - [x] TextPlus DSL code generator — `transcriptToDsl` (linear) + branching merge output
 - [ ] Standalone HTML code generator

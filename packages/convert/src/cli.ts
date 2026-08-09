@@ -11,19 +11,25 @@
 
 import { transcriptToDsl } from './transcript';
 import { mergeTranscriptsToDsl } from './merge';
-import { zilToDsl } from './zil';
+import { deconstructZil, formatConversionReport } from './zil';
+import type { ConversionReport } from './zil';
 
 const USAGE = `Usage: textplus-convert <input...> [options]
 
 Converts parser-IF material to TextPlus DSL:
   transcript file(s)   One converts linearly; several merge into a branching
                        story (rooms unify by header name).
-  ZIL source file(s)   Deconstructed directly - rooms, prose, and compass
-                       exits are recovered from the program itself
-                       (auto-detected by <ROOM ...> forms).
+  ZIL source file(s)   Deconstructed directly - rooms, prose, compass exits,
+                       and gated (conditional) exits are recovered from the
+                       program itself (auto-detected by <ROOM ...> forms).
+                       Several ZIL files become worlds - one per file, with
+                       cross-file exits as world-switch links. Every ZIL run
+                       prints a deconstruction report: recovered / derived /
+                       not recovered.
 
 Options:
   --title <title>   Override the story title
+  --globals         ZIL only: extract simple <GLOBAL> declarations as qualities
   --out <file>      Write the DSL to a file instead of stdout
   --check           Compile the result through @textplus/author and report
 `;
@@ -39,6 +45,7 @@ export async function runCli(argv: string[]): Promise<number> {
   let title: string | undefined;
   let out: string | undefined;
   let check = false;
+  let globals = false;
 
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
@@ -54,6 +61,8 @@ export async function runCli(argv: string[]): Promise<number> {
       }
     } else if (arg === '--check') {
       check = true;
+    } else if (arg === '--globals') {
+      globals = true;
     } else if (arg.startsWith('--')) {
       return usage();
     } else {
@@ -76,6 +85,7 @@ export async function runCli(argv: string[]): Promise<number> {
   }
 
   let dsl: string;
+  let conversionReport: ConversionReport | null = null;
   try {
     const zilCount = texts.filter((text) => /<ROOM\s/.test(text)).length;
     if (zilCount > 0 && zilCount < texts.length) {
@@ -83,7 +93,13 @@ export async function runCli(argv: string[]): Promise<number> {
       return 1;
     }
     if (zilCount > 0) {
-      dsl = zilToDsl(texts.join('\n\n'), { title });
+      const zilFiles = files.map((file, index) => ({
+        name: file.replace(/\\/g, '/').split('/').pop() ?? file,
+        source: texts[index],
+      }));
+      const result = deconstructZil(zilFiles, { title, globals });
+      dsl = result.dsl;
+      conversionReport = result.report;
     } else {
       dsl =
         texts.length === 1
@@ -100,6 +116,10 @@ export async function runCli(argv: string[]): Promise<number> {
     console.log(`DSL written to ${out}`);
   } else {
     console.log(dsl);
+  }
+
+  if (conversionReport) {
+    console.log(formatConversionReport(conversionReport));
   }
 
   if (check) {

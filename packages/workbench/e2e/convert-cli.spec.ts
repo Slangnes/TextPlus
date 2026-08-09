@@ -11,6 +11,28 @@ import { fileURLToPath } from 'node:url';
 import { test, expect } from '@playwright/test';
 import { ZIL_FIXTURE } from './helpers';
 
+const GATEHOUSE_ZIL = `"Gatehouse area"
+
+<ROOM GATE-HOUSE
+      (LOC ROOMS)
+      (DESC "Gate House")
+      (LDESC "Iron bars shadow the flagstones.")
+      (NORTH TO INNER-COURT IF IRON-GATE IS OPEN)
+      (SOUTH TO INNER-COURT IF ALARM-RAISED)
+      (EAST TO CHAPEL-GARDEN)>
+
+<ROOM INNER-COURT
+      (LOC ROOMS)
+      (DESC "Inner Court")
+      (LDESC "A square of trampled grass.")
+      (SOUTH TO GATE-HOUSE)>
+
+<GLOBAL WATCH-COUNT 3>
+<GLOBAL HAS-TORCH <>>
+<GLOBAL BANNER-TEXT "For the realm">
+<GLOBAL GUARD-TABLE <ITABLE 5>>
+`;
+
 const packagesDir = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const convertBin = join(packagesDir, 'convert', 'bin', 'textplus-convert.mjs');
 
@@ -123,6 +145,52 @@ test.describe('convert CLI', () => {
     expect(result.output).toContain('-> Go north => old-chapel');
     expect(result.output).toContain('✅ DSL compilation successful');
     expect(result.output).toContain('Situations: 2');
+    // Every ZIL run carries its honesty report.
+    expect(result.output).toContain('Deconstruction report:');
+    expect(result.output).toContain('SORRY (blocked) exits');
+  });
+
+  test('conditional ZIL exits become gated links over synthesized qualities', async () => {
+    writeFileSync(join(workDir, 'gatehouse.zil'), GATEHOUSE_ZIL, 'utf8');
+    const result = await run([join(workDir, 'gatehouse.zil'), '--check']);
+    expect(result.status).toBe(0);
+    // Door gate (IF X IS OPEN) and flag gate (IF FLAG) both surface.
+    expect(result.output).toContain('quality iron-gate-open boolean = false');
+    expect(result.output).toContain('quality alarm-raised boolean = false');
+    expect(result.output).toContain('-> Go north => inner-court ? iron-gate-open');
+    expect(result.output).toContain('-> Go south => inner-court ? alarm-raised');
+    expect(result.output).toContain('door gate: "IRON-GATE IS OPEN"');
+    expect(result.output).toContain('exits target rooms outside the given files'); // CHAPEL-GARDEN
+    expect(result.output).toContain('✅ DSL compilation successful');
+  });
+
+  test('multiple ZIL files become worlds with cross-file world-switch links', async () => {
+    writeFileSync(join(workDir, 'chapel.zil'), ZIL_FIXTURE, 'utf8');
+    writeFileSync(join(workDir, 'gatehouse.zil'), GATEHOUSE_ZIL, 'utf8');
+    const result = await run([
+      join(workDir, 'chapel.zil'),
+      join(workDir, 'gatehouse.zil'),
+      '--check',
+    ]);
+    expect(result.status).toBe(0);
+    expect(result.output).toContain('world chapel');
+    expect(result.output).toContain('world gatehouse');
+    expect(result.output).toContain(':: chapel:chapel-garden [start]');
+    expect(result.output).toContain(':: gatehouse:gate-house');
+    // The cross-file exit resolved into a world-switch link.
+    expect(result.output).toContain('-> Go east => chapel:chapel-garden');
+    expect(result.output).toContain('✅ DSL compilation successful');
+    expect(result.output).toContain('Situations: 4');
+  });
+
+  test('--globals extracts simple globals as qualities and reports the rest', async () => {
+    writeFileSync(join(workDir, 'gatehouse.zil'), GATEHOUSE_ZIL, 'utf8');
+    const result = await run([join(workDir, 'gatehouse.zil'), '--globals']);
+    expect(result.status).toBe(0);
+    expect(result.output).toContain('quality watch-count number = 3');
+    expect(result.output).toContain('quality has-torch boolean = false');
+    expect(result.output).toContain('quality banner-text string = For the realm');
+    expect(result.output).toContain('1 table/complex globals'); // GUARD-TABLE
   });
 
   test('empty transcripts fail cleanly', async () => {

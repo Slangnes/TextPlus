@@ -15,7 +15,8 @@ import { loadDraft, saveDraft } from './drafts';
 import { BLANK_TEMPLATE, EXAMPLES, SAMPLE_STORY } from './examples';
 import { confirmAction, openImportDialog, openSettingsDialog } from './modal';
 import { renderJournal } from './journal';
-import { transcriptToDsl, zilToDsl } from '@textplus/convert';
+import { transcriptToDsl, deconstructZil, formatConversionReport } from '@textplus/convert';
+import type { ConversionReport } from '@textplus/convert';
 import { renderMap } from './mapview';
 import { getSettings, updateSettings, PANEL_MODULES, SOLO_POSITIONS } from './settings';
 import type { PanelModule, PanelView, SoloPosition, WorkbenchSettings } from './settings';
@@ -513,14 +514,34 @@ exampleSelect.addEventListener('change', () => {
 });
 
 requireElement<HTMLButtonElement>('btn-import').addEventListener('click', () => {
+  let report: ConversionReport | null = null;
   void openImportDialog({
     // ZIL source deconstructs directly; anything else is read as a transcript.
-    convert: (text) => (/<ROOM\s/.test(text) ? zilToDsl(text) : transcriptToDsl(text)),
+    convert: (text) => {
+      report = null;
+      if (/<ROOM\s/.test(text)) {
+        const result = deconstructZil([{ name: 'import', source: text }], {});
+        report = result.report;
+        return result.dsl;
+      }
+      return transcriptToDsl(text);
+    },
   }).then((dsl) => {
     if (dsl === null) {
       return;
     }
-    void confirmAction('Replace the current story with the imported transcript?').then((confirmed) => {
+    let message = 'Replace the current story with the imported transcript?';
+    if (report) {
+      // Surface the deconstruction honestly: what came over, what didn't.
+      console.log(formatConversionReport(report));
+      const r = report.recovered;
+      message =
+        `Replace the current story with the deconstructed game? ` +
+        `Recovered ${r.rooms} rooms, ${r.exits} exits (${r.gatedExits} gated), ` +
+        `prose for ${r.proseLdesc + r.proseMLook} rooms; ` +
+        `${report.notRecovered.length} categories not recovered (full report in the console).`;
+    }
+    void confirmAction(message).then((confirmed) => {
       if (confirmed) {
         setSource(dsl);
       }

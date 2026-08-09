@@ -4,7 +4,7 @@ Transcript-to-story conversion (the Transmatte-inspired workflow). This file is 
 
 ## Status
 
-🚧 Milestone 4 in progress — four slices shipped: plain-text transcript → linear DSL (the workbench **Import** feature), multi-transcript **branching merge**, the **`textplus-convert` CLI**, and **ZIL deconstruction** (2026-08-09) — the Transmatte flow fed by the actual program instead of a transcript. Compiled story-file (.z5) deconstruction and the HTML/Trizbort generators remain ahead.
+🚧 Milestone 4 in progress — the Transmatte flow runs from the actual program: ZIL deconstruction recovers rooms, prose, compass exits, **gated (conditional) exits** over synthesized qualities, opt-in **globals as qualities** (`--globals`), and **multi-file → worlds** (one world per file, cross-file exits as world-switch links). Every ZIL run emits a **deconstruction report** (recovered / derived / not recovered — modeled on the cite-your-source discipline of AMFV-EE's game-data.js), printed by the CLI and summarized in the workbench Import confirm. Plus: transcripts (linear + branching merge). Compiled story-file (.z5) deconstruction and the HTML/Trizbort generators remain ahead. Proving ground: the full AMFV set (prism+rockvil+apartment) → 178 rooms / 3 worlds / 446 exits, prose for 167, with 185 SORRY + 197 PER exits honestly reported as not recovered.
 
 ## Current Surface
 
@@ -12,7 +12,7 @@ Transcript-to-story conversion (the Transmatte-inspired workflow). This file is 
 |---|---|
 | `src/transcript.ts` | `parseTranscriptText(text)` — segments a transcript into moves (`>` commands, room headers, prose; strips `[Score…]`/`*** … ***` noise). `transcriptToDsl(text, {title?})` — one situation per move, slugified deduped ids, `[start]` tag, links from sentence-cased commands, linkless final situation, directive-lookalike prose neutralized. Throws only on empty input |
 | `src/merge.ts` | `mergeTranscriptsToDsl(texts, {title?})` — merges several playthroughs into one branching story: rooms unify by header name (within and across transcripts), shared rooms gain one link per distinct continuation; headerless moves stay linear (nothing safe to unify on) |
-| `src/zil.ts` | `zilToDsl(source, {title?})` — deconstructs original ZIL: every `<ROOM …>` becomes a situation with its **real prose** (`LDESC`, else the ACTION routine's M-LOOK strings, best effort) and movement-labeled links from its exits, so the story lays out compass-true. Proven on AMFV's `rockvil.zil`: 150 situations, ~137 with recovered prose, compiles clean |
+| `src/zil.ts` | `deconstructZil(files, {title?, globals?})` → `{dsl, report}` (plus `zilToDsl` single-source convenience): rooms with real prose (LDESC, else M-LOOK strings — flagged *derived*), movement-labeled exits, `IF FLAG` / `IF DOOR IS OPEN` gates → boolean qualities + `? gated` links (mechanics reported as authoring work), simple globals → qualities, multi-file → worlds. `formatConversionReport` renders the recovered/derived/not-recovered ledger |
 | `src/cli.ts` + `bin/` | `textplus-convert <input...> [--title] [--out] [--check]` — ZIL sources auto-detected (`<ROOM` forms) and deconstructed; otherwise one transcript converts linearly, several merge; `--check` compiles through `@textplus/author`. Exit codes 0/1/2. Run `bin/textplus-convert.mjs` after `npm run build` |
 | `src/index.ts` | Public exports: `parseTranscriptText`, `transcriptToDsl`, `mergeTranscriptsToDsl` (+ types); the `slugify`/`sentenceCase`/`sanitizeProse` helpers stay module-internal; `parseTranscript` / `generateDSL` / `generateHTML` remain throwing M4 placeholders |
 
@@ -37,7 +37,8 @@ The merge and CLI slices are verified by `e2e/convert-cli.spec.ts`: linear conve
 
 - [ ] Compiled story-file deconstruction (.z5/.dat) — ZIL *source* deconstruction shipped; binaries remain the horizon note
 - [ ] Engine-specific transcript formats: Glulx, Inform 7, TADS 3
-- [ ] Object/inventory extraction (from transcripts or ZIL objects)
+- [ ] Object/inventory extraction (ZIL `<OBJECT>` forms — next docs-grounded slice)
+- [ ] Blocked-link DSL construct (a gated link with a refusal message) — would recover the 185 SORRY exits
 - [ ] Standalone HTML generator (via Core)
 - [ ] Trizbort map generator (pairs with `@textplus/map`)
 - [ ] Merge unification for headerless moves (currently only room headers unify)
