@@ -364,6 +364,7 @@ Required phase gates:
 ### Planned Implementation
 - [x] Auto-layout algorithm (positions rooms without overlaps — layered BFS grid, orphans in trailing column)
 - [x] Importer (parse transcripts → room graph) — `importTranscript` in `packages/map/src/importer.ts`
+- [x] ZIL source importer — `importZilRooms` in `packages/map/src/zil.ts` recovers the exact room graph from original Infocom source (beyond Trizbort's transcript-only import); proven on AMFV's `rockvil.zil` (150 rooms / 331 connections → compiling DSL)
 - [x] Code generator: TextPlus Author DSL — `graphToDsl` in `packages/map/src/codegen.ts` (Inform 7 and Ink still open below)
 - [ ] Batch rename / find-replace
 - [x] Round-trip conversion (map ↔ DSL) — transcript → graph → DSL → config → graph verified in `e2e/map-tools.spec.ts` (topology + tags survive; prose is a placeholder)

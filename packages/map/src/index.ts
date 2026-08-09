@@ -7,6 +7,7 @@
  * - Auto-layout algorithm for room/situation positioning (layered BFS grid)
  * - GameConfig → StoryGraph adapter for graph visualization
  * - Transcript importer: play transcript → StoryGraph (rooms + connections)
+ * - ZIL importer: original Infocom source → exact StoryGraph, no playthrough
  * - DSL code generation: StoryGraph → compiling TextPlus Author skeleton
  *   (round-trip with graphFromConfig)
  *
@@ -28,6 +29,7 @@ export type {
 } from './layout';
 export { graphFromConfig } from './adapter';
 export { importTranscript } from './importer';
+export { importZilRooms } from './zil';
 export { graphToDsl } from './codegen';
 export type { GraphToDslOptions } from './codegen';
 

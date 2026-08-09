@@ -13,6 +13,7 @@ Story-graph layout and (eventually) Trizbort-style automation. This file is the 
 | `src/layout.ts` | `layoutGraph(graph, {columnWidth?, rowHeight?})` (defaults 200×72) — layered-BFS grid auto-layout: shortest-path depth columns from the start situation, unique cells, orphans parked in a trailing column with `reachable: false`, terminal (ending) flags |
 | `src/adapter.ts` | `graphFromConfig` — `@textplus/core` GameConfig → neutral `StoryGraph` (parallel links deduplicated) |
 | `src/importer.ts` | `importTranscript(text)` — play transcript → `StoryGraph`: room headers become nodes (unified by name, so revisits converge), commands become edges; headerless responses become linear step nodes. Extracts structure only — prose-preserving conversion belongs to `@textplus/convert` |
+| `src/zil.ts` | `importZilRooms(source)` — original Infocom ZIL source → exact `StoryGraph`: `<ROOM …>` forms become nodes (titled by `DESC`), plain and conditional directional exits become edges; `SORRY`/`PER` exits and cross-file targets are skipped. Proven on AMFV's real `rockvil.zil`: 150 rooms, 331 connections, compiles into a playable DSL skeleton |
 | `src/codegen.ts` | `graphToDsl(graph, {title?})` — compiling TextPlus DSL skeleton from a graph (titles, tags — emitted comma-form to match the parser — links, and start survive; prose is a placeholder; throws on an empty graph) |
 | `src/index.ts` | Public exports; legacy `autoLayout(rooms)` surface backed by the real engine |
 

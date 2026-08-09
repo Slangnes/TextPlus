@@ -13,6 +13,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { test, expect } from '@playwright/test';
 import { importTranscript } from '../../map/src/importer';
+import { importZilRooms } from '../../map/src/zil';
 import { graphToDsl } from '../../map/src/codegen';
 import { graphFromConfig } from '../../map/src/adapter';
 import type { StoryGraph } from '../../map/src/layout';
@@ -98,6 +99,53 @@ test.describe('map tools', () => {
       graph.nodes.map((node) => node.id).sort(),
     );
     expect(roundTripped.edges).toEqual(graph.edges);
+  });
+
+  test('importZilRooms recovers rooms and exits from ZIL source', async () => {
+    const zil = `"Test area"
+
+<ROOM TOWN-SQUARE
+      (LOC ROOMS)
+      (DESC "Town Square")
+      (NORTH TO OLD-CHURCH)
+      (EAST TO MARKET IF GATES-OPEN)
+      (SW SORRY "The alley is blocked.")
+      (WEST PER SECRET-DOOR-F)
+      (FLAGS OUTSIDEBIT)>
+
+<ROUTINE SECRET-DOOR-F () <RTRUE>>
+
+<ROOM OLD-CHURCH
+      (LOC ROOMS)
+      (DESC "Old Church")
+      (SOUTH TO TOWN-SQUARE)
+      (DOWN TO CRYPT)>
+
+<ROOM MARKET
+      (LOC ROOMS)
+      (NORTH TO ELSEWHERE-NOT-DEFINED)>
+`;
+    const graph = importZilRooms(zil);
+    await test.info().attach('zil-graph.json', {
+      body: JSON.stringify(graph, null, 2),
+      contentType: 'application/json',
+    });
+
+    expect(graph.startId).toBe('town-square');
+    expect(graph.nodes.map((node) => node.id)).toEqual(['town-square', 'old-church', 'market']);
+    expect(graph.nodes[2].title).toBe('Market'); // no DESC — titled from the id
+    expect(graph.edges).toEqual([
+      { from: 'town-square', to: 'old-church' }, // plain exit
+      { from: 'town-square', to: 'market' }, // conditional exit keeps its target
+      { from: 'old-church', to: 'town-square' },
+      // SORRY/PER exits, the CRYPT exit (undefined room), and ELSEWHERE are dropped
+    ]);
+    expect(() => importZilRooms('<ROUTINE NOPE () <RTRUE>>')).toThrow('No <ROOM');
+
+    // And the recovered graph feeds the same DSL pipeline as everything else.
+    const { report } = await compileDsl(workDir, graphToDsl(graph));
+    expect(report.success).toBe(true);
+    expect(Object.keys(report.config.situations)).toHaveLength(3);
   });
 
   test('tags survive the round-trip, including a start node with extra tags', async () => {
