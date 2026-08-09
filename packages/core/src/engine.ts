@@ -6,6 +6,7 @@ import type {
   EventListener,
   GameConfig,
   GameEngine,
+  GameMessageEvent,
   GameState,
   QualityChangeEvent,
   SituationChangeEvent,
@@ -25,10 +26,13 @@ export class TextPlusGameEngine implements GameEngine {
   private history: string[] = [];
   /** Last-visited situation per world, for world-switch resume. */
   private perWorldPositions: Record<string, string> = {};
+  /** Turn clock: 0 at start; every transition (and wait tick) advances it. */
+  private turnCount = 0;
 
   private situationChangeListeners: EventListener<SituationChangeEvent>[] = [];
   private qualityChangeListeners: EventListener<QualityChangeEvent>[] = [];
   private worldChangeListeners: EventListener<WorldChangeEvent>[] = [];
+  private messageListeners: EventListener<GameMessageEvent>[] = [];
 
   constructor(config: GameConfig) {
     if (!config.initialSituation) {
@@ -56,6 +60,55 @@ export class TextPlusGameEngine implements GameEngine {
       this.situationSystem.callOnEnter(initialSituation, this);
     }
     this.mirrorWorldQuality();
+    this.mirrorTurnQuality();
+  }
+
+  /**
+   * Like the `world` quality: declaring a number quality named `turn` opts in
+   * to the engine maintaining it, so the clock is visible to conditions,
+   * interpolation, HUD readouts, and theme rules with no extra plumbing.
+   */
+  private mirrorTurnQuality(): void {
+    if (this.qualitySystem.getDefinition('turn')?.type !== 'number') {
+      return;
+    }
+    if (this.qualitySystem.getValue('turn') !== this.turnCount) {
+      this.setQuality('turn', this.turnCount);
+    }
+  }
+
+  /** Advance the clock one tick and fire any due scheduled entries. */
+  private tickSchedule(): void {
+    this.turnCount += 1;
+    this.mirrorTurnQuality();
+    for (const entry of this.config.schedule ?? []) {
+      if (entry.world && entry.world !== this.getCurrentWorld()) {
+        continue;
+      }
+      const due =
+        entry.at !== undefined
+          ? entry.at === this.turnCount
+          : entry.every !== undefined
+            ? entry.every > 0 && this.turnCount % entry.every === 0
+            : false;
+      if (!due) {
+        continue;
+      }
+      if (entry.effects) {
+        try {
+          entry.effects(this);
+        } catch (error) {
+          console.error('Error in scheduled effects:', error);
+        }
+      }
+      if (entry.message) {
+        this.emitMessage({
+          message: entry.message,
+          turn: this.turnCount,
+          timestamp: Date.now()
+        });
+      }
+    }
   }
 
   /** Remember the situation as the world's resume point, when it has one. */
@@ -184,6 +237,9 @@ export class TextPlusGameEngine implements GameEngine {
       this.situationSystem.callOnEnter(newDefinition, this);
     }
     this.mirrorWorldQuality();
+    // The clock ticks after arrival (schedule sees the post-move world) and
+    // before the situation-change emit, so one render shows post-event state.
+    this.tickSchedule();
 
     this.emitSituationChange({
       previousSituation,
@@ -215,6 +271,17 @@ export class TextPlusGameEngine implements GameEngine {
     this.transition(target);
   }
 
+  getTurn(): number {
+    return this.turnCount;
+  }
+
+  /** Let time pass in place: N clock ticks with no movement or lifecycle. */
+  wait(turns = 1): void {
+    for (let i = 0; i < turns; i += 1) {
+      this.tickSchedule();
+    }
+  }
+
   followLink(link: SituationLink): void {
     if (link.onChoose) {
       try {
@@ -234,6 +301,7 @@ export class TextPlusGameEngine implements GameEngine {
       },
       qualities: this.qualitySystem.exportState(),
       perWorldPositions: { ...this.perWorldPositions },
+      turnCount: this.turnCount,
       version: SAVE_FORMAT_VERSION,
       timestamp: Date.now()
     };
@@ -260,6 +328,11 @@ export class TextPlusGameEngine implements GameEngine {
       }
     });
     this.trackWorldPosition(this.currentSituationId);
+    // Pre-scheduler saves lack turnCount. Under this engine's own semantics
+    // every transition was exactly one turn (wait() didn't exist), so
+    // history.length - 1 IS the true turn count for them — derived, not guessed.
+    this.turnCount = state.turnCount ?? Math.max(0, state.situations.history.length - 1);
+    this.mirrorTurnQuality();
   }
 
   reset(): void {
@@ -268,12 +341,14 @@ export class TextPlusGameEngine implements GameEngine {
     this.history = [this.currentSituationId];
     this.perWorldPositions = {};
     this.trackWorldPosition(this.currentSituationId);
+    this.turnCount = 0;
 
     const situation = this.situationSystem.getSituation(this.currentSituationId);
     if (situation) {
       this.situationSystem.callOnEnter(situation, this);
     }
     this.mirrorWorldQuality();
+    this.mirrorTurnQuality();
   }
 
   onQualityChange(listener: EventListener<QualityChangeEvent>): () => void {
@@ -302,6 +377,16 @@ export class TextPlusGameEngine implements GameEngine {
       const index = this.worldChangeListeners.indexOf(listener);
       if (index >= 0) {
         this.worldChangeListeners.splice(index, 1);
+      }
+    };
+  }
+
+  onMessage(listener: EventListener<GameMessageEvent>): () => void {
+    this.messageListeners.push(listener);
+    return () => {
+      const index = this.messageListeners.indexOf(listener);
+      if (index >= 0) {
+        this.messageListeners.splice(index, 1);
       }
     };
   }
@@ -390,6 +475,16 @@ export class TextPlusGameEngine implements GameEngine {
         listener(event);
       } catch (error) {
         console.error('Error in world change listener:', error);
+      }
+    }
+  }
+
+  private emitMessage(event: GameMessageEvent): void {
+    for (const listener of this.messageListeners) {
+      try {
+        listener(event);
+      } catch (error) {
+        console.error('Error in message listener:', error);
       }
     }
   }

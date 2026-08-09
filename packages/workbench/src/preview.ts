@@ -18,6 +18,8 @@ export interface RenderInfo {
   situationId: string;
   /** World/mode of the current situation, when the game uses worlds. */
   worldId?: string;
+  /** Current turn on the game clock. */
+  turn?: number;
 }
 
 export class PreviewHost {
@@ -25,12 +27,36 @@ export class PreviewHost {
   private readonly renderer = new DomRenderer();
   private engine: GameEngine | null = null;
   private unsubscribes: Array<() => void> = [];
+  private messageLog: HTMLElement | null = null;
 
   /** Invoked after every render with the current position (survives remounts). */
   onRender: ((info: RenderInfo) => void) | null = null;
 
   constructor(container: HTMLElement) {
     this.container = container;
+  }
+
+  /** Host element for scheduled-message log entries (.tp-message). */
+  attachMessageLog(element: HTMLElement): void {
+    this.messageLog = element;
+  }
+
+  private appendMessage(message: string, turn: number): void {
+    if (!this.messageLog) {
+      return;
+    }
+    const entry = document.createElement('div');
+    entry.className = 'tp-message';
+    const turnEl = document.createElement('span');
+    turnEl.className = 'tp-message__turn';
+    turnEl.textContent = `turn ${turn}`;
+    entry.appendChild(turnEl);
+    entry.appendChild(document.createTextNode(` ${message}`));
+    this.messageLog.appendChild(entry);
+  }
+
+  private clearMessages(): void {
+    this.messageLog?.replaceChildren();
   }
 
   /** The engine backing the current preview, if a game is mounted. */
@@ -43,6 +69,9 @@ export class PreviewHost {
     const saved = this.engine ? this.engine.getSaveState() : null;
 
     this.teardown();
+    if (!preserveState) {
+      this.clearMessages();
+    }
 
     let engine = createGame(config);
     if (preserveState && saved && config.situations[saved.currentSituation]) {
@@ -60,6 +89,20 @@ export class PreviewHost {
     if (engine.onWorldChange) {
       this.unsubscribes.push(engine.onWorldChange(() => this.render()));
     }
+    if (engine.onMessage) {
+      this.unsubscribes.push(
+        engine.onMessage((event) => this.appendMessage(event.message, event.turn)),
+      );
+    }
+    this.render();
+  }
+
+  /** Let time pass in place, then reflect the new clock in the UI. */
+  wait(turns = 1): void {
+    if (!this.engine?.wait) {
+      return;
+    }
+    this.engine.wait(turns);
     this.render();
   }
 
@@ -69,6 +112,7 @@ export class PreviewHost {
       return;
     }
     this.engine.reset();
+    this.clearMessages();
     this.render();
   }
 
@@ -94,6 +138,7 @@ export class PreviewHost {
       this.onRender({
         situationId: this.engine.currentSituation,
         worldId: situation.world,
+        turn: this.engine.getTurn?.(),
       });
     }
   }

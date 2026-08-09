@@ -16,6 +16,7 @@ import type {
   HudConfig,
   HudThemeRule,
   QualityDefinition,
+  ScheduleEntry,
   SituationDefinition,
   SituationLink,
   WorldDefinition,
@@ -222,6 +223,33 @@ export function compileAST(ast: AuthorGameAst, options: CompileAstOptions = {}):
     // linter reports them (empty-world) so the gap is visible, not silent.
   }
 
+  // Compile the turn-clock schedule
+  let scheduleEntries: ScheduleEntry[] | undefined;
+  if (ast.schedule && ast.schedule.length > 0) {
+    scheduleEntries = [];
+    ast.schedule.forEach((node) => {
+      let effects: ((game: GameEngine) => void) | undefined;
+      if (node.effects) {
+        try {
+          effects = compileEffects(parseEffects(node.effects));
+        } catch (error) {
+          errors.push({
+            type: 'invalid_effects',
+            message: `Schedule "${node.kind} ${node.turns}": invalid effects "${node.effects}": ${(error as Error).message}`,
+          });
+          return;
+        }
+      }
+      const entry: ScheduleEntry = { world: node.world, effects, message: node.message };
+      if (node.kind === 'every') {
+        entry.every = node.turns;
+      } else {
+        entry.at = node.turns;
+      }
+      scheduleEntries!.push(entry);
+    });
+  }
+
   if (errors.length > 0) {
     return {
       config: null,
@@ -236,6 +264,7 @@ export function compileAST(ast: AuthorGameAst, options: CompileAstOptions = {}):
     situations: situationsRecord,
     hud,
     worlds,
+    schedule: scheduleEntries,
   };
 
   return {

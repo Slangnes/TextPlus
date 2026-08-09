@@ -44,6 +44,16 @@ export interface AuthorWorldNode {
   label?: string;
 }
 
+/** A schedule directive ("every 2 { pressure += 1 }", "at 12 say \"...\""). */
+export interface AuthorScheduleNode {
+  kind: 'every' | 'at';
+  turns: number;
+  world?: string;
+  /** Raw effects string (undefined when the entry only says something). */
+  effects?: string;
+  message?: string;
+}
+
 /** 1-based source line numbers, kept out of the nodes so AST deep-equals stay stable. */
 export interface AuthorPositions {
   qualities: Record<string, number>;
@@ -58,6 +68,8 @@ export interface AuthorPositions {
   themes: number[];
   /** Parallel to the worlds array. */
   worlds: number[];
+  /** Parallel to the schedule array. */
+  schedule: number[];
 }
 
 export interface AuthorGameAst {
@@ -70,6 +82,8 @@ export interface AuthorGameAst {
   themes?: AuthorThemeNode[];
   /** World declarations in order (undefined when none). */
   worlds?: AuthorWorldNode[];
+  /** Schedule directives in order (undefined when none). */
+  schedule?: AuthorScheduleNode[];
   positions?: AuthorPositions;
 }
 
@@ -148,10 +162,12 @@ export function parseGame(source: string): AuthorGameAst {
     hud: [],
     themes: [],
     worlds: [],
+    schedule: [],
   };
   const hud: AuthorHudNode[] = [];
   const themes: AuthorThemeNode[] = [];
   const worlds: AuthorWorldNode[] = [];
+  const schedule: AuthorScheduleNode[] = [];
 
   let currentSituation: PendingSituation | null = null;
   let expectingSituationTitle = false;
@@ -213,6 +229,34 @@ export function parseGame(source: string): AuthorGameAst {
       const [, theme, when] = match;
       themes.push({ theme, when: when.trim() });
       positions.themes.push(lineNumber);
+      continue;
+    }
+
+    if (!currentSituation && (trimmed.startsWith('every ') || trimmed.startsWith('at '))) {
+      const match = trimmed.match(
+        /^(every|at)\s+(\d+)(?:\s+in\s+([a-zA-Z][\w-]*))?(?:\s*\{\s*(.+?)\s*\})?(?:\s+say\s+"([^"]*)")?$/,
+      );
+      if (!match) {
+        throw new Error(
+          `Line ${lineNumber}: invalid schedule directive (expected: every|at <turns> [in <world>] [{ effects }] [say "message"])`,
+        );
+      }
+      const [, kind, rawTurns, world, effects, message] = match;
+      const turns = Number(rawTurns);
+      if (kind === 'every' && turns < 1) {
+        throw new Error(`Line ${lineNumber}: "every ${rawTurns}" must be at least every 1 turn`);
+      }
+      if (!effects && !message) {
+        throw new Error(`Line ${lineNumber}: schedule directive needs effects and/or say "message"`);
+      }
+      schedule.push({
+        kind: kind as AuthorScheduleNode['kind'],
+        turns,
+        world,
+        effects: effects?.trim(),
+        message,
+      });
+      positions.schedule.push(lineNumber);
       continue;
     }
 
@@ -305,6 +349,7 @@ export function parseGame(source: string): AuthorGameAst {
     hud: hud.length > 0 ? hud : undefined,
     themes: themes.length > 0 ? themes : undefined,
     worlds: worlds.length > 0 ? worlds : undefined,
+    schedule: schedule.length > 0 ? schedule : undefined,
     positions,
   };
 }

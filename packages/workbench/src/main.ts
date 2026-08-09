@@ -42,6 +42,7 @@ function requireElement<T extends HTMLElement>(id: string): T {
 const statusEl = requireElement<HTMLElement>('status');
 const statusSituationEl = requireElement<HTMLElement>('status-situation');
 const statusWorldEl = requireElement<HTMLElement>('status-world');
+const statusTurnEl = requireElement<HTMLElement>('status-turn');
 const statusCursorEl = requireElement<HTMLElement>('status-cursor');
 const diagnosticsEl = requireElement<HTMLElement>('diagnostics');
 const mapContainer = requireElement<HTMLElement>('map-container');
@@ -49,6 +50,7 @@ const exampleSelect = requireElement<HTMLSelectElement>('example-select');
 const layoutSelect = requireElement<HTMLSelectElement>('layout-select');
 const viewStash = requireElement<HTMLElement>('view-stash');
 const preview = new PreviewHost(requireElement<HTMLElement>('preview-game'));
+preview.attachMessageLog(requireElement<HTMLElement>('preview-messages'));
 
 const viewElements: Record<PanelModule, HTMLElement> = {
   editor: requireElement<HTMLElement>('view-editor'),
@@ -384,6 +386,7 @@ function redrawMap(): void {
 preview.onRender = (info) => {
   statusSituationEl.textContent = `@ ${info.situationId}`;
   statusWorldEl.textContent = info.worldId ? `⬒ ${worldLabel(info.worldId)}` : '';
+  statusTurnEl.textContent = info.turn !== undefined ? `⏱ ${info.turn}` : '';
   // The map follows the player between worlds (unless viewing All).
   if (info.worldId && activeMapWorld && info.worldId !== activeMapWorld) {
     activeMapWorld = info.worldId;
@@ -573,6 +576,8 @@ declare global {
       wordWrapOn(): boolean;
       getWorld(): string | undefined;
       setWorld(worldId: string): void;
+      getTurn(): number | undefined;
+      wait(turns?: number): void;
     };
   }
 }
@@ -583,6 +588,10 @@ window.__workbench = {
   getWorld: () => preview.getEngine()?.getCurrentWorld?.(),
   setWorld: (worldId: string) => {
     preview.getEngine()?.goToWorld?.(worldId);
+  },
+  getTurn: () => preview.getEngine()?.getTurn?.(),
+  wait: (turns?: number) => {
+    preview.wait(turns);
   },
 };
 

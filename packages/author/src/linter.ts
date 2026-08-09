@@ -281,6 +281,27 @@ export function lintAST(ast: AuthorGameAst): LintOutput {
     }
   });
 
+  // Schedule directives: effect parsing/typing + world references
+  (ast.schedule ?? []).forEach((node, index) => {
+    const line = ast.positions?.schedule?.[index];
+    if (node.effects) {
+      checkEffects(node.effects, line, `schedule ${node.kind} ${node.turns}`);
+    }
+    if (node.world) {
+      const known =
+        (ast.worlds ?? []).some((world) => world.id === node.world) ||
+        Object.keys(ast.situations).some((id) => id.startsWith(`${node.world}:`));
+      if (!known) {
+        diagnostics.push({
+          severity: 'warning',
+          code: 'unknown-world-in-schedule',
+          message: `${prefix(line)}schedule references unknown world "${node.world}"`,
+          line,
+        });
+      }
+    }
+  });
+
   // Declared worlds must contain at least one situation (world:... id)
   (ast.worlds ?? []).forEach((worldNode, index) => {
     const hasMember = Object.keys(ast.situations).some((id) =>

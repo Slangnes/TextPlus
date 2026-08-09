@@ -46,6 +46,11 @@ export const LINE_RULES: GroupRule[] = [
     /^(world)(\s+)([a-zA-Z][\w-]*)((?:\s+"[^"]*")?)(\s*)$/,
     ['keyword', 'white', 'type.identifier', 'string', 'white'],
   ],
+  // every 2 { pressure += 1 } / at 12 in hall say "..."
+  [
+    /^(every|at)(\s+)(\d+)((?:\s+in\s+[a-zA-Z][\w-]*)?)((?:\s*\{.*?\})?)((?:\s+say\s+"[^"]*")?)(\s*)$/,
+    ['keyword', 'white', 'constant', 'annotation', 'attribute', 'string', 'white'],
+  ],
   // :: situation-id [tags, here]  (ids may be world-qualified: world:situation)
   [
     /^(::)(\s+)([a-zA-Z][\w-]*(?::[a-zA-Z][\w-]*)?)((?:\s+\[[^\]]*\])?)(\s*)$/,

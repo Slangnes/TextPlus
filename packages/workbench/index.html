@@ -550,6 +550,26 @@
 
     .map-empty { color: var(--wb-text-dim); }
 
+    /* --- Scheduled messages ------------------------------------------------ */
+
+    .preview-messages:not(:empty) {
+      margin-top: 14px;
+      border-top: 1px solid var(--wb-border);
+      padding-top: 10px;
+    }
+
+    .tp-message {
+      font-size: 13px;
+      color: var(--wb-text);
+      padding: 3px 0;
+    }
+
+    .tp-message__turn {
+      font-size: 11px;
+      color: var(--wb-text-dim);
+      margin-right: 6px;
+    }
+
     /* --- Modals ------------------------------------------------------------ */
 
     .modal-backdrop {
@@ -718,6 +738,7 @@
     <div class="status" id="status"></div>
     <div class="statusbar__item" id="status-world" title="Current world/mode in the preview"></div>
     <div class="statusbar__item" id="status-situation" title="Current situation in the preview"></div>
+    <div class="statusbar__item" id="status-turn" title="Current turn on the game clock"></div>
     <div class="statusbar__item" id="status-cursor"></div>
   </footer>
 
@@ -728,6 +749,7 @@
     </div>
     <div class="view view-play" id="view-play">
       <div id="preview-game"></div>
+      <div id="preview-messages" class="preview-messages" aria-label="Messages" aria-live="polite"></div>
     </div>
     <div class="view view-map" id="view-map">
       <div id="map-container"></div>

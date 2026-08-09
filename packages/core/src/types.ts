@@ -127,6 +127,26 @@ export interface WorldDefinition {
 }
 
 /**
+ * One scheduled event on the turn clock. Turns are transitions: every
+ * `goToSituation`/`followLink`/`goToWorld` (and each `wait()` tick) advances
+ * the counter by one. `at` fires exactly once, on that turn; `every` fires on
+ * each multiple. World-scoped entries fire only while the player is there —
+ * a moment missed (wrong world at the time) is missed, never replayed.
+ */
+export interface ScheduleEntry {
+  /** Fire on every Nth turn (mutually exclusive with `at`) */
+  every?: number;
+  /** Fire once when the turn counter reaches exactly N */
+  at?: number;
+  /** Only fire while the current situation belongs to this world */
+  world?: string;
+  /** Compiled effects to run (failures are logged, never thrown) */
+  effects?: (game: GameEngine) => void;
+  /** Message emitted through onMessage (rendered as a play-panel log entry) */
+  message?: string;
+}
+
+/**
  * Complete game configuration
  */
 export interface GameConfig {
@@ -142,6 +162,8 @@ export interface GameConfig {
   hud?: HudConfig;
   /** Optional named worlds/modes (see WorldDefinition) */
   worlds?: Record<string, WorldDefinition>;
+  /** Optional turn-clock schedule (see ScheduleEntry) */
+  schedule?: ScheduleEntry[];
   /** Optional game metadata */
   author?: string;
   version?: string;
@@ -165,6 +187,8 @@ export interface GameState {
   qualities: Record<string, number | string | boolean>;
   /** Last-visited situation per world, for world-switch resume (optional) */
   perWorldPositions?: Record<string, string>;
+  /** Turn counter (optional; pre-scheduler saves derive it from history) */
+  turnCount?: number;
   /** Save file version for compatibility checking */
   version: number;
   /** When was this save created? */
@@ -207,6 +231,17 @@ export interface WorldChangeEvent {
   currentWorld: string | undefined;
   /** Situation arrived at */
   currentSituation: string;
+  /** When did this occur? */
+  timestamp: number;
+}
+
+/**
+ * Event fired when a scheduled (or engine) message is emitted
+ */
+export interface GameMessageEvent {
+  message: string;
+  /** Turn the message fired on */
+  turn: number;
   /** When did this occur? */
   timestamp: number;
 }
@@ -285,6 +320,15 @@ export interface GameEngine {
 
   /** Subscribe to world change events (optional — worlds-aware engines only) */
   onWorldChange?(listener: EventListener<WorldChangeEvent>): () => void;
+
+  /** Current turn (0 before the first transition) */
+  getTurn?(): number;
+
+  /** Let time pass in place: advance N turns (default 1) without moving */
+  wait?(turns?: number): void;
+
+  /** Subscribe to scheduled-message events */
+  onMessage?(listener: EventListener<GameMessageEvent>): () => void;
 
   /** Get readable content for the current situation (with dynamic evaluation) */
   getCurrentSituationContent(): string;
