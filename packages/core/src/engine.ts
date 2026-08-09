@@ -11,6 +11,7 @@ import type {
   SituationChangeEvent,
   SituationLink
 } from './types';
+import { SAVE_FORMAT_VERSION } from './types';
 import { QualitySystem } from './qualities';
 import { SituationSystem } from './situation';
 
@@ -166,13 +167,13 @@ export class TextPlusGameEngine implements GameEngine {
         history: [...this.history]
       },
       qualities: this.qualitySystem.exportState(),
-      version: 1,
+      version: SAVE_FORMAT_VERSION,
       timestamp: Date.now()
     };
   }
 
   loadState(state: GameState): void {
-    if (state.version !== 1) {
+    if (state.version !== SAVE_FORMAT_VERSION) {
       throw new Error(`Incompatible save format version: ${state.version}`);
     }
     if (!this.situationSystem.hasSituation(state.currentSituation)) {

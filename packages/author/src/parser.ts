@@ -116,6 +116,15 @@ function finalizeSituation(
   positions.entryEffects[current.id] = current.entryEffectLines;
 }
 
+/**
+ * The single start-resolution rule: the situation tagged `start`, else the
+ * first declared. Compiler and linter must agree on this — never reimplement.
+ */
+export function resolveInitialSituation(ast: AuthorGameAst): string | undefined {
+  const startSituation = Object.values(ast.situations).find((s) => s.tags.includes('start'));
+  return startSituation?.id || Object.keys(ast.situations)[0];
+}
+
 export function parseGame(source: string): AuthorGameAst {
   const lines = source.replace(/\r\n/g, '\n').split('\n');
   let title: string | null = null;

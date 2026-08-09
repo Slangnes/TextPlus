@@ -55,4 +55,4 @@ export {
 
 // Version info
 export const VERSION = '0.0.1';
-export const SAVE_VERSION = 1;
+export { SAVE_FORMAT_VERSION, SAVE_FORMAT_VERSION as SAVE_VERSION } from './types';

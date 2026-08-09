@@ -20,6 +20,7 @@ import type {
   SituationLink,
 } from '@textplus/core';
 import type { AuthorGameAst, AuthorLinkNode, AuthorQualityNode, AuthorSituationNode } from './parser';
+import { resolveInitialSituation } from './parser';
 import { parseExpression, compileConditionExpr } from './expression';
 import { parseEffects, compileEffects } from './effects';
 import { compileContent, createRng } from './content';
@@ -151,9 +152,9 @@ export function compileAST(ast: AuthorGameAst, options: CompileAstOptions = {}):
     });
   });
 
-  // Determine initial situation (first situation, or first marked as 'start')
-  const startSituation = Object.values(ast.situations).find((s) => s.tags.includes('start'));
-  const initialSituation = startSituation?.id || Object.keys(ast.situations)[0];
+  // Falsy when there are no situations — the guard below turns that into a
+  // fatal error and the config is discarded.
+  const initialSituation = resolveInitialSituation(ast) ?? '';
 
   if (!initialSituation) {
     errors.push({

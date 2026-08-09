@@ -6,6 +6,7 @@
  */
 
 import type { AuthorGameAst } from './parser';
+import { resolveInitialSituation } from './parser';
 import { parseExpression, collectQualityRefs } from './expression';
 import type { ExprNode } from './expression';
 import { parseEffects, collectEffectRefs } from './effects';
@@ -61,8 +62,7 @@ export interface LintOutput {
  * Find all situations reachable from the initial situation
  */
 function findReachable(ast: AuthorGameAst): Set<string> {
-  const startSituation = Object.values(ast.situations).find((s) => s.tags.includes('start'));
-  const initial = startSituation?.id || Object.keys(ast.situations)[0];
+  const initial = resolveInitialSituation(ast);
 
   if (!initial) {
     return new Set();
