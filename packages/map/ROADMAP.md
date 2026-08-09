@@ -4,16 +4,18 @@ Story-graph layout and (eventually) Trizbort-style automation. This file is the 
 
 ## Status
 
-🚧 Milestone 3 in progress — auto-layout powers the workbench Map panel; the transcript importer and DSL code generation (round-trip with the adapter) shipped 2026-08-08. Trizbort-format export and the Inform 7/Ink generators are still ahead (see the parity gap below).
+🚧 Milestone 3 in progress — the mapping core is at Trizbort level for auto-mapping (2026-08-09): compass-true layout from direction-carrying edges, zoom/pan navigation, Trizbort XML export, plus importers Trizbort doesn't have (ZIL source → exact map). Hand-editing, regions/colors, and the Inform 7/Ink generators are still ahead (see the parity gap below).
 
 ## Current Surface
 
 | Module | Notes |
 |---|---|
-| `src/layout.ts` | `layoutGraph(graph, {columnWidth?, rowHeight?})` (defaults 200×72) — layered-BFS grid auto-layout: shortest-path depth columns from the start situation, unique cells, orphans parked in a trailing column with `reachable: false`, terminal (ending) flags |
+| `src/layout.ts` | `layoutGraph(graph, {columnWidth?, rowHeight?, mode?})` — two auto-selected modes: **compass** (Trizbort-style: rooms honor edge directions — north up, east right; collisions stretch along the exit vector) when most edges carry vectors, else **flow** (layered BFS depth columns). Unique cells; orphans flagged `reachable: false`; terminal flags |
+| `src/directions.ts` | The direction vocabulary: `directionFromText` (commands and link labels → canonical Direction), `directionLabel` (Direction → "Go north"/"Enter") |
 | `src/adapter.ts` | `graphFromConfig` — `@textplus/core` GameConfig → neutral `StoryGraph` (parallel links deduplicated) |
 | `src/importer.ts` | `importTranscript(text)` — play transcript → `StoryGraph`: room headers become nodes (unified by name, so revisits converge), commands become edges; headerless responses become linear step nodes. Extracts structure only — prose-preserving conversion belongs to `@textplus/convert` |
-| `src/zil.ts` | `importZilRooms(source)` — original Infocom ZIL source → exact `StoryGraph`: `<ROOM …>` forms become nodes (titled by `DESC`), plain and conditional directional exits become edges; `SORRY`/`PER` exits and cross-file targets are skipped. Proven on AMFV's real `rockvil.zil`: 150 rooms, 331 connections, compiles into a playable DSL skeleton |
+| `src/zil.ts` | `importZilRooms(source)` — original Infocom ZIL source → exact `StoryGraph` with directional edges: `<ROOM …>` forms become nodes (titled by `DESC`), plain and conditional directional exits become compass-carrying edges; `SORRY`/`PER` exits and cross-file targets are skipped. Proven on AMFV's real `rockvil.zil`: 150 rooms, 331 directional connections, compass layout |
+| `src/trizbort.ts` | `graphToTrizbort(layout, {title?})` — Trizbort XML export: rooms positioned from the layout, compass directions docked as ports, opposite one-ways merged into two-way lines. Generated to the published schema; not yet validated inside trizbort.io |
 | `src/codegen.ts` | `graphToDsl(graph, {title?})` — compiling TextPlus DSL skeleton from a graph (titles, tags — emitted comma-form to match the parser — links, and start survive; prose is a placeholder; throws on an empty graph) |
 | `src/index.ts` | Public exports; legacy `autoLayout(rooms)` surface backed by the real engine |
 
@@ -27,25 +29,22 @@ Test standard: the traced Playwright E2E suite is the only test layer. Run from 
 
 ## Trizbort Parity Gap (honest accounting)
 
-[Trizbort.io](https://github.com/henck/trizbort) (MIT, Hans Donner) is a full interactive map *editor*. We currently have none of:
+[Trizbort.io](https://github.com/henck/trizbort) (MIT, Hans Donner) is a full interactive map *editor*. Shipped from its feature set: compass-direction layout and in/out/up/down labels (2026-08-09), one-way vs two-way connection flow in the export, Trizbort-format **export** (import still open), transcript import (2026-08-08), and zoom/pan navigation. We still have none of:
 
 - Hand-drawn/editable maps: room placement, custom shapes, colors, regions, dark rooms
-- Connection detail: compass directions, door states (locked/one-way), in/out labels
+- Door states (locked doors) and per-connection text labels
 - Objects/props inside rooms
 - Code generation: Inform 7, TADS 3, Alan 2/3, Quest, ZIL, YAML
-- Trizbort file format import/export (round-trip with the desktop app and trizbort.io)
-
-(Transcript import — auto-populating a map from a play session — shipped 2026-08-08 as `importTranscript`.)
+- Trizbort file format **import** (round-trip with the desktop app and trizbort.io)
 
 Our scope (root ROADMAP M3) is *automation on top of* those ideas — auto-layout (done), transcript import (done), and code-gen — not a re-implementation of the whole editor. Anything from the list above that TextPlus adopts should be tracked as an explicit item here and in the root roadmap.
 
 ## Ahead (M3 remainder)
 
 - [ ] Code generators: Inform 7, Ink (TextPlus Author DSL shipped via `graphToDsl`)
-- [ ] Export to Trizbort format
+- [ ] Trizbort format import (export shipped; validate the export inside trizbort.io)
 - [ ] Batch rename / find-replace
-- [ ] Workbench surfaces for the new tools (map-panel export, import-to-map flow)
-- [ ] Custom cell sizing exposed in the workbench (zoom/density) — would also make it verifiable
+- [ ] Hand-editing: drag rooms, edit connections (the gap between auto-mapper and editor)
 
 ## Drift Rules
 

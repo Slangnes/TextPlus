@@ -3,7 +3,7 @@
 This document tracks the features, deliverables, and milestones for the TextPlus project. Items are organized by component and priority.
 
 **Last Updated**: August 8, 2026  
-**Current Status**: M0–M2 ✅ complete | M3 Map + M4 Convert 🚧 in progress | Test standard: traced Playwright E2E suite (62 scenarios)
+**Current Status**: M0–M2 ✅ complete | M3 Map + M4 Convert 🚧 in progress | Test standard: traced Playwright E2E suite (69 scenarios)
 
 ---
 
@@ -364,7 +364,9 @@ Required phase gates:
 ### Planned Implementation
 - [x] Auto-layout algorithm (positions rooms without overlaps — layered BFS grid, orphans in trailing column)
 - [x] Importer (parse transcripts → room graph) — `importTranscript` in `packages/map/src/importer.ts`
-- [x] ZIL source importer — `importZilRooms` in `packages/map/src/zil.ts` recovers the exact room graph from original Infocom source (beyond Trizbort's transcript-only import); proven on AMFV's `rockvil.zil` (150 rooms / 331 connections → compiling DSL)
+- [x] ZIL source importer — `importZilRooms` in `packages/map/src/zil.ts` recovers the exact room graph with compass directions from original Infocom source (beyond Trizbort's transcript-only import); proven on AMFV's `rockvil.zil` (150 rooms / 331 directional connections → compass map + compiling DSL)
+- [x] Compass-true auto-layout (2026-08-09) — direction-carrying edges (ZIL exits, transcript commands, movement-phrased link labels) place rooms Trizbort-style: north up, east right; zoom/pan navigation in the workbench map panel
+- [x] Trizbort XML export (2026-08-09) — workbench "Export Trizbort" button + `graphToTrizbort`; compass ports, one-way/two-way flow; not yet validated inside trizbort.io
 - [x] Code generator: TextPlus Author DSL — `graphToDsl` in `packages/map/src/codegen.ts` (Inform 7 and Ink still open below)
 - [ ] Batch rename / find-replace
 - [x] Round-trip conversion (map ↔ DSL) — transcript → graph → DSL → config → graph verified in `e2e/map-tools.spec.ts` (topology + tags survive; prose is a placeholder)
@@ -373,7 +375,7 @@ Required phase gates:
 - [x] Auto-layout algorithm
 - [x] Layout verification — originally 15 vitest tests (since removed); geometry now asserted via `e2e/map.spec.ts`
 - [x] Import transcript output — transcript → `StoryGraph` → compiling DSL skeleton
-- [ ] Export to Trizbort format
+- [x] Export to Trizbort format — `graphToTrizbort` + the map panel's Export button (validation inside trizbort.io still open)
 
 ### Should Have
 - [ ] Inform 7 code generation
@@ -398,6 +400,7 @@ Required phase gates:
 
 ### Planned Implementation
 - [ ] Transcript parser: engine-specific formats (Glulx, Inform 7, TADS 3; the plain Z-machine-style path is shipped)
+- [x] ZIL deconstruction (2026-08-09) — `zilToDsl`: the actual program → DSL with real room prose and compass exits, no transcript needed (CLI auto-detects; the workbench Import dialog accepts pasted or file-picked ZIL). Compiled .z5 binaries remain the horizon note
 - [x] Multi-transcript merging (detect branching) — `mergeTranscriptsToDsl` in `packages/convert/src/merge.ts`
 - [x] TextPlus DSL code generator — `transcriptToDsl` (linear) + branching merge output
 - [ ] Standalone HTML code generator

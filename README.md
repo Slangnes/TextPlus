@@ -33,8 +33,8 @@ npm workspaces monorepo under `packages/*`. Dependency direction: `core` ← `au
 |---|---|---|---|
 | `@textplus/core` | [Undum](https://github.com/idmillington/undum) | ✅ M1 complete | ES-module runtime: engine, qualities, situations, DOM renderer, HUD/themes, storage |
 | `@textplus/author` | [Raconteur](https://github.com/sequitur/raconteur) | ✅ M2 complete | Authoring DSL: parser → compiler → linter → workflow, plus the `textplus-author` / `create-textplus-game` CLI |
-| `@textplus/map` | [Trizbort.io](https://github.com/henck/trizbort) | 🚧 M3 in progress | Auto-layout, transcript→graph importer, and graph→DSL round-trip (powers the Workbench map) |
-| `@textplus/convert` | [Transmatte](https://eblong.com/zarf/transmatte/) | 🚧 M4 in progress | Transcripts → compiling TextPlus DSL: linear (Workbench Import), branching multi-transcript merge, `textplus-convert` CLI |
+| `@textplus/map` | [Trizbort.io](https://github.com/henck/trizbort) | 🚧 M3 in progress | Compass-true auto-layout, zoom/pan, ZIL + transcript importers, Trizbort XML export, graph→DSL round-trip (powers the Workbench map) |
+| `@textplus/convert` | [Transmatte](https://eblong.com/zarf/transmatte/) | 🚧 M4 in progress | Parser-IF material → compiling TextPlus DSL: transcripts (linear or branching merge), **ZIL deconstruction straight from the program**, `textplus-convert` CLI |
 | `@textplus/demo` | — | ✅ | Three playable example games built directly on core |
 | `@textplus/workbench` | — | ✅ active | Browser authoring app: Monaco editor, live preview, map, diagnostics, import/export |
 

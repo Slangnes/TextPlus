@@ -9,6 +9,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { test, expect } from '@playwright/test';
+import { ZIL_FIXTURE } from './helpers';
 
 const packagesDir = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const convertBin = join(packagesDir, 'convert', 'bin', 'textplus-convert.mjs');
@@ -109,6 +110,19 @@ test.describe('convert CLI', () => {
     const dsl = readFileSync(out, 'utf8');
     expect(dsl).toContain('title: Forked Paths');
     expect(dsl).toContain('-> Go south => river-bank');
+  });
+
+  test('ZIL source deconstructs directly — no transcript needed', async () => {
+    writeFileSync(join(workDir, 'chapel.zil'), ZIL_FIXTURE, 'utf8');
+    const result = await run([join(workDir, 'chapel.zil'), '--check']);
+    expect(result.status).toBe(0);
+    expect(result.output).toContain(':: chapel-garden [start]');
+    expect(result.output).toContain('Roses climb the low stone wall'); // LDESC prose
+    expect(result.output).toContain('Candlelight pools beneath the stone arches'); // M-LOOK prose
+    expect(result.output).not.toContain('A hush falls'); // other branches stay out
+    expect(result.output).toContain('-> Go north => old-chapel');
+    expect(result.output).toContain('✅ DSL compilation successful');
+    expect(result.output).toContain('Situations: 2');
   });
 
   test('empty transcripts fail cleanly', async () => {

@@ -4,7 +4,7 @@ Transcript-to-story conversion (the Transmatte-inspired workflow). This file is 
 
 ## Status
 
-🚧 Milestone 4 in progress — three slices shipped: plain-text transcript → linear DSL (the workbench **Import** feature), multi-transcript **branching merge**, and the **`textplus-convert` CLI**. Engine-specific formats and the HTML/Trizbort generators remain ahead.
+🚧 Milestone 4 in progress — four slices shipped: plain-text transcript → linear DSL (the workbench **Import** feature), multi-transcript **branching merge**, the **`textplus-convert` CLI**, and **ZIL deconstruction** (2026-08-09) — the Transmatte flow fed by the actual program instead of a transcript. Compiled story-file (.z5) deconstruction and the HTML/Trizbort generators remain ahead.
 
 ## Current Surface
 
@@ -12,7 +12,8 @@ Transcript-to-story conversion (the Transmatte-inspired workflow). This file is 
 |---|---|
 | `src/transcript.ts` | `parseTranscriptText(text)` — segments a transcript into moves (`>` commands, room headers, prose; strips `[Score…]`/`*** … ***` noise). `transcriptToDsl(text, {title?})` — one situation per move, slugified deduped ids, `[start]` tag, links from sentence-cased commands, linkless final situation, directive-lookalike prose neutralized. Throws only on empty input |
 | `src/merge.ts` | `mergeTranscriptsToDsl(texts, {title?})` — merges several playthroughs into one branching story: rooms unify by header name (within and across transcripts), shared rooms gain one link per distinct continuation; headerless moves stay linear (nothing safe to unify on) |
-| `src/cli.ts` + `bin/` | `textplus-convert <transcript...> [--title] [--out] [--check]` — one file converts linearly, several merge; `--check` compiles through `@textplus/author`. Exit codes 0/1/2. Run `bin/textplus-convert.mjs` after `npm run build` |
+| `src/zil.ts` | `zilToDsl(source, {title?})` — deconstructs original ZIL: every `<ROOM …>` becomes a situation with its **real prose** (`LDESC`, else the ACTION routine's M-LOOK strings, best effort) and movement-labeled links from its exits, so the story lays out compass-true. Proven on AMFV's `rockvil.zil`: 150 situations, ~137 with recovered prose, compiles clean |
+| `src/cli.ts` + `bin/` | `textplus-convert <input...> [--title] [--out] [--check]` — ZIL sources auto-detected (`<ROOM` forms) and deconstructed; otherwise one transcript converts linearly, several merge; `--check` compiles through `@textplus/author`. Exit codes 0/1/2. Run `bin/textplus-convert.mjs` after `npm run build` |
 | `src/index.ts` | Public exports: `parseTranscriptText`, `transcriptToDsl`, `mergeTranscriptsToDsl` (+ types); the `slugify`/`sentenceCase`/`sanitizeProse` helpers stay module-internal; `parseTranscript` / `generateDSL` / `generateHTML` remain throwing M4 placeholders |
 
 ## Accepted transcript format
@@ -34,8 +35,9 @@ The merge and CLI slices are verified by `e2e/convert-cli.spec.ts`: linear conve
 
 ## Ahead (M4 remainder)
 
-- [ ] Engine-specific format support: Z-machine variants, Glulx, Inform 7, TADS 3
-- [ ] Object/inventory extraction from transcripts
+- [ ] Compiled story-file deconstruction (.z5/.dat) — ZIL *source* deconstruction shipped; binaries remain the horizon note
+- [ ] Engine-specific transcript formats: Glulx, Inform 7, TADS 3
+- [ ] Object/inventory extraction (from transcripts or ZIL objects)
 - [ ] Standalone HTML generator (via Core)
 - [ ] Trizbort map generator (pairs with `@textplus/map`)
 - [ ] Merge unification for headerless moves (currently only room headers unify)

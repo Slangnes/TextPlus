@@ -6,7 +6,7 @@
  */
 
 import { test, expect } from '@playwright/test';
-import { getSource, setSource, trackNativeDialogs } from './helpers';
+import { getSource, setSource, trackNativeDialogs, ZIL_FIXTURE } from './helpers';
 
 const FIXTURE = `WEST OF HOUSE
 You are standing in an open field west of a white house, with a boarded
@@ -89,6 +89,37 @@ test.describe('import transcript', () => {
     ).toHaveCount(1);
 
     expect(nativeDialogs()).toBe(0);
+  });
+
+  test('ZIL source imports via the file picker as a deconstructed story with a compass map', async ({ page }) => {
+    await page.locator('#btn-import').click();
+    await page
+      .locator('.modal__file input')
+      .setInputFiles({ name: 'chapel.zil', mimeType: 'text/plain', buffer: Buffer.from(ZIL_FIXTURE) });
+    await expect(page.locator('.modal__textarea')).toHaveValue(/CHAPEL-GARDEN/);
+    await page.locator('.modal__button--primary').click();
+
+    await expect(page.locator('.modal__body p').first()).toContainText('imported transcript');
+    await page.locator('.modal__button--primary').click();
+
+    await expect(page.locator('#status')).toContainText('✓ Chapel Garden');
+    await expect(page.locator('.tp-body')).toContainText('Roses climb the low stone wall');
+
+    await page.locator('.tp-link', { hasText: 'Go north' }).click();
+    await expect(page.locator('.tp-body')).toContainText('Candlelight pools beneath the stone arches');
+
+    // The recovered exits lay the map out compass-true: chapel due north.
+    const positions = await page.locator('.map-node').evaluateAll((nodes) =>
+      nodes.map((node) => ({
+        id: node.getAttribute('data-situation-id'),
+        x: Number(node.querySelector('rect')?.getAttribute('x')),
+        y: Number(node.querySelector('rect')?.getAttribute('y')),
+      })),
+    );
+    const garden = positions.find((p) => p.id === 'chapel-garden')!;
+    const chapel = positions.find((p) => p.id === 'old-chapel')!;
+    expect(chapel.x).toBe(garden.x);
+    expect(chapel.y).toBeLessThan(garden.y);
   });
 
   test('an empty transcript shows an inline error and keeps the dialog open', async ({ page }) => {

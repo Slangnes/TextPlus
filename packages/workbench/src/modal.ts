@@ -148,15 +148,33 @@ export function openImportDialog(options: ImportDialogOptions): Promise<string |
 
     const hint = document.createElement('p');
     hint.textContent =
-      'Paste a play transcript (lines starting with ">" are commands). It becomes a linear story draft.';
+      'Paste a play transcript (">" lines are commands) or original ZIL source (<ROOM ...> forms are deconstructed directly). It becomes a story draft.';
     shell.body.appendChild(hint);
 
     const textarea = document.createElement('textarea');
     textarea.className = 'modal__textarea';
     textarea.rows = 12;
-    textarea.setAttribute('aria-label', 'Transcript text');
+    textarea.setAttribute('aria-label', 'Transcript or ZIL source text');
     textarea.placeholder = '> open mailbox\nOpening the small mailbox reveals a leaflet.';
     shell.body.appendChild(textarea);
+
+    const fileRow = document.createElement('label');
+    fileRow.className = 'modal__file';
+    fileRow.appendChild(document.createTextNode('…or choose a file: '));
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.setAttribute('aria-label', 'Transcript or ZIL source file');
+    fileInput.addEventListener('change', () => {
+      const file = fileInput.files?.[0];
+      if (!file) {
+        return;
+      }
+      void file.text().then((text) => {
+        textarea.value = text;
+      });
+    });
+    fileRow.appendChild(fileInput);
+    shell.body.appendChild(fileRow);
 
     const error = document.createElement('p');
     error.className = 'modal__error';

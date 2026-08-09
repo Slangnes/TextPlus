@@ -11,11 +11,16 @@
 
 import { transcriptToDsl } from './transcript';
 import { mergeTranscriptsToDsl } from './merge';
+import { zilToDsl } from './zil';
 
-const USAGE = `Usage: textplus-convert <transcript...> [options]
+const USAGE = `Usage: textplus-convert <input...> [options]
 
-Converts parser-IF transcripts to TextPlus DSL. One file converts linearly;
-several files merge into a branching story (rooms unify by header name).
+Converts parser-IF material to TextPlus DSL:
+  transcript file(s)   One converts linearly; several merge into a branching
+                       story (rooms unify by header name).
+  ZIL source file(s)   Deconstructed directly - rooms, prose, and compass
+                       exits are recovered from the program itself
+                       (auto-detected by <ROOM ...> forms).
 
 Options:
   --title <title>   Override the story title
@@ -72,10 +77,19 @@ export async function runCli(argv: string[]): Promise<number> {
 
   let dsl: string;
   try {
-    dsl =
-      texts.length === 1
-        ? transcriptToDsl(texts[0], { title })
-        : mergeTranscriptsToDsl(texts, { title });
+    const zilCount = texts.filter((text) => /<ROOM\s/.test(text)).length;
+    if (zilCount > 0 && zilCount < texts.length) {
+      console.error('Cannot mix ZIL source and transcripts in one conversion.');
+      return 1;
+    }
+    if (zilCount > 0) {
+      dsl = zilToDsl(texts.join('\n\n'), { title });
+    } else {
+      dsl =
+        texts.length === 1
+          ? transcriptToDsl(texts[0], { title })
+          : mergeTranscriptsToDsl(texts, { title });
+    }
   } catch (error) {
     console.error(`Conversion failed: ${(error as Error).message}`);
     return 1;
