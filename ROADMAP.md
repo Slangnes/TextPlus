@@ -2,21 +2,21 @@
 
 This document tracks the features, deliverables, and milestones for the TextPlus project. Items are organized by component and priority.
 
-**Last Updated**: April 21, 2026  
-**Current Status**: Phase 0 (Bootstrap) ✅ Complete | Phase 1 (Core) ✅ Complete
+**Last Updated**: August 8, 2026  
+**Current Status**: M0–M2 ✅ complete | M3 Map + M4 Convert 🚧 in progress | Test standard: traced Playwright E2E suite (58 scenarios)
 
 ---
 
 ## Current Status Summary
 
-| Milestone | Status | Progress | Target |
+| Milestone | Status | Progress | Notes |
 |-----------|--------|----------|--------|
 | **M0: Bootstrap** | ✅ COMPLETE | 100% | Project setup infrastructure |
-| **M1: Core** | ✅ COMPLETE | 100% | 5-6 weeks (80%+ test coverage) |
-| **M2: Author** | 🚧 IN PROGRESS | 85% | Conditions, effects, markdown, adaptive text, HUD/theme directives all live; scaffold CLI remains |
-| **M3: Map** | 🚧 IN PROGRESS | 20% | Auto-layout + config adapter done (workbench map view) |
-| **M4: Convert** | 🚧 IN PROGRESS | 15% | Plain-text transcript → DSL slice done; engine formats + merging remain |
-| **M5: Integration** | ⏳ PENDING | 0% | Final release, demo |
+| **M1: Core** | ✅ COMPLETE | 100% | Runtime + Beyond Text HUD/theme slices; `storage.ts` awaits its M5 UI surface |
+| **M2: Author** | ✅ COMPLETE | 100% | DSL, linter (9 rules), workflow, CLI (`textplus-author` / `create-textplus-game`); Raconteur compat resolved as a migration guide |
+| **M3: Map** | 🚧 IN PROGRESS | ~40% | Auto-layout, transcript importer, DSL round-trip done; Trizbort export, Inform 7/Ink codegen, batch ops remain |
+| **M4: Convert** | 🚧 IN PROGRESS | ~45% | Linear DSL, branching multi-transcript merge, `textplus-convert` CLI, workbench Import done; engine formats, HTML/Trizbort generators remain |
+| **M5: Integration** | ⏳ PENDING | ~10% | CLI surfaces landed early; save/load UI, docs site, release remain |
 
 ---
 
@@ -30,6 +30,7 @@ This document tracks the features, deliverables, and milestones for the TextPlus
 
 ### Roadmap Changelog
 
+- **2026-08-08 (later)**: Testing standard changed by project decision: the vitest layer was removed; the traced Playwright E2E suite (58 scenarios, trace.zip per test) is the only test layer, including Node-context specs for the CLIs. Toolchain slimmed (root owns devDeps; scripts 25→7; terser/@vitest extras dropped). M2 completed: `textplus-author`/`create-textplus-game` CLI, quality-type-consistency lint rules, Raconteur compat resolved as a migration guide (runtime compat descoped by design). M4 advanced: workbench Import feature, `mergeTranscriptsToDsl` branching merge, `textplus-convert` CLI. M3 advanced: `importTranscript` (transcript → StoryGraph) and `graphToDsl` (round-trip with `graphFromConfig`). Doc convention: one doc per package — completed packages a real `README.md`, in-progress a package `ROADMAP.md`.
 - **2026-08-08**: Phase 2B shipped: DSL conditions now evaluate at runtime (safe expression language, no eval), links and situations mutate qualities via `{ effects }` brace blocks, markdown (escape-first, built-in) and adaptive text (`[oneOf|randomly|frequently|rarely]`, `{quality}` interpolation) compile into content. Declarative HUD (`hud <quality> meter|badge|readout`) and state-driven theming (`theme <name> when <expr>`) land in core (`renderHud`/`applyHudThemes`) and the workbench preview. Fine-grained Monarch grammar extracted to `dsl-language.ts` (unit-tested as data). M4 first slice: `transcriptToDsl` converts plain-text transcripts to compiling DSL (round-trip acceptance test). All four workbench examples now exercise the full surface.
 - **2026-08-07**: Workbench editor upgraded to Monaco (monaco-editor 0.56): TextPlus DSL syntax highlighting (Monarch grammar), palette-matched light/dark themes, line numbers that stay correct under word wrap, diagnostic squiggles from the lint pipeline. Verified Transmatte's license factually (public domain) in CREDITS.md; documented the Trizbort parity gap in the map package doc (now `packages/map/ROADMAP.md`). Added "Beyond Text" vision section (rich interfaces, HUDs).
 - **2026-08-07**: Workbench: configurable 1-4 panel layout (each panel hosts any module or nothing; drag-resizable splitters, 4-panel center handle, 3-panel solo-position control; persisted), bottom status bar (compile state / current situation / cursor), editor word wrap. Added Playwright E2E suite (16 scenarios) with tracing always on — trace.zip artifacts are the release visual-QA vector (see CLAUDE.md).
@@ -44,60 +45,23 @@ This document tracks the features, deliverables, and milestones for the TextPlus
 
 ## Package Architecture
 
-This section defines required modules, ownership boundaries, and verification targets for each package.
+Ownership boundaries and where each package documents itself. Module-level surface tables live in the package docs (single source of truth) — this section only maps the boundaries.
 
-### `@textplus/core`
-
-| Module | Responsibility | Key Interfaces | Depends On | Test Owner/Area |
-|--------|----------------|----------------|------------|-----------------|
-| `engine.ts` | Runtime orchestration, transitions, events, lifecycle | `GameEngine`, `GameState` | `qualities.ts`, `situation.ts` | Unit: engine flow, callbacks, save/load |
-| `qualities.ts` | Typed quality values, mutation rules, bounds, serialization | `QualityDefinition`, `QualityValue` | `types.ts` | Unit: mutation rules, type/bounds checks |
-| `situation.ts` | Situation lookup, routing, conditional links/content | `SituationDefinition`, `SituationLink` | `types.ts` | Unit: link filtering, condition safety |
-| `dom.ts` | DOM rendering/event wiring without jQuery | `SituationRenderer` | `engine.ts` | Integration: render + interaction |
-| `storage.ts` | Save/load persistence and slot handling | `StorageHandler` | `types.ts` | Integration: valid/corrupt save scenarios |
-| `themes/*` | Theme tokens and theme switching/persistence | Theme config surface | `dom.ts`, `storage.ts` | Integration: theme apply/switch/persist |
-| `types.ts` | Public API contracts and serialization schema | All exported interfaces | None | Compile-time contract checks |
-| `index.ts` | Public exports and package boundary | Package API | All core modules | Build/export smoke tests |
-
-### `@textplus/author`
-
-| Module Group | Responsibility | Depends On | Test Owner/Area |
-|--------------|----------------|------------|-----------------|
-| Parser/Lexer | Parse author DSL into AST | None | Unit: syntax/edge cases |
-| Compiler | Compile AST to `@textplus/core` config | `@textplus/core` types | Unit: compile output validity |
-| Linter | Detect unreachable/broken situations | Parser + compiler outputs | Unit: diagnostics accuracy |
-| CLI scaffold | Project bootstrap for authoring workflows | Parser/compiler templates | Unit/integration: CLI behavior |
-
-### `@textplus/map`
-
-| Module Group | Responsibility | Depends On | Test Owner/Area |
-|--------------|----------------|------------|-----------------|
-| Layout | Auto-position rooms/links | Internal geometry utils | Unit: overlap and spacing |
-| Importers | Transcript/graph ingestion | `@textplus/convert` outputs (optional) | Unit: parse mapping fidelity |
-| Generators | Export to target formats (Inform, Ink, DSL) | Internal graph model | Unit: codegen snapshots |
-
-### `@textplus/convert`
-
-| Module Group | Responsibility | Depends On | Test Owner/Area |
-|--------------|----------------|------------|-----------------|
-| Transcript parser | Parse parser-IF transcripts | None | Unit: format compatibility |
-| Merger | Merge multi-transcript branching paths | Parser output model | Unit: branch merge logic |
-| Code generators | Generate DSL/HTML/map outputs | `@textplus/core`, `@textplus/map` (optional) | Unit/integration: output validity |
-| CLI | Conversion workflow entry point | Parser + generators | Integration: end-to-end CLI runs |
-
-### `demo` and `docs`
-
-| Package | Responsibility | Depends On | Verification |
-|---------|----------------|------------|--------------|
-| `demo` | Playable reference games and examples | `@textplus/core`, later `@textplus/author` | E2E playthrough + manual smoke |
-| `docs` | Project docs and developer/user guides | All package public APIs | Build + link checks |
+| Package | Owns | Package doc |
+|---------|------|-------------|
+| `@textplus/core` | Runtime: engine, qualities, situations, DOM renderer, HUD/themes, storage, public contracts | `packages/core/README.md` |
+| `@textplus/author` | DSL: parser → compiler → linter → workflow; `textplus-author` / `create-textplus-game` CLI; scaffolding | `packages/author/README.md` |
+| `@textplus/map` | Story-graph layout, GameConfig adapter, transcript importer, graph→DSL codegen | `packages/map/ROADMAP.md` |
+| `@textplus/convert` | Transcript parsing, linear + branching DSL generation, `textplus-convert` CLI | `packages/convert/ROADMAP.md` |
+| `@textplus/demo` | Playable reference games built directly on core | `packages/demo/README.md` |
+| `@textplus/workbench` | Browser authoring app (editor/play/map/diagnostics, import/export) and the repo's Playwright E2E suite (`e2e/`, incl. Node-context CLI specs) | `packages/workbench/README.md` |
 
 ### Cross-Package Dependency Direction
 
-`@textplus/core` <- `@textplus/author` <- (`@textplus/map`, `@textplus/convert`) <- `demo/docs`
+`@textplus/core` <- `@textplus/author` <- (`@textplus/map`, `@textplus/convert`) <- `demo`/`workbench`
 
 Rules:
-- Do not create reverse dependencies into higher-level packages.
+- Do not create reverse dependencies into higher-level packages; siblings (`map`, `convert`) do not import each other.
 - Keep `@textplus/core` free of author/map/convert concerns.
 - Add adapters at package boundaries instead of sharing internals.
 
@@ -467,6 +431,7 @@ Required phase gates:
 ### Deliverables
 - [ ] End-to-end demo (transcript → game → map)
 - [ ] Save/load slot UI in the workbench Play panel — also the missing E2E surface for core `storage.ts`, which is currently unverified
+- [ ] Core follow-ups deferred since M1: dedicated themes module/stylesheets; a surface for `onExit` hooks and theme CSS variables (or retire them); wire `engine.validate()` into an app surface or fold it into the author linter
 - [x] CLI surfaces — `textplus-author` / `create-textplus-game` (M2) and `textplus-convert` (M4) both shipped with E2E coverage
 - [ ] VitePress documentation site
 - [ ] CONTRIBUTING.md guide
@@ -492,9 +457,9 @@ Required phase gates:
 
 ---
 
-## Getting Started: Milestone 1
+## Verifying the Repo
 
-To begin M1 implementation:
+The standing verification commands:
 
 ```bash
 # Verify current repo state (lint + builds + traced E2E)

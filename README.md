@@ -38,7 +38,7 @@ npm workspaces monorepo under `packages/*`. Dependency direction: `core` ← `au
 | `@textplus/demo` | — | ✅ | Three playable example games built directly on core |
 | `@textplus/workbench` | — | ✅ active | Browser authoring app: Monaco editor, live preview, map, diagnostics, import/export |
 
-Each package documents its own surface, verification, and gaps in `packages/<name>/ROADMAP.md` (or a short `README.md`); repo-wide sequencing lives in [ROADMAP.md](./ROADMAP.md).
+Each package keeps exactly one doc: completed packages a real `README.md` (usage/reference), in-progress packages a `ROADMAP.md` (surface, verification, open items). Repo-wide sequencing lives in [ROADMAP.md](./ROADMAP.md).
 
 ---
 

@@ -29,6 +29,8 @@ E2E tests drive the editor through the `window.__workbench` hook (`getSource`/`s
 
 E2E runs write a `trace.zip` per test to `test-results/` — the visual QA artifact for releases. Open one with `npx playwright show-trace <path>/trace.zip`, or `npx playwright show-report` for the suite.
 
+The `e2e/` directory hosts the **repo-wide** suite, not just workbench scenarios: convention guards (`conventions.spec.ts`), core-through-the-app (`engine.spec.ts`), linting/diagnostics (`diagnostics.spec.ts`), map geometry (`map.spec.ts`), the Import feature (`import.spec.ts`), and Node-context specs for the author/convert CLIs and map tools (`cli.spec.ts`, `convert-cli.spec.ts`, `map-tools.spec.ts`). It lives here because the Playwright config and dev server do.
+
 The Vite config aliases `@textplus/core`, `@textplus/author`, `@textplus/map`, and `@textplus/convert` to their **source** entrypoints, so edits to those packages hot-reload the workbench without a rebuild.
 
 **Import** (toolbar) opens an in-app dialog: paste a Z-machine-style play transcript and it becomes a linear story draft via `@textplus/convert`'s `transcriptToDsl` (replacing the current story through the standard confirm flow).
