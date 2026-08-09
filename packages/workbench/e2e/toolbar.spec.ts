@@ -61,6 +61,20 @@ B.
     expect((await second).suggestedFilename()).toBe('wild-name-2.tp.txt');
   });
 
+  test('Restart says so instead of doing nothing when no story ever compiled', async ({ page }) => {
+    await page.addInitScript(() => {
+      localStorage.setItem(
+        'textplus-workbench-draft',
+        'title: Broken\n\n:: start [start]\nStart\nOops.\n\n-> Go => missing',
+      );
+    });
+    await page.goto('/');
+    await expect(page.locator('#status')).toContainText('✗');
+
+    await page.locator('#btn-restart').click();
+    await expect(page.locator('#status')).toContainText('Nothing to restart');
+  });
+
   test('Escape and backdrop clicks dismiss the confirm without replacing', async ({ page }) => {
     await page.locator('#btn-new').click();
     await expect(page.locator('.modal')).toBeVisible();

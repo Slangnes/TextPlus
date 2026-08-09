@@ -58,6 +58,7 @@ const viewElements: Record<PanelModule, HTMLElement> = {
 
 let debounceTimer: ReturnType<typeof setTimeout> | undefined;
 let lastGoodConfig: GameConfig | null = null;
+let lastSituationLines: Record<string, number> = {};
 let settings = getSettings();
 
 const editor = createEditor(requireElement('editor-host'), loadDraft() ?? SAMPLE_STORY);
@@ -316,6 +317,12 @@ function redrawMap(): void {
         if (engine && engine.getSituation(situationId)) {
           engine.goToSituation(situationId);
         }
+        // Clicking a room also takes the editor to its definition, so the
+        // map, preview, and source stay one connected view of the story.
+        const line = lastSituationLines[situationId];
+        if (line !== undefined) {
+          editor.focusLine(line);
+        }
       },
     },
     mapContainer,
@@ -340,6 +347,7 @@ function compileNow(): void {
   );
   if (report.config) {
     lastGoodConfig = report.config;
+    lastSituationLines = report.situationLines;
     preview.mount(report.config);
     redrawMap();
   }
@@ -428,7 +436,18 @@ requireElement<HTMLButtonElement>('btn-import').addEventListener('click', () => 
 requireElement<HTMLButtonElement>('btn-export').addEventListener('click', exportStory);
 
 requireElement<HTMLButtonElement>('btn-restart').addEventListener('click', () => {
-  preview.restart();
+  if (preview.getEngine()) {
+    preview.restart();
+    return;
+  }
+  if (lastGoodConfig) {
+    preview.mount(lastGoodConfig, { preserveState: false });
+    return;
+  }
+  // Nothing has ever compiled (e.g. a broken draft on load): say so instead
+  // of silently doing nothing.
+  statusEl.textContent = '✗ Nothing to restart — fix the story errors first';
+  statusEl.className = 'status status--error';
 });
 
 requireElement<HTMLButtonElement>('btn-settings').addEventListener('click', () => {

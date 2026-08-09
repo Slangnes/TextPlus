@@ -65,10 +65,16 @@ test.describe('workbench', () => {
     await expect(page.locator('#status-situation')).toHaveText('@ stacks');
   });
 
-  test('clicking a map room jumps the preview there', async ({ page }) => {
+  test('clicking a map room jumps the preview and the editor there', async ({ page }) => {
     await page.locator('.map-node[data-situation-id="vault"]').click();
     await expect(page.locator('.tp-title')).toHaveText('The Vault of Returns');
     await expect(page.locator('.map-node.is-current')).toHaveAttribute('data-situation-id', 'vault');
+
+    // The editor lands on the situation's :: header line.
+    const source = await getSource(page);
+    const headerLine = source.split('\n').findIndex((line) => line.startsWith(':: vault')) + 1;
+    expect(headerLine).toBeGreaterThan(0);
+    await expect(page.locator('#status-cursor')).toHaveText(new RegExp(`^Ln ${headerLine}, `));
   });
 
   test('broken links surface in diagnostics and click focuses the editor', async ({ page }) => {

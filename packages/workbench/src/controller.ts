@@ -23,6 +23,8 @@ export interface WorkbenchReport {
   issues: WorkbenchIssue[];
   /** Short human summary, e.g. "5 situations · 2 qualities" */
   summary: string;
+  /** 1-based source line of each situation's `::` header (from the AST). */
+  situationLines: Record<string, number>;
 }
 
 /** Pull a 1-based line number out of a diagnostic message, if present. */
@@ -34,7 +36,7 @@ export function extractLineNumber(message: string): number | null {
 /** Run the full author workflow over DSL source and shape a display report. */
 export function analyzeSource(source: string): WorkbenchReport {
   if (!source.trim()) {
-    return { status: 'empty', config: null, issues: [], summary: '' };
+    return { status: 'empty', config: null, issues: [], summary: '', situationLines: {} };
   }
 
   const result = workflowExecute(source);
@@ -67,5 +69,11 @@ export function analyzeSource(source: string): WorkbenchReport {
     ? `${Object.keys(config.situations).length} situations · ${Object.keys(config.qualities).length} qualities`
     : '';
 
-  return { status, config, issues, summary };
+  return {
+    status,
+    config,
+    issues,
+    summary,
+    situationLines: result.ast?.positions?.situations ?? {},
+  };
 }
