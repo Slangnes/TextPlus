@@ -36,6 +36,8 @@ export interface GraphNode {
   id: string;
   title: string;
   tags?: string[];
+  /** World/mode the situation belongs to, when the game uses worlds. */
+  world?: string;
 }
 
 export interface GraphEdge {

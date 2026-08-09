@@ -41,14 +41,19 @@ export const LINE_RULES: GroupRule[] = [
     /^(theme)(\s+)([a-zA-Z][\w-]*)(\s+)(when)(\s+)(.*)$/,
     ['keyword', 'white', 'string', 'white', 'keyword', 'white', 'annotation'],
   ],
-  // :: situation-id [tags, here]
+  // world comm "Communications"
   [
-    /^(::)(\s+)([a-zA-Z][\w-]*)((?:\s+\[[^\]]*\])?)(\s*)$/,
+    /^(world)(\s+)([a-zA-Z][\w-]*)((?:\s+"[^"]*")?)(\s*)$/,
+    ['keyword', 'white', 'type.identifier', 'string', 'white'],
+  ],
+  // :: situation-id [tags, here]  (ids may be world-qualified: world:situation)
+  [
+    /^(::)(\s+)([a-zA-Z][\w-]*(?::[a-zA-Z][\w-]*)?)((?:\s+\[[^\]]*\])?)(\s*)$/,
     ['metatag', 'white', 'type.identifier', 'tag', 'white'],
   ],
   // -> Link text => target ? condition { effects }
   [
-    /^(\s*)(->)(\s+)(.+?)(\s+=>\s+)([a-zA-Z][\w-]*)((?:\s+\?\s+[^{]+?)?)((?:\s*\{.*\})?)(\s*)$/,
+    /^(\s*)(->)(\s+)(.+?)(\s+=>\s+)([a-zA-Z][\w-]*(?::[a-zA-Z][\w-]*)?)((?:\s+\?\s+[^{]+?)?)((?:\s*\{.*\})?)(\s*)$/,
     ['white', 'operators', 'white', 'string', 'operators', 'type.identifier', 'annotation', 'attribute', 'white'],
   ],
   // { entry effects }

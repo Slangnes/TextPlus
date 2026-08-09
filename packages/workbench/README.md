@@ -10,7 +10,7 @@ Browser authoring environment for TextPlus: a 1–4 panel workspace where each p
 | `src/dsl-language.ts` | The TextPlus DSL Monarch grammar and palette-matched light/dark editor themes, kept as plain data |
 | `src/controller.ts` | Runs the `@textplus/author` parse→compile→lint workflow, shapes results into a display report with line-number extraction |
 | `src/preview.ts` | `PreviewHost` — mounts compiled `GameConfig`s into a playable preview via `@textplus/core`; preserves the playthrough across recompiles; `onRender` hook for observers |
-| `src/mapview.ts` | SVG story map from `@textplus/map` layouts: rooms, arrows, up/down/in/out edge labels, current-situation highlight, click-to-jump, wheel zoom / drag pan / double-click fit |
+| `src/mapview.ts` | SVG story map from `@textplus/map` layouts: rooms, arrows, up/down/in/out edge labels, current-situation highlight, click-to-jump, wheel zoom / drag pan / double-click fit; world tabs (All + per world) filter the graph and follow the player between modes |
 | `src/drafts.ts` | Autosave/restore of DSL source to localStorage (injectable storage) |
 | `src/settings.ts` | User preferences and layout persistence (confirm dialogs, word wrap, panel count/views/splitter sizes/solo position), localStorage-backed |
 | `src/modal.ts` | In-app modal dialogs (`confirmAction`, `openImportDialog`, `openSettingsDialog`) — native popups are banned project-wide, see CLAUDE.md |

@@ -281,6 +281,22 @@ export function lintAST(ast: AuthorGameAst): LintOutput {
     }
   });
 
+  // Declared worlds must contain at least one situation (world:... id)
+  (ast.worlds ?? []).forEach((worldNode, index) => {
+    const hasMember = Object.keys(ast.situations).some((id) =>
+      id.startsWith(`${worldNode.id}:`),
+    );
+    if (!hasMember) {
+      const line = ast.positions?.worlds?.[index];
+      diagnostics.push({
+        severity: 'warning',
+        code: 'empty-world',
+        message: `${prefix(line)}world "${worldNode.id}" has no situations (use "${worldNode.id}:<situation-id>" headers)`,
+        line,
+      });
+    }
+  });
+
   // Check for unused qualities (defined but never referenced)
   const usedQualities = new Set<string>();
   Object.values(ast.situations).forEach((situation) => {

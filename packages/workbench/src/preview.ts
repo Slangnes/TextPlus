@@ -14,14 +14,20 @@ export interface MountOptions {
   preserveState?: boolean;
 }
 
+export interface RenderInfo {
+  situationId: string;
+  /** World/mode of the current situation, when the game uses worlds. */
+  worldId?: string;
+}
+
 export class PreviewHost {
   private readonly container: HTMLElement;
   private readonly renderer = new DomRenderer();
   private engine: GameEngine | null = null;
   private unsubscribes: Array<() => void> = [];
 
-  /** Invoked after every render with the current situation id (survives remounts). */
-  onRender: ((situationId: string) => void) | null = null;
+  /** Invoked after every render with the current position (survives remounts). */
+  onRender: ((info: RenderInfo) => void) | null = null;
 
   constructor(container: HTMLElement) {
     this.container = container;
@@ -51,6 +57,9 @@ export class PreviewHost {
     this.engine = engine;
     this.unsubscribes.push(engine.onSituationChange(() => this.render()));
     this.unsubscribes.push(engine.onQualityChange(() => this.render()));
+    if (engine.onWorldChange) {
+      this.unsubscribes.push(engine.onWorldChange(() => this.render()));
+    }
     this.render();
   }
 
@@ -82,7 +91,10 @@ export class PreviewHost {
     }
 
     if (this.onRender) {
-      this.onRender(this.engine.currentSituation);
+      this.onRender({
+        situationId: this.engine.currentSituation,
+        worldId: situation.world,
+      });
     }
   }
 

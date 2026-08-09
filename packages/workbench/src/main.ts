@@ -41,6 +41,7 @@ function requireElement<T extends HTMLElement>(id: string): T {
 
 const statusEl = requireElement<HTMLElement>('status');
 const statusSituationEl = requireElement<HTMLElement>('status-situation');
+const statusWorldEl = requireElement<HTMLElement>('status-world');
 const statusCursorEl = requireElement<HTMLElement>('status-cursor');
 const diagnosticsEl = requireElement<HTMLElement>('diagnostics');
 const mapContainer = requireElement<HTMLElement>('map-container');
@@ -303,11 +304,62 @@ function renderDiagnostics(report: WorkbenchReport): void {
 
 // --- Map ---------------------------------------------------------------------
 
+/** null = the "All" view (whole graph, cross-world edges visible). */
+let activeMapWorld: string | null = null;
+
+function worldLabel(worldId: string): string {
+  return lastGoodConfig?.worlds?.[worldId]?.label ?? worldId;
+}
+
+function renderWorldTabs(worldIds: string[]): void {
+  const host = requireElement<HTMLElement>('map-worlds');
+  host.replaceChildren();
+  host.hidden = worldIds.length === 0;
+  if (worldIds.length === 0) {
+    return;
+  }
+  const addTab = (id: string | null, label: string): void => {
+    const tab = document.createElement('button');
+    tab.type = 'button';
+    tab.className = `map-world-tab${id === activeMapWorld ? ' is-active' : ''}`;
+    tab.setAttribute('data-world-id', id ?? '*');
+    tab.textContent = label;
+    tab.addEventListener('click', () => {
+      activeMapWorld = id;
+      redrawMap();
+    });
+    host.appendChild(tab);
+  };
+  addTab(null, 'All');
+  worldIds.forEach((id) => addTab(id, worldLabel(id)));
+}
+
 function redrawMap(): void {
   if (!lastGoodConfig) {
     return;
   }
-  const graphLayout = layoutGraph(graphFromConfig(lastGoodConfig));
+  const graph = graphFromConfig(lastGoodConfig);
+  const worldIds = Object.keys(lastGoodConfig.worlds ?? {});
+  if (activeMapWorld && !worldIds.includes(activeMapWorld)) {
+    activeMapWorld = null;
+  }
+  renderWorldTabs(worldIds);
+
+  let filtered = graph;
+  if (activeMapWorld) {
+    const nodes = graph.nodes.filter((node) => node.world === activeMapWorld);
+    const ids = new Set(nodes.map((node) => node.id));
+    filtered = {
+      nodes,
+      edges: graph.edges.filter((edge) => ids.has(edge.from) && ids.has(edge.to)),
+      startId:
+        graph.startId && ids.has(graph.startId)
+          ? graph.startId
+          : lastGoodConfig.worlds?.[activeMapWorld]?.initialSituation ?? null,
+    };
+  }
+
+  const graphLayout = layoutGraph(filtered);
   renderMap(
     graphLayout,
     {
@@ -329,8 +381,13 @@ function redrawMap(): void {
   );
 }
 
-preview.onRender = (situationId) => {
-  statusSituationEl.textContent = `@ ${situationId}`;
+preview.onRender = (info) => {
+  statusSituationEl.textContent = `@ ${info.situationId}`;
+  statusWorldEl.textContent = info.worldId ? `⬒ ${worldLabel(info.worldId)}` : '';
+  // The map follows the player between worlds (unless viewing All).
+  if (info.worldId && activeMapWorld && info.worldId !== activeMapWorld) {
+    activeMapWorld = info.worldId;
+  }
   redrawMap();
 };
 
@@ -514,6 +571,8 @@ declare global {
       getSource(): string;
       setSource(source: string): void;
       wordWrapOn(): boolean;
+      getWorld(): string | undefined;
+      setWorld(worldId: string): void;
     };
   }
 }
@@ -521,6 +580,10 @@ window.__workbench = {
   getSource: () => editor.getValue(),
   setSource,
   wordWrapOn: () => settings.editorWordWrap,
+  getWorld: () => preview.getEngine()?.getCurrentWorld?.(),
+  setWorld: (worldId: string) => {
+    preview.getEngine()?.goToWorld?.(worldId);
+  },
 };
 
 // Restore layout and prefs; the editor was created with the saved draft

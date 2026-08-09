@@ -20,6 +20,8 @@ export type {
   QualityValue,
   QualityChangeEvent,
   SituationChangeEvent,
+  WorldChangeEvent,
+  WorldDefinition,
   EventListener,
   SituationRenderer,
   StorageHandler

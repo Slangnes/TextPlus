@@ -72,6 +72,8 @@ export interface SituationDefinition {
   content: string | ((context: CallbackContext) => string);
   /** CSS class names to apply to the root element */
   tags?: string[];
+  /** World/mode this situation belongs to (ids stay globally unique) */
+  world?: string;
   /** Available links from this situation */
   links?: SituationLink[];
   /** Called when entering this situation */
@@ -114,6 +116,17 @@ export interface HudConfig {
 }
 
 /**
+ * A named world/mode: a sub-graph of situations sharing global player state.
+ * Situations opt in via their `world` field; ids remain globally unique.
+ */
+export interface WorldDefinition {
+  /** Display label ("Communications Mode"); defaults to the id */
+  label?: string;
+  /** Situation entered on first visit to this world */
+  initialSituation: string;
+}
+
+/**
  * Complete game configuration
  */
 export interface GameConfig {
@@ -127,6 +140,8 @@ export interface GameConfig {
   situations: Record<string, SituationDefinition>;
   /** Optional declarative HUD and state-driven theming */
   hud?: HudConfig;
+  /** Optional named worlds/modes (see WorldDefinition) */
+  worlds?: Record<string, WorldDefinition>;
   /** Optional game metadata */
   author?: string;
   version?: string;
@@ -148,6 +163,8 @@ export interface GameState {
   };
   /** Current quality values */
   qualities: Record<string, number | string | boolean>;
+  /** Last-visited situation per world, for world-switch resume (optional) */
+  perWorldPositions?: Record<string, string>;
   /** Save file version for compatibility checking */
   version: number;
   /** When was this save created? */
@@ -175,6 +192,20 @@ export interface SituationChangeEvent {
   /** Previous situation ID */
   previousSituation: string;
   /** New situation ID */
+  currentSituation: string;
+  /** When did this occur? */
+  timestamp: number;
+}
+
+/**
+ * Event fired when a transition crosses into a different world/mode
+ */
+export interface WorldChangeEvent {
+  /** World left (undefined when leaving unassigned situations) */
+  previousWorld: string | undefined;
+  /** World entered (undefined when entering unassigned situations) */
+  currentWorld: string | undefined;
+  /** Situation arrived at */
   currentSituation: string;
   /** When did this occur? */
   timestamp: number;
@@ -245,6 +276,15 @@ export interface GameEngine {
 
   /** Subscribe to situation change events */
   onSituationChange(listener: EventListener<SituationChangeEvent>): () => void;
+
+  /** World/mode of the current situation, when the game uses worlds */
+  getCurrentWorld?(): string | undefined;
+
+  /** Switch to a world, resuming its last-visited situation (or its initial) */
+  goToWorld?(worldId: string): void;
+
+  /** Subscribe to world change events (optional — worlds-aware engines only) */
+  onWorldChange?(listener: EventListener<WorldChangeEvent>): () => void;
 
   /** Get readable content for the current situation (with dynamic evaluation) */
   getCurrentSituationContent(): string;

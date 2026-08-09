@@ -108,6 +108,13 @@ export class DomRenderer implements SituationRenderer {
       situation.tags.forEach((tag) => wrapper.classList.add(tag));
     }
 
+    // Expose the current world/mode for per-mode skins (mirrors data-theme).
+    if (situation.world) {
+      target.setAttribute('data-world', situation.world);
+    } else {
+      target.removeAttribute('data-world');
+    }
+
     target.appendChild(wrapper);
   }
 

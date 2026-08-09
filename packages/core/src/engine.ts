@@ -9,7 +9,8 @@ import type {
   GameState,
   QualityChangeEvent,
   SituationChangeEvent,
-  SituationLink
+  SituationLink,
+  WorldChangeEvent
 } from './types';
 import { SAVE_FORMAT_VERSION } from './types';
 import { QualitySystem } from './qualities';
@@ -22,9 +23,12 @@ export class TextPlusGameEngine implements GameEngine {
   private readonly situationSystem: SituationSystem;
   private currentSituationId: string;
   private history: string[] = [];
+  /** Last-visited situation per world, for world-switch resume. */
+  private perWorldPositions: Record<string, string> = {};
 
   private situationChangeListeners: EventListener<SituationChangeEvent>[] = [];
   private qualityChangeListeners: EventListener<QualityChangeEvent>[] = [];
+  private worldChangeListeners: EventListener<WorldChangeEvent>[] = [];
 
   constructor(config: GameConfig) {
     if (!config.initialSituation) {
@@ -45,10 +49,36 @@ export class TextPlusGameEngine implements GameEngine {
 
     this.currentSituationId = config.initialSituation;
     this.history = [this.currentSituationId];
+    this.trackWorldPosition(this.currentSituationId);
 
     const initialSituation = this.situationSystem.getSituation(this.currentSituationId);
     if (initialSituation) {
       this.situationSystem.callOnEnter(initialSituation, this);
+    }
+    this.mirrorWorldQuality();
+  }
+
+  /** Remember the situation as the world's resume point, when it has one. */
+  private trackWorldPosition(situationId: string): void {
+    const world = this.situationSystem.getSituation(situationId)?.world;
+    if (world) {
+      this.perWorldPositions[world] = situationId;
+    }
+  }
+
+  /**
+   * Games that declare a string quality named `world` get it maintained by
+   * the engine, making the current world visible to conditions, adaptive
+   * text, HUD readouts, and theme rules with no extra plumbing. Opt-in by
+   * declaration — nothing is injected into games that don't ask.
+   */
+  private mirrorWorldQuality(): void {
+    if (this.qualitySystem.getDefinition('world')?.type !== 'string') {
+      return;
+    }
+    const world = this.situationSystem.getSituation(this.currentSituationId)?.world ?? '';
+    if (this.qualitySystem.getValue('world') !== world) {
+      this.setQuality('world', world);
     }
   }
 
@@ -124,11 +154,22 @@ export class TextPlusGameEngine implements GameEngine {
   }
 
   goToSituation(situationId: string): void {
+    this.transition(situationId);
+  }
+
+  /**
+   * The single transition path — both public entry points and world switches
+   * come through here, so lifecycle hooks, history, world bookkeeping, and
+   * events can never diverge. (The DOM renderer calls goToSituation directly,
+   * bypassing followLink — anything per-move must live here.)
+   */
+  private transition(situationId: string): void {
     if (!this.situationSystem.hasSituation(situationId)) {
       throw new Error(`Situation not found: ${situationId}`);
     }
 
     const previousSituation = this.currentSituationId;
+    const previousWorld = this.situationSystem.getSituation(previousSituation)?.world;
     const previousDefinition = this.situationSystem.getSituation(previousSituation);
     if (previousDefinition) {
       this.situationSystem.callOnExit(previousDefinition, this);
@@ -136,17 +177,42 @@ export class TextPlusGameEngine implements GameEngine {
 
     this.currentSituationId = situationId;
     this.history.push(situationId);
+    this.trackWorldPosition(situationId);
 
     const newDefinition = this.situationSystem.getSituation(situationId);
     if (newDefinition) {
       this.situationSystem.callOnEnter(newDefinition, this);
     }
+    this.mirrorWorldQuality();
 
     this.emitSituationChange({
       previousSituation,
       currentSituation: situationId,
       timestamp: Date.now()
     });
+
+    const currentWorld = newDefinition?.world;
+    if (currentWorld !== previousWorld) {
+      this.emitWorldChange({
+        previousWorld,
+        currentWorld,
+        currentSituation: situationId,
+        timestamp: Date.now()
+      });
+    }
+  }
+
+  getCurrentWorld(): string | undefined {
+    return this.situationSystem.getSituation(this.currentSituationId)?.world;
+  }
+
+  goToWorld(worldId: string): void {
+    const worldDef = this.config.worlds?.[worldId];
+    if (!worldDef) {
+      throw new Error(`World not found: ${worldId}`);
+    }
+    const target = this.perWorldPositions[worldId] ?? worldDef.initialSituation;
+    this.transition(target);
   }
 
   followLink(link: SituationLink): void {
@@ -167,6 +233,7 @@ export class TextPlusGameEngine implements GameEngine {
         history: [...this.history]
       },
       qualities: this.qualitySystem.exportState(),
+      perWorldPositions: { ...this.perWorldPositions },
       version: SAVE_FORMAT_VERSION,
       timestamp: Date.now()
     };
@@ -183,17 +250,30 @@ export class TextPlusGameEngine implements GameEngine {
     this.qualitySystem.importState(state.qualities);
     this.currentSituationId = state.currentSituation;
     this.history = [...state.situations.history];
+
+    // Restore world resume points, dropping any that reference situations
+    // no longer present (a live edit may have removed them).
+    this.perWorldPositions = {};
+    Object.entries(state.perWorldPositions ?? {}).forEach(([world, situationId]) => {
+      if (this.situationSystem.hasSituation(situationId)) {
+        this.perWorldPositions[world] = situationId;
+      }
+    });
+    this.trackWorldPosition(this.currentSituationId);
   }
 
   reset(): void {
     this.qualitySystem.reset();
     this.currentSituationId = this.config.initialSituation;
     this.history = [this.currentSituationId];
+    this.perWorldPositions = {};
+    this.trackWorldPosition(this.currentSituationId);
 
     const situation = this.situationSystem.getSituation(this.currentSituationId);
     if (situation) {
       this.situationSystem.callOnEnter(situation, this);
     }
+    this.mirrorWorldQuality();
   }
 
   onQualityChange(listener: EventListener<QualityChangeEvent>): () => void {
@@ -212,6 +292,16 @@ export class TextPlusGameEngine implements GameEngine {
       const index = this.situationChangeListeners.indexOf(listener);
       if (index >= 0) {
         this.situationChangeListeners.splice(index, 1);
+      }
+    };
+  }
+
+  onWorldChange(listener: EventListener<WorldChangeEvent>): () => void {
+    this.worldChangeListeners.push(listener);
+    return () => {
+      const index = this.worldChangeListeners.indexOf(listener);
+      if (index >= 0) {
+        this.worldChangeListeners.splice(index, 1);
       }
     };
   }
@@ -253,6 +343,19 @@ export class TextPlusGameEngine implements GameEngine {
           );
         }
       }
+      if (situation.world && this.config.worlds && !this.config.worlds[situation.world]) {
+        errors.push(
+          `Situation ${situationId} belongs to undeclared world \"${situation.world}\"`
+        );
+      }
+    }
+
+    for (const [worldId, world] of Object.entries(this.config.worlds ?? {})) {
+      if (!this.situationSystem.hasSituation(world.initialSituation)) {
+        errors.push(
+          `World ${worldId}: initial situation \"${world.initialSituation}\" does not exist`
+        );
+      }
     }
 
     return {
@@ -277,6 +380,16 @@ export class TextPlusGameEngine implements GameEngine {
         listener(event);
       } catch (error) {
         console.error('Error in situation change listener:', error);
+      }
+    }
+  }
+
+  private emitWorldChange(event: WorldChangeEvent): void {
+    for (const listener of this.worldChangeListeners) {
+      try {
+        listener(event);
+      } catch (error) {
+        console.error('Error in world change listener:', error);
       }
     }
   }

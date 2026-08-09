@@ -18,6 +18,7 @@ import type {
   QualityDefinition,
   SituationDefinition,
   SituationLink,
+  WorldDefinition,
 } from '@textplus/core';
 import type { AuthorGameAst, AuthorLinkNode, AuthorQualityNode, AuthorSituationNode } from './parser';
 import { resolveInitialSituation } from './parser';
@@ -92,12 +93,19 @@ function compileLink(node: AuthorLinkNode, errors: CompileError[], situationId: 
 /**
  * Compile a situation node to Core definition
  */
+/** The world prefix of a qualified id ("comm:feed-a" → "comm"), else undefined. */
+function worldOf(situationId: string): string | undefined {
+  const colon = situationId.indexOf(':');
+  return colon === -1 ? undefined : situationId.slice(0, colon);
+}
+
 function compileSituation(node: AuthorSituationNode, errors: CompileError[], rng: Rng): SituationDefinition {
   const situation: SituationDefinition = {
     id: node.id,
     title: node.title,
     content: compileContent(node.content, rng),
     tags: node.tags.length > 0 ? node.tags : undefined,
+    world: worldOf(node.id),
     links: node.links.map((link) => compileLink(link, errors, node.id)),
   };
 
@@ -190,6 +198,30 @@ export function compileAST(ast: AuthorGameAst, options: CompileAstOptions = {}):
     };
   }
 
+  // Worlds: declared `world` directives plus prefixes discovered from
+  // qualified situation ids. Each world's initial situation is its first
+  // declared member (declaration order); the global [start] rule is unchanged.
+  let worlds: Record<string, WorldDefinition> | undefined;
+  const declaredWorlds = new Map((ast.worlds ?? []).map((node) => [node.id, node]));
+  const discovered = new Map<string, string>(); // world -> first situation id
+  Object.keys(ast.situations).forEach((situationId) => {
+    const world = worldOf(situationId);
+    if (world && !discovered.has(world)) {
+      discovered.set(world, situationId);
+    }
+  });
+  if (declaredWorlds.size > 0 || discovered.size > 0) {
+    worlds = {};
+    for (const [worldId, firstSituation] of discovered) {
+      worlds[worldId] = {
+        label: declaredWorlds.get(worldId)?.label,
+        initialSituation: firstSituation,
+      };
+    }
+    // Declared worlds without any situation compile to nothing here; the
+    // linter reports them (empty-world) so the gap is visible, not silent.
+  }
+
   if (errors.length > 0) {
     return {
       config: null,
@@ -203,6 +235,7 @@ export function compileAST(ast: AuthorGameAst, options: CompileAstOptions = {}):
     qualities: qualitiesRecord,
     situations: situationsRecord,
     hud,
+    worlds,
   };
 
   return {

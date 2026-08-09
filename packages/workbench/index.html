@@ -486,6 +486,27 @@
       padding: 3px 10px;
     }
 
+    .map-worlds {
+      display: flex;
+      gap: 4px;
+    }
+
+    .map-world-tab {
+      font-size: 12px;
+      padding: 3px 10px;
+      border: 1px solid var(--wb-border);
+      background: transparent;
+      color: var(--wb-text-dim);
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .map-world-tab.is-active {
+      background: var(--wb-accent);
+      color: var(--wb-accent-ink);
+      border-color: var(--wb-accent);
+    }
+
     .map-node rect {
       fill: var(--wb-surface);
       stroke: var(--wb-border);
@@ -695,6 +716,7 @@
 
   <footer class="statusbar">
     <div class="status" id="status"></div>
+    <div class="statusbar__item" id="status-world" title="Current world/mode in the preview"></div>
     <div class="statusbar__item" id="status-situation" title="Current situation in the preview"></div>
     <div class="statusbar__item" id="status-cursor"></div>
   </footer>
@@ -710,6 +732,7 @@
     <div class="view view-map" id="view-map">
       <div id="map-container"></div>
       <div class="map-toolbar">
+        <div id="map-worlds" class="map-worlds" hidden></div>
         <button type="button" id="btn-export-trizbort">Export Trizbort</button>
         <p class="map-legend">Click a room: preview + editor jump there · scroll = zoom · drag = pan · double-click = fit · gold = current · dashed = unreachable</p>
       </div>

@@ -39,6 +39,7 @@ The Lower Stacks
 | `quality <id> number\|boolean\|string = <default> [min N] [max N]` | Declare a quality; numbers clamp to bounds; `min` must precede `max`; string defaults are written bare (`= calm`) |
 | `hud <id> meter\|badge\|readout ["Label"]` | HUD entry bound to a quality (meter: progress bar; badge: shown when truthy; readout: label + value) |
 | `theme <name> when <expr>` | Sets `data-theme="<name>"` on the play surface while the expression holds; last matching rule wins |
+| `world <id> ["Label"]` | Declare a world/mode. Situations join it via qualified ids (`:: <world>:<id>`); links may target any world's situations (`=> comm:feed-a`), and crossing worlds is an ordinary transition. Each world resumes at its last-visited situation; the current world is exposed as `data-world` on the play surface and, when you declare `quality world string = ...`, mirrored into that quality for conditions/HUD/themes |
 
 ### Situations
 
@@ -95,6 +96,7 @@ Exit codes: 0 success (warnings allowed), 1 errors/failure, 2 usage. `--out` wri
 | `effect-parse-error` / `condition-parse-error` | error | A brace block / condition fails to parse |
 | `effect-type-mismatch` | error | `+=`/`-=` on a non-number, or `=` assigning against the declared type |
 | `orphaned-situation` | warning | Unreachable from the start |
+| `empty-world` | warning | A declared world has no situations |
 | `unknown-quality-in-effect` / `-condition` / `-hud` | warning | Reference to an undeclared quality |
 | `condition-type-mismatch` | warning | Ordered comparison on a declared non-number |
 | `unused-quality` | warning | Declared but never referenced |

@@ -145,7 +145,7 @@ export function sanitizeProse(prose: string): string {
       if (/^\{.*\}$/.test(trimmed)) {
         return line.replace('{', '⦃').replace(/\}(?=[^}]*$)/, '⦄');
       }
-      if (/^(title:|quality\s|hud\s|theme\s)/.test(trimmed)) {
+      if (/^(title:|quality\s|hud\s|theme\s|world\s|task\s|every\s|at\s)/.test(trimmed)) {
         return ` ${line}`;
       }
       return line;

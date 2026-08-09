@@ -38,6 +38,12 @@ export interface AuthorThemeNode {
   when: string;
 }
 
+/** A declared world/mode ("world comm \"Communications\""). */
+export interface AuthorWorldNode {
+  id: string;
+  label?: string;
+}
+
 /** 1-based source line numbers, kept out of the nodes so AST deep-equals stay stable. */
 export interface AuthorPositions {
   qualities: Record<string, number>;
@@ -50,6 +56,8 @@ export interface AuthorPositions {
   hud: number[];
   /** Parallel to the themes array. */
   themes: number[];
+  /** Parallel to the worlds array. */
+  worlds: number[];
 }
 
 export interface AuthorGameAst {
@@ -60,6 +68,8 @@ export interface AuthorGameAst {
   hud?: AuthorHudNode[];
   /** Theme rules in declaration order (undefined when none). */
   themes?: AuthorThemeNode[];
+  /** World declarations in order (undefined when none). */
+  worlds?: AuthorWorldNode[];
   positions?: AuthorPositions;
 }
 
@@ -137,9 +147,11 @@ export function parseGame(source: string): AuthorGameAst {
     entryEffects: {},
     hud: [],
     themes: [],
+    worlds: [],
   };
   const hud: AuthorHudNode[] = [];
   const themes: AuthorThemeNode[] = [];
+  const worlds: AuthorWorldNode[] = [];
 
   let currentSituation: PendingSituation | null = null;
   let expectingSituationTitle = false;
@@ -204,9 +216,21 @@ export function parseGame(source: string): AuthorGameAst {
       continue;
     }
 
+    if (!currentSituation && trimmed.startsWith('world ')) {
+      const match = trimmed.match(/^world\s+([a-zA-Z][\w-]*)(?:\s+"([^"]*)")?$/);
+      if (!match) {
+        throw new Error(`Line ${lineNumber}: invalid world declaration (expected: world <id> ["label"])`);
+      }
+      const [, id, label] = match;
+      worlds.push({ id, label });
+      positions.worlds.push(lineNumber);
+      continue;
+    }
+
     if (trimmed.startsWith(':: ')) {
       finalizeSituation(situations, positions, currentSituation);
-      const match = trimmed.match(/^::\s+([a-zA-Z][\w-]*)(?:\s+\[([^\]]+)\])?$/);
+      // Ids may be world-qualified: `world:situation` (one colon).
+      const match = trimmed.match(/^::\s+([a-zA-Z][\w-]*(?::[a-zA-Z][\w-]*)?)(?:\s+\[([^\]]+)\])?$/);
       if (!match) {
         throw new Error(`Line ${lineNumber}: invalid situation header`);
       }
@@ -238,7 +262,7 @@ export function parseGame(source: string): AuthorGameAst {
     }
 
     if (trimmed.startsWith('-> ')) {
-      const match = trimmed.match(/^->\s+(.+?)\s+=>\s+([a-zA-Z][\w-]*)(?:\s+\?\s+(.+?))?(?:\s*\{\s*(.+?)\s*\})?$/);
+      const match = trimmed.match(/^->\s+(.+?)\s+=>\s+([a-zA-Z][\w-]*(?::[a-zA-Z][\w-]*)?)(?:\s+\?\s+(.+?))?(?:\s*\{\s*(.+?)\s*\})?$/);
       if (!match) {
         throw new Error(`Line ${lineNumber}: invalid link definition`);
       }
@@ -280,6 +304,7 @@ export function parseGame(source: string): AuthorGameAst {
     situations,
     hud: hud.length > 0 ? hud : undefined,
     themes: themes.length > 0 ? themes : undefined,
+    worlds: worlds.length > 0 ? worlds : undefined,
     positions,
   };
 }
