@@ -17,6 +17,7 @@ Browser authoring environment for TextPlus: a 1–4 panel workspace where each p
 | `src/examples.ts` | Blank template + four example stories (DSL tour and adaptations of all three demo games); must always compile clean |
 | `src/main.ts` | DOM glue: editor, compile debounce, toolbar (New / example picker / Import / Export / Restart / layout selector / solo-position / Settings), 1–4 panel layout with drag splitters, status bar (compile · world · situation · turn · cursor), diagnostics with click-to-line |
 | `src/journal.ts` | Journal panel: task checklist + capture recordings (frozen content snapshots), entries click through to their situation in the editor |
+| `src/examples.ts` | Bundled stories (all guard-enforced to compile with zero issues), incl. "Night Shift" — the showcase exercising worlds, the clock, capture/journal, and the in-game map together |
 
 ## Usage
 

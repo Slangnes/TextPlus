@@ -355,11 +355,74 @@ Your sanity has fractured too far and the library dissolves around you. You are 
 -> Rest and rebuild (Restart) => sanctuary
 `;
 
+const NIGHT_SHIFT = `title: Night Shift
+
+world office "The Office"
+world cams "The Cameras"
+world museum "The Floor"
+
+quality turn number = 0
+quality alertness number = 6 min 0 max 6
+quality east-unlocked boolean = false
+
+task broken-case "The broken display case"
+task footprints "Footprints in the dust"
+
+hud turn readout "Hour"
+hud alertness meter "Alertness"
+
+theme dim when alertness < 4
+theme dark when alertness < 2
+
+map dungeon
+
+every 3 { alertness -= 1 }
+at 4 say "A crash echoes from the east wing."
+at 6 in cams say "Static swallows the feed for a moment."
+
+:: office:desk [start]
+The Security Desk
+Monitors hum. Coffee cools. Your alertness holds at {alertness}.
+
+-> Check the cameras => cams:feed-a
+-> Walk the floor => museum:atrium
+-> Drink the cold coffee => office:desk { alertness += 2 }
+
+:: cams:feed-a
+Feed A - The Atrium
+Marble and moonlight, quiet as a held breath.
+
+-> Switch to Feed B => cams:feed-b
+-> Back to the desk => office:desk
+
+:: cams:feed-b
+Feed B - The East Wing
+Something glitters on the floor between the cases. Worth unlocking the east door for.
+
+-> Back to the desk => office:desk { east-unlocked = true }
+
+:: museum:atrium
+The Atrium
+Your footsteps double themselves in echo. [oneOf: Dust hangs in the lamplight. | A banner shifts in some unfelt draft.]
+
+-> East wing => museum:east-wing ? east-unlocked
+-> Study the marble floor => museum:atrium { capture footprints }
+-> Return to the desk => office:desk
+
+:: museum:east-wing
+The East Wing
+Glass everywhere. A case yawns open where the meteor iron slept.
+
+-> Record the scene => museum:east-wing { capture broken-case }
+-> Back to the atrium => museum:atrium
+`;
+
 /** Seed story for first-time visitors. */
 export const SAMPLE_STORY = DUSTY_ARCHIVE;
 
 export const EXAMPLES: ExampleStory[] = [
   { id: 'dusty-archive', label: 'The Dusty Archive (DSL tour)', source: DUSTY_ARCHIVE },
+  { id: 'night-shift', label: 'Night Shift (worlds · clock · journal · map)', source: NIGHT_SHIFT },
   { id: 'hello-world', label: 'Hello World (demo adaptation)', source: HELLO_WORLD },
   { id: 'detective-case', label: "The Detective's Case (demo adaptation)", source: DETECTIVE_CASE },
   { id: 'memory-keeper', label: 'The Memory Keeper (demo adaptation)', source: MEMORY_KEEPER },

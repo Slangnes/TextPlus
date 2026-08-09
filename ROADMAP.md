@@ -3,7 +3,7 @@
 This document tracks the features, deliverables, and milestones for the TextPlus project. Items are organized by component and priority.
 
 **Last Updated**: August 8, 2026  
-**Current Status**: M0–M2 ✅ complete | M3 Map + M4 Convert 🚧 in progress | Test standard: traced Playwright E2E suite (69 scenarios)
+**Current Status**: M0–M2 ✅ complete | M3 Map + M4 Convert 🚧 in progress | Test standard: traced Playwright E2E suite (91 scenarios)
 
 ---
 
@@ -14,9 +14,18 @@ This document tracks the features, deliverables, and milestones for the TextPlus
 | **M0: Bootstrap** | ✅ COMPLETE | 100% | Project setup infrastructure |
 | **M1: Core** | ✅ COMPLETE | 100% | Runtime + Beyond Text HUD/theme slices; `storage.ts` awaits its M5 UI surface |
 | **M2: Author** | ✅ COMPLETE | 100% | DSL, linter (9 rules), workflow, CLI (`textplus-author` / `create-textplus-game`); Raconteur compat resolved as a migration guide |
-| **M3: Map** | 🚧 IN PROGRESS | ~40% | Auto-layout, transcript importer, DSL round-trip done; Trizbort export, Inform 7/Ink codegen, batch ops remain |
-| **M4: Convert** | 🚧 IN PROGRESS | ~45% | Linear DSL, branching multi-transcript merge, `textplus-convert` CLI, workbench Import done; engine formats, HTML/Trizbort generators remain |
-| **M5: Integration** | ⏳ PENDING | ~10% | CLI surfaces landed early; save/load UI, docs site, release remain |
+| **M3: Map** | 🚧 IN PROGRESS | ~75% | Compass layout, zoom/pan, ZIL+transcript importers, gated-edge dev view, in-game dungeon map, Trizbort export; hand-editing, Trizbort import, Inform 7/Ink codegen remain |
+| **M4: Convert** | 🚧 IN PROGRESS | ~70% | Deconstruction (prose, gates, globals, multi-file worlds) + conversion report, transcripts + branching merge + CLI; objects, blocked-link construct, engine formats, .z5 remain |
+| **M5: Integration** | ⏳ PENDING | ~15% | CLI surfaces + showcase example landed early; save/load UI, docs site, release remain |
+
+### Feature Milestones (restructured 2026-08-09 — work is organized by feature, not package)
+
+| Feature | Status | What it means |
+|---|---|---|
+| **Scene Machinery** | ✅ shipped | Worlds/modes (per-world resume, `data-world` skins, map world tabs), the turn clock (`every`/`at` schedules, messages, `wait`), capture/journal/tasks + the Journal panel — the generic engine behind AMFV-class experiences |
+| **The Living Map** | ✅ shipped (auto-map) | Compass-true layout, zoom/pan, gated edges in the dev view, Trizbort export, and the player-facing fog-of-war dungeon map (`map dungeon`); hand-editing and Trizbort *import* still ahead |
+| **Deep Deconstruction** | 🚧 in progress | The program → the story: ZIL rooms/prose/exits/gates/globals/multi-file worlds with an honest conversion report; ahead: objects, a blocked-link DSL construct (185 AMFV SORRY exits wait on it), .z5 binaries |
+| **Showcase & Docs** | 🚧 in progress | "Night Shift" bundled example exercises every pillar under the zero-warnings guard; docs site, save/load UI, and release remain |
 
 ### Known Verification Limits
 
