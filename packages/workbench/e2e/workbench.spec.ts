@@ -1,8 +1,8 @@
 /**
  * TextPlus Workbench E2E suite.
  *
- * Every test records a Playwright trace (see playwright.config.ts). The
- * trace.zip artifacts are the project's release QA record, carrying both
+ * Every test records a Playwright trace (see playwright.config.ts). All
+ * scenarios in this file are browser-driven, so their traces carry both
  * verification vectors at once: the visual film-strip/DOM snapshots and the
  * code-level log of actions, console, and network.
  *

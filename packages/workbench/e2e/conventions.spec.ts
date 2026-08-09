@@ -1,9 +1,10 @@
 /**
- * Project convention guards, enforced through the E2E suite so every release
- * trace.zip carries the proof.
+ * Project convention guards, enforced through the E2E suite.
  *
  * 1. No native browser popups anywhere in workbench sources — the app must use
- *    the shared modal utilities (src/modal.ts). Static source scan.
+ *    the shared modal utilities (src/modal.ts). Static source scan (Node
+ *    context: its trace records the assertion, not a visual). The runtime
+ *    complement is trackNativeDialogs, asserted across the browser specs.
  * 2. Every example in the examples menu compiles with zero errors and zero
  *    warnings, verified through the real app: load it, watch the status bar
  *    and diagnostics panel.

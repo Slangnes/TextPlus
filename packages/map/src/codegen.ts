@@ -34,7 +34,9 @@ export function graphToDsl(graph: StoryGraph, options: GraphToDslOptions = {}): 
   const sections = graph.nodes.map((node) => {
     const tags = node.id === startId ? ['start', ...(node.tags ?? [])] : (node.tags ?? []);
     const uniqueTags = [...new Set(tags)];
-    const header = uniqueTags.length > 0 ? `:: ${node.id} [${uniqueTags.join(' ')}]` : `:: ${node.id}`;
+    // The author parser splits tags on commas — a space join would mangle
+    // multi-tag headers and silently lose the [start] tag.
+    const header = uniqueTags.length > 0 ? `:: ${node.id} [${uniqueTags.join(', ')}]` : `:: ${node.id}`;
     const lines = [header, node.title || node.id, '', '...'];
     (byFrom.get(node.id) ?? []).forEach((target) => {
       lines.push('', `-> To ${titles.get(target) ?? target} => ${target}`);

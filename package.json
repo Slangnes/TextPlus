@@ -4,6 +4,9 @@
   "description": "TextPlus - Modernizing Interactive Fiction Tools",
   "type": "module",
   "private": true,
+  "engines": {
+    "node": ">=20"
+  },
   "workspaces": [
     "packages/*"
   ],

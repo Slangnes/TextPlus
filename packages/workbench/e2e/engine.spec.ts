@@ -184,6 +184,67 @@ Rest here.
     await expect(body).toContainText('beta');
   });
 
+  test('the last matching theme rule wins, and the theme clears above thresholds', async ({ page }) => {
+    await setSource(
+      page,
+      `title: Precedence
+
+quality sanity number = 100 min 0 max 100
+
+hud sanity meter "Sanity"
+
+theme dim when sanity < 70
+theme dark when sanity < 40
+
+:: start [start]
+The Edge
+Your sanity holds at {sanity}.
+
+-> Slip => start { sanity -= 35 }
+-> Recover => start { sanity += 35 }
+`,
+    );
+    const preview = page.locator('#preview-game');
+    await expect(preview).not.toHaveAttribute('data-theme', /./);
+
+    await page.locator('.tp-link', { hasText: 'Slip' }).click(); // 65: only dim matches
+    await expect(preview).toHaveAttribute('data-theme', 'dim');
+
+    await page.locator('.tp-link', { hasText: 'Slip' }).click(); // 30: both match, last wins
+    await expect(preview).toHaveAttribute('data-theme', 'dark');
+
+    await page.locator('.tp-link', { hasText: 'Recover' }).click(); // 65: back to dim
+    await expect(preview).toHaveAttribute('data-theme', 'dim');
+
+    await page.locator('.tp-link', { hasText: 'Recover' }).click(); // 100: cleared
+    await expect(preview).not.toHaveAttribute('data-theme', /./);
+  });
+
+  test('HUD readouts render label and live value for string qualities', async ({ page }) => {
+    await setSource(
+      page,
+      `title: Readout Test
+
+quality mood string = calm
+
+hud mood readout "Mood"
+
+:: start [start]
+The Room
+The mood is {mood}.
+
+-> Stir the air => start { mood = 'restless' }
+`,
+    );
+    const readout = page.locator('.tp-hud__readout[data-quality-id="mood"]');
+    await expect(readout.locator('.tp-hud__label')).toHaveText('Mood');
+    await expect(readout.locator('.tp-hud__value')).toHaveText('calm');
+    await expect(page.locator('.tp-body')).toContainText('The mood is calm');
+
+    await page.locator('.tp-link', { hasText: 'Stir the air' }).click();
+    await expect(readout.locator('.tp-hud__value')).toHaveText('restless');
+  });
+
   test('entry effects fire on every arrival', async ({ page }) => {
     await setSource(
       page,

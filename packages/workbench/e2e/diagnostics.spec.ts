@@ -143,6 +143,35 @@ The lantern waits.
     await expect(page.locator('#status')).toContainText('✗');
   });
 
+  test('effect parse errors and unknown-quality references in effects and hud all surface', async ({ page }) => {
+    await setSource(
+      page,
+      `title: Rule Trio
+
+quality courage number = 5 min 0 max 10
+
+hud ghost meter "Ghost"
+
+:: start [start]
+The Hall
+Courage hums here.
+
+-> Fumble => start { courage + 1 }
+-> Haunt => start { ghost += 1 }
+`,
+    );
+    await expect(
+      page.locator('.diag--error', { hasText: 'invalid effects "{ courage + 1 }"' }),
+    ).toBeVisible();
+    await expect(
+      page.locator('.diag--warning', { hasText: 'effect references undeclared quality "ghost"' }),
+    ).toBeVisible();
+    await expect(
+      page.locator('.diag--warning', { hasText: 'hud references undeclared quality "ghost"' }),
+    ).toBeVisible();
+    await expect(page.locator('#status')).toContainText('✗');
+  });
+
   test('blank source shows the empty state, not an error', async ({ page }) => {
     await setSource(page, '');
     await expect(page.locator('#status')).toHaveClass(/status--empty/);

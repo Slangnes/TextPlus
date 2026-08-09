@@ -37,13 +37,20 @@ interface CliResult {
   status: number;
 }
 
-function run(args: string[]): CliResult {
+/** Runs the CLI and attaches command + exit code + output to the trace. */
+async function run(args: string[]): Promise<CliResult> {
+  let result: CliResult;
   try {
-    return { output: execFileSync('node', [convertBin, ...args], { encoding: 'utf8' }), status: 0 };
+    result = { output: execFileSync('node', [convertBin, ...args], { encoding: 'utf8' }), status: 0 };
   } catch (error) {
     const failed = error as { status?: number; stdout?: string; stderr?: string };
-    return { output: `${failed.stdout ?? ''}${failed.stderr ?? ''}`, status: failed.status ?? -1 };
+    result = { output: `${failed.stdout ?? ''}${failed.stderr ?? ''}`, status: failed.status ?? -1 };
   }
+  await test.info().attach(`$ textplus-convert ${args.join(' ')}`, {
+    body: `exit ${result.status}\n\n${result.output}`,
+    contentType: 'text/plain',
+  });
+  return result;
 }
 
 test.describe('convert CLI', () => {
@@ -67,8 +74,8 @@ test.describe('convert CLI', () => {
     rmSync(workDir, { recursive: true, force: true });
   });
 
-  test('a single transcript converts linearly and compiles under --check', () => {
-    const result = run([join(workDir, 'one.txt'), '--check']);
+  test('a single transcript converts linearly and compiles under --check', async () => {
+    const result = await run([join(workDir, 'one.txt'), '--check']);
     expect(result.status).toBe(0);
     expect(result.output).toContain(':: crossroads [start]');
     expect(result.output).toContain('-> Go north => old-mill');
@@ -76,8 +83,8 @@ test.describe('convert CLI', () => {
     expect(result.output).toContain('Situations: 3');
   });
 
-  test('merging two walks yields a branching story that compiles', () => {
-    const result = run([join(workDir, 'one.txt'), join(workDir, 'two.txt'), '--check']);
+  test('merging two walks yields a branching story that compiles', async () => {
+    const result = await run([join(workDir, 'one.txt'), join(workDir, 'two.txt'), '--check']);
     expect(result.status).toBe(0);
     // The shared room gained both continuations — the branch point.
     expect(result.output).toContain('-> Go north => old-mill');
@@ -86,9 +93,9 @@ test.describe('convert CLI', () => {
     expect(result.output).toContain('Situations: 4');
   });
 
-  test('--out writes the DSL file with a title override', () => {
+  test('--out writes the DSL file with a title override', async () => {
     const out = join(workDir, 'story.tp.txt');
-    const result = run([
+    const result = await run([
       join(workDir, 'one.txt'),
       join(workDir, 'two.txt'),
       '--title',
@@ -98,20 +105,21 @@ test.describe('convert CLI', () => {
     ]);
     expect(result.status).toBe(0);
     expect(result.output).toContain(`DSL written to ${out}`);
+    await test.info().attach('story.tp.txt', { path: out, contentType: 'text/plain' });
     const dsl = readFileSync(out, 'utf8');
     expect(dsl).toContain('title: Forked Paths');
     expect(dsl).toContain('-> Go south => river-bank');
   });
 
-  test('empty transcripts fail cleanly', () => {
+  test('empty transcripts fail cleanly', async () => {
     writeFileSync(join(workDir, 'empty.txt'), '   \n', 'utf8');
-    const result = run([join(workDir, 'empty.txt')]);
+    const result = await run([join(workDir, 'empty.txt')]);
     expect(result.status).toBe(1);
     expect(result.output).toContain('Conversion failed');
   });
 
-  test('no arguments prints usage and exits 2', () => {
-    const result = run([]);
+  test('no arguments prints usage and exits 2', async () => {
+    const result = await run([]);
     expect(result.status).toBe(2);
     expect(result.output).toContain('Usage: textplus-convert');
   });
