@@ -20,6 +20,7 @@ export const VERSION = '0.0.1';
 
 export { layoutGraph } from './layout';
 export type {
+  Direction,
   GraphNode,
   GraphEdge,
   StoryGraph,
@@ -27,6 +28,9 @@ export type {
   GraphLayout,
   LayoutOptions,
 } from './layout';
+export { directionFromText, directionLabel } from './directions';
+export { graphToTrizbort } from './trizbort';
+export type { TrizbortOptions } from './trizbort';
 export { graphFromConfig } from './adapter';
 export { importTranscript } from './importer';
 export { importZilRooms } from './zil';

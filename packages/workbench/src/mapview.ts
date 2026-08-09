@@ -57,8 +57,9 @@ export function renderMap(layout: GraphLayout, options: MapViewOptions, target: 
 
   const svg = svgEl('svg');
   svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
-  svg.setAttribute('width', String(width));
-  svg.setAttribute('height', String(height));
+  svg.setAttribute('width', '100%');
+  svg.setAttribute('height', '100%');
+  svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
   svg.setAttribute('class', 'map-svg');
   svg.setAttribute('role', 'img');
   svg.setAttribute('aria-label', 'Story map');
@@ -105,6 +106,23 @@ export function renderMap(layout: GraphLayout, options: MapViewOptions, target: 
     line.setAttribute('class', 'map-edge');
     line.setAttribute('marker-end', 'url(#map-arrow)');
     root.appendChild(line);
+
+    // Compass directions are readable from the geometry; vertical/portal
+    // movement (up/down/in/out) gets an explicit label at the midpoint.
+    if (
+      edge.direction === 'up' ||
+      edge.direction === 'down' ||
+      edge.direction === 'in' ||
+      edge.direction === 'out'
+    ) {
+      const label = svgEl('text');
+      label.setAttribute('x', String((start.x + end.x) / 2));
+      label.setAttribute('y', String((start.y + end.y) / 2 - 4));
+      label.setAttribute('text-anchor', 'middle');
+      label.setAttribute('class', 'map-edge-label');
+      label.textContent = edge.direction;
+      root.appendChild(label);
+    }
   });
 
   layout.nodes.forEach((node) => {
@@ -147,6 +165,60 @@ export function renderMap(layout: GraphLayout, options: MapViewOptions, target: 
     }
 
     root.appendChild(group);
+  });
+
+  // --- Zoom & pan (Trizbort-style navigation) --------------------------------
+  const view = { x: 0, y: 0, w: width, h: height };
+  const applyView = (): void => {
+    svg.setAttribute('viewBox', `${view.x} ${view.y} ${view.w} ${view.h}`);
+  };
+
+  svg.addEventListener(
+    'wheel',
+    (event) => {
+      event.preventDefault();
+      const rect = svg.getBoundingClientRect();
+      const fx = (event.clientX - rect.left) / rect.width;
+      const fy = (event.clientY - rect.top) / rect.height;
+      const px = view.x + fx * view.w;
+      const py = view.y + fy * view.h;
+      const scale =
+        Math.min(Math.max((event.deltaY > 0 ? 1.25 : 0.8) * view.w, 60), width * 4) / view.w;
+      view.w *= scale;
+      view.h *= scale;
+      view.x = px - fx * view.w;
+      view.y = py - fy * view.h;
+      applyView();
+    },
+    { passive: false },
+  );
+
+  let pan: { startX: number; startY: number; viewX: number; viewY: number } | null = null;
+  svg.addEventListener('pointerdown', (event) => {
+    if ((event.target as Element).closest('.map-node')) {
+      return; // node clicks still navigate
+    }
+    pan = { startX: event.clientX, startY: event.clientY, viewX: view.x, viewY: view.y };
+    svg.setPointerCapture(event.pointerId);
+  });
+  svg.addEventListener('pointermove', (event) => {
+    if (!pan) {
+      return;
+    }
+    const rect = svg.getBoundingClientRect();
+    view.x = pan.viewX - ((event.clientX - pan.startX) / rect.width) * view.w;
+    view.y = pan.viewY - ((event.clientY - pan.startY) / rect.height) * view.h;
+    applyView();
+  });
+  svg.addEventListener('pointerup', () => {
+    pan = null;
+  });
+  svg.addEventListener('dblclick', () => {
+    view.x = 0;
+    view.y = 0;
+    view.w = width;
+    view.h = height;
+    applyView();
   });
 
   target.appendChild(svg);

@@ -74,9 +74,10 @@ test.describe('map tools', () => {
     expect(graph.nodes.map((node) => node.id)).toEqual(['crossroads', 'old-mill', 'step-1']);
     expect(graph.nodes[1].title).toBe('OLD MILL');
     expect(graph.nodes[2].title).toBe('Enter mill');
+    // Commands carry compass information onto the edges.
     expect(graph.edges).toEqual([
-      { from: 'crossroads', to: 'old-mill' },
-      { from: 'old-mill', to: 'step-1' },
+      { from: 'crossroads', to: 'old-mill', direction: 'north' },
+      { from: 'old-mill', to: 'step-1', direction: 'in' },
     ]);
     expect(() => importTranscript('   \n')).toThrow('no rooms or commands');
   });
@@ -86,7 +87,7 @@ test.describe('map tools', () => {
     const dsl = graphToDsl(graph);
     expect(dsl).toContain('title: CROSSROADS');
     expect(dsl).toContain(':: crossroads [start]');
-    expect(dsl).toContain('-> To OLD MILL => old-mill');
+    expect(dsl).toContain('-> Go north => old-mill'); // directional labels round-trip
 
     const { output, report } = await compileDsl(workDir, dsl);
     expect(output).toContain('✅ DSL compilation successful');
@@ -135,9 +136,9 @@ test.describe('map tools', () => {
     expect(graph.nodes.map((node) => node.id)).toEqual(['town-square', 'old-church', 'market']);
     expect(graph.nodes[2].title).toBe('Market'); // no DESC — titled from the id
     expect(graph.edges).toEqual([
-      { from: 'town-square', to: 'old-church' }, // plain exit
-      { from: 'town-square', to: 'market' }, // conditional exit keeps its target
-      { from: 'old-church', to: 'town-square' },
+      { from: 'town-square', to: 'old-church', direction: 'north' }, // plain exit
+      { from: 'town-square', to: 'market', direction: 'east' }, // conditional exit keeps its target
+      { from: 'old-church', to: 'town-square', direction: 'south' },
       // SORRY/PER exits, the CRYPT exit (undefined room), and ELSEWHERE are dropped
     ]);
     expect(() => importZilRooms('<ROUTINE NOPE () <RTRUE>>')).toThrow('No <ROOM');

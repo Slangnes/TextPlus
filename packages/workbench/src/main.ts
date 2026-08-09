@@ -18,7 +18,7 @@ import { transcriptToDsl } from '@textplus/convert';
 import { renderMap } from './mapview';
 import { getSettings, updateSettings, PANEL_MODULES, SOLO_POSITIONS } from './settings';
 import type { PanelModule, PanelView, SoloPosition, WorkbenchSettings } from './settings';
-import { graphFromConfig, layoutGraph } from '@textplus/map';
+import { graphFromConfig, graphToTrizbort, layoutGraph } from '@textplus/map';
 import type { GameConfig } from '@textplus/core';
 
 const COMPILE_DEBOUNCE_MS = 250;
@@ -372,17 +372,34 @@ function setSource(source: string): void {
 
 // --- Toolbar actions ---------------------------------------------------------
 
-function exportStory(): void {
-  const source = editor.getValue();
-  const title = /^title:\s*(.+)$/m.exec(source)?.[1]?.trim() ?? '';
-  const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'story';
-  const blob = new Blob([source], { type: 'text/plain' });
+function downloadText(filename: string, text: string, type: string): void {
+  const blob = new Blob([text], { type });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
-  link.download = `${slug}.tp.txt`;
+  link.download = filename;
   link.click();
   URL.revokeObjectURL(url);
+}
+
+function storySlug(): string {
+  const title = /^title:\s*(.+)$/m.exec(editor.getValue())?.[1]?.trim() ?? '';
+  return title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'story';
+}
+
+function exportStory(): void {
+  downloadText(`${storySlug()}.tp.txt`, editor.getValue(), 'text/plain');
+}
+
+function exportTrizbort(): void {
+  if (!lastGoodConfig) {
+    statusEl.textContent = '✗ Nothing to export — fix the story errors first';
+    statusEl.className = 'status status--error';
+    return;
+  }
+  const layout = layoutGraph(graphFromConfig(lastGoodConfig));
+  const xml = graphToTrizbort(layout, { title: lastGoodConfig.title });
+  downloadText(`${storySlug()}.trizbort`, xml, 'application/xml');
 }
 
 // --- Wiring ------------------------------------------------------------------
@@ -434,6 +451,8 @@ requireElement<HTMLButtonElement>('btn-import').addEventListener('click', () => 
 });
 
 requireElement<HTMLButtonElement>('btn-export').addEventListener('click', exportStory);
+
+requireElement<HTMLButtonElement>('btn-export-trizbort').addEventListener('click', exportTrizbort);
 
 requireElement<HTMLButtonElement>('btn-restart').addEventListener('click', () => {
   if (preview.getEngine()) {

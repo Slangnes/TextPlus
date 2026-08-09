@@ -12,10 +12,25 @@
  * source in hand, the whole map is recovered exactly, no playthrough needed.
  */
 
-import type { StoryGraph, GraphNode, GraphEdge } from './layout';
+import type { StoryGraph, GraphNode, GraphEdge, Direction } from './layout';
 
 const DIRECTIONS =
-  /\((?:NORTH|SOUTH|EAST|WEST|NE|NW|SE|SW|UP|DOWN|IN|OUT|LAND)\s+TO\s+([A-Z0-9][A-Z0-9-]*)/g;
+  /\((NORTH|SOUTH|EAST|WEST|NE|NW|SE|SW|UP|DOWN|IN|OUT|LAND)\s+TO\s+([A-Z0-9][A-Z0-9-]*)/g;
+
+const ZIL_DIRECTIONS: Record<string, Direction> = {
+  NORTH: 'north',
+  SOUTH: 'south',
+  EAST: 'east',
+  WEST: 'west',
+  NE: 'ne',
+  NW: 'nw',
+  SE: 'se',
+  SW: 'sw',
+  UP: 'up',
+  DOWN: 'down',
+  IN: 'in',
+  OUT: 'out',
+};
 
 function slugify(zilId: string): string {
   const slug = zilId.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
@@ -38,7 +53,7 @@ export function importZilRooms(source: string): StoryGraph {
 
   const nodes: GraphNode[] = [];
   const ids = new Map<string, string>(); // ZIL id -> slug
-  const rawEdges: Array<{ from: string; to: string }> = [];
+  const rawEdges: Array<{ from: string; to: string; direction?: Direction }> = [];
 
   chunks.forEach((chunk) => {
     const header = /^<ROOM\s+([A-Z0-9][A-Z0-9-]*)/.exec(chunk);
@@ -56,7 +71,7 @@ export function importZilRooms(source: string): StoryGraph {
     nodes.push({ id: slug, title: desc?.[1] || titleFromId(zilId) });
 
     for (const exit of chunk.matchAll(DIRECTIONS)) {
-      rawEdges.push({ from: zilId, to: exit[1] });
+      rawEdges.push({ from: zilId, to: exit[2], direction: ZIL_DIRECTIONS[exit[1]] });
     }
   });
 
@@ -66,7 +81,7 @@ export function importZilRooms(source: string): StoryGraph {
 
   const edges: GraphEdge[] = [];
   const seen = new Set<string>();
-  rawEdges.forEach(({ from, to }) => {
+  rawEdges.forEach(({ from, to, direction }) => {
     const fromSlug = ids.get(from);
     const toSlug = ids.get(to);
     if (!fromSlug || !toSlug || fromSlug === toSlug) {
@@ -75,7 +90,7 @@ export function importZilRooms(source: string): StoryGraph {
     const key = `${fromSlug} > ${toSlug}`;
     if (!seen.has(key)) {
       seen.add(key);
-      edges.push({ from: fromSlug, to: toSlug });
+      edges.push(direction ? { from: fromSlug, to: toSlug, direction } : { from: fromSlug, to: toSlug });
     }
   });
 

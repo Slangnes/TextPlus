@@ -11,7 +11,8 @@
  * connections — while convert owns full prose-preserving DSL conversion.
  */
 
-import type { StoryGraph, GraphNode, GraphEdge } from './layout';
+import type { StoryGraph, GraphNode, GraphEdge, Direction } from './layout';
+import { directionFromText } from './directions';
 
 const MAX_ROOM_HEADER_LENGTH = 50;
 
@@ -73,18 +74,19 @@ export function importTranscript(text: string): StoryGraph {
     }
   };
 
-  const connect = (from: string, to: string): void => {
+  const connect = (from: string, to: string, direction?: Direction): void => {
     const key = `${from} > ${to}`;
     if (!edgeSeen.has(key)) {
       edgeSeen.add(key);
-      edges.push({ from, to });
+      edges.push(direction ? { from, to, direction } : { from, to });
     }
   };
 
   const arriveAt = (id: string, title: string): void => {
     ensureNode(id, title);
     if (currentId !== null && currentId !== id) {
-      connect(currentId, id);
+      // The command that led here often names the direction ("go north").
+      connect(currentId, id, pendingCommand ? directionFromText(pendingCommand) : undefined);
     }
     currentId = id;
     pendingCommand = null;

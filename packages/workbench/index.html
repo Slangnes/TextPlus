@@ -452,7 +452,39 @@
 
     /* --- Story map --------------------------------------------------------- */
 
-    .map-svg { max-width: none; }
+    .map-svg {
+      max-width: none;
+      cursor: grab;
+      touch-action: none;
+    }
+
+    .view-map {
+      display: flex;
+      flex-direction: column;
+    }
+
+    #map-container {
+      flex: 1;
+      min-height: 0;
+    }
+
+    .map-edge-label {
+      font-size: 10px;
+      fill: var(--wb-text-dim);
+      pointer-events: none;
+    }
+
+    .map-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .map-toolbar button {
+      font-size: 12px;
+      padding: 3px 10px;
+    }
 
     .map-node rect {
       fill: var(--wb-surface);
@@ -670,7 +702,10 @@
     </div>
     <div class="view view-map" id="view-map">
       <div id="map-container"></div>
-      <p class="map-legend">Click a room to jump the preview there · gold outline = current · shaded = ending · dashed red = unreachable</p>
+      <div class="map-toolbar">
+        <button type="button" id="btn-export-trizbort">Export Trizbort</button>
+        <p class="map-legend">Click a room: preview + editor jump there · scroll = zoom · drag = pan · double-click = fit · gold = current · dashed = unreachable</p>
+      </div>
     </div>
     <div class="view view-diagnostics" id="view-diagnostics">
       <div id="diagnostics" aria-label="Diagnostics" aria-live="polite"></div>

@@ -3,8 +3,34 @@
  * depth columns, unique cells, orphan parking, terminal flags, edge dedup.
  */
 
+import { readFileSync } from 'node:fs';
 import { test, expect } from '@playwright/test';
 import { setSource } from './helpers';
+
+const COMPASS_STORY = `title: Compass
+
+:: plaza [start]
+The Plaza
+Streets run everywhere.
+
+-> Go north => temple
+-> Go east => market
+-> Go southwest => docks
+
+:: temple
+The Temple
+Quiet.
+
+-> Go south => plaza
+
+:: market
+The Market
+Loud.
+
+:: docks
+The Docks
+Wet.
+`;
 
 interface NodePos {
   id: string | null;
@@ -95,6 +121,64 @@ Done.
     );
     await expect(page.locator('.map-node')).toHaveCount(2);
     await expect(page.locator('.map-edge')).toHaveCount(1);
+  });
+
+  test('movement-labeled links produce a compass-true layout', async ({ page }) => {
+    await setSource(page, COMPASS_STORY);
+    await expect(page.locator('.map-node')).toHaveCount(4);
+    const nodes = await nodePositions(page);
+    const byId = new Map(nodes.map((n) => [n.id, n]));
+    const plaza = byId.get('plaza')!;
+    const temple = byId.get('temple')!;
+    const market = byId.get('market')!;
+    const docks = byId.get('docks')!;
+
+    expect(temple.x).toBe(plaza.x); // north = straight up
+    expect(temple.y).toBeLessThan(plaza.y);
+    expect(market.y).toBe(plaza.y); // east = straight right
+    expect(market.x).toBeGreaterThan(plaza.x);
+    expect(docks.x).toBeLessThan(plaza.x); // southwest = down-left
+    expect(docks.y).toBeGreaterThan(plaza.y);
+  });
+
+  test('the map zooms with the wheel, pans by dragging, and resets on double-click', async ({ page }) => {
+    const svg = page.locator('.map-svg');
+    const before = await svg.getAttribute('viewBox');
+    const box = (await svg.boundingBox())!;
+    const emptyX = box.x + box.width - 30;
+    const emptyY = box.y + box.height - 30;
+
+    await page.mouse.move(emptyX, emptyY);
+    await page.mouse.wheel(0, -120);
+    const zoomed = await svg.getAttribute('viewBox');
+    expect(zoomed).not.toBe(before);
+
+    await page.mouse.move(emptyX, emptyY);
+    await page.mouse.down();
+    await page.mouse.move(emptyX - 80, emptyY - 40, { steps: 3 });
+    await page.mouse.up();
+    const panned = await svg.getAttribute('viewBox');
+    expect(panned).not.toBe(zoomed);
+
+    await page.mouse.dblclick(emptyX, emptyY);
+    await expect(svg).toHaveAttribute('viewBox', before!);
+  });
+
+  test('Export Trizbort downloads an XML map with compass ports', async ({ page }) => {
+    await setSource(page, COMPASS_STORY);
+    await expect(page.locator('.map-node')).toHaveCount(4);
+
+    const download = page.waitForEvent('download');
+    await page.locator('#btn-export-trizbort').click();
+    const file = await download;
+    expect(file.suggestedFilename()).toBe('compass.trizbort');
+
+    const xml = readFileSync((await file.path()), 'utf8');
+    expect(xml).toContain('<trizbort');
+    expect(xml).toContain('name="The Plaza"');
+    expect(xml).toContain('isStartRoom="yes"');
+    expect(xml).toContain('port="n"'); // compass directions dock to ports
+    expect(xml).toContain('flow="oneWay"'); // market/docks have no way back
   });
 
   test('unreachable rooms park in a trailing column, flagged unreachable', async ({ page }) => {
