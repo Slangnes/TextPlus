@@ -147,6 +147,30 @@ export interface ScheduleEntry {
 }
 
 /**
+ * A capturable task/scene ("record the dying forests"). Tasks complete when
+ * a `capture` effect records them into the journal.
+ */
+export interface TaskDefinition {
+  /** Display label for checklists */
+  label: string;
+}
+
+/**
+ * One recorded journal entry: where the player was, when, and the content
+ * exactly as it read at capture time (dynamic text frozen as-was — the only
+ * honest snapshot, since it may depend on state that later changes).
+ */
+export interface JournalEntry {
+  turn: number;
+  world?: string;
+  situationId: string;
+  /** Task this capture completes, when the capture named one */
+  taskId?: string;
+  /** Rendered content snapshot (compiled HTML) at capture time */
+  content: string;
+}
+
+/**
  * Complete game configuration
  */
 export interface GameConfig {
@@ -164,6 +188,8 @@ export interface GameConfig {
   worlds?: Record<string, WorldDefinition>;
   /** Optional turn-clock schedule (see ScheduleEntry) */
   schedule?: ScheduleEntry[];
+  /** Optional capturable tasks/scenes (see TaskDefinition) */
+  tasks?: Record<string, TaskDefinition>;
   /** Optional game metadata */
   author?: string;
   version?: string;
@@ -189,6 +215,8 @@ export interface GameState {
   perWorldPositions?: Record<string, string>;
   /** Turn counter (optional; pre-scheduler saves derive it from history) */
   turnCount?: number;
+  /** Recorded journal entries (optional) */
+  journal?: JournalEntry[];
   /** Save file version for compatibility checking */
   version: number;
   /** When was this save created? */
@@ -243,6 +271,14 @@ export interface GameMessageEvent {
   /** Turn the message fired on */
   turn: number;
   /** When did this occur? */
+  timestamp: number;
+}
+
+/**
+ * Event fired when a journal entry is recorded
+ */
+export interface JournalChangeEvent {
+  entry: JournalEntry;
   timestamp: number;
 }
 
@@ -329,6 +365,18 @@ export interface GameEngine {
 
   /** Subscribe to scheduled-message events */
   onMessage?(listener: EventListener<GameMessageEvent>): () => void;
+
+  /** Record the current situation into the journal, optionally completing a task */
+  capture?(taskId?: string): void;
+
+  /** The recorded journal, in capture order */
+  getJournal?(): JournalEntry[];
+
+  /** Declared tasks (empty record when the game declares none) */
+  getTasks?(): Record<string, TaskDefinition>;
+
+  /** Subscribe to journal change events */
+  onJournalChange?(listener: EventListener<JournalChangeEvent>): () => void;
 
   /** Get readable content for the current situation (with dynamic evaluation) */
   getCurrentSituationContent(): string;

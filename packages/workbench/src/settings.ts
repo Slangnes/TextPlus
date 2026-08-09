@@ -9,11 +9,11 @@
 
 const SETTINGS_KEY = 'textplus-workbench-settings';
 
-export type PanelModule = 'editor' | 'play' | 'map' | 'diagnostics';
+export type PanelModule = 'editor' | 'play' | 'map' | 'diagnostics' | 'journal';
 /** What a panel can host: a module, or nothing. 'none' may repeat; modules may not. */
 export type PanelView = PanelModule | 'none';
 
-export const PANEL_MODULES: readonly PanelModule[] = ['editor', 'play', 'map', 'diagnostics'];
+export const PANEL_MODULES: readonly PanelModule[] = ['editor', 'play', 'map', 'diagnostics', 'journal'];
 
 export interface LayoutSizes {
   /** Height of the top row as a percentage (10-90). */

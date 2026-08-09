@@ -46,6 +46,11 @@ export const LINE_RULES: GroupRule[] = [
     /^(world)(\s+)([a-zA-Z][\w-]*)((?:\s+"[^"]*")?)(\s*)$/,
     ['keyword', 'white', 'type.identifier', 'string', 'white'],
   ],
+  // task forests "The dying forests"
+  [
+    /^(task)(\s+)([a-zA-Z][\w-]*)((?:\s+"[^"]*")?)(\s*)$/,
+    ['keyword', 'white', 'variable', 'string', 'white'],
+  ],
   // every 2 { pressure += 1 } / at 12 in hall say "..."
   [
     /^(every|at)(\s+)(\d+)((?:\s+in\s+[a-zA-Z][\w-]*)?)((?:\s*\{.*?\})?)((?:\s+say\s+"[^"]*")?)(\s*)$/,

@@ -14,6 +14,7 @@ import { PreviewHost } from './preview';
 import { loadDraft, saveDraft } from './drafts';
 import { BLANK_TEMPLATE, EXAMPLES, SAMPLE_STORY } from './examples';
 import { confirmAction, openImportDialog, openSettingsDialog } from './modal';
+import { renderJournal } from './journal';
 import { transcriptToDsl, zilToDsl } from '@textplus/convert';
 import { renderMap } from './mapview';
 import { getSettings, updateSettings, PANEL_MODULES, SOLO_POSITIONS } from './settings';
@@ -28,6 +29,7 @@ const VIEW_LABELS: Record<PanelView, string> = {
   play: 'Play',
   map: 'Map',
   diagnostics: 'Diagnostics',
+  journal: 'Journal',
   none: '— empty —',
 };
 
@@ -57,6 +59,7 @@ const viewElements: Record<PanelModule, HTMLElement> = {
   play: requireElement<HTMLElement>('view-play'),
   map: requireElement<HTMLElement>('view-map'),
   diagnostics: requireElement<HTMLElement>('view-diagnostics'),
+  journal: requireElement<HTMLElement>('view-journal'),
 };
 
 let debounceTimer: ReturnType<typeof setTimeout> | undefined;
@@ -383,6 +386,18 @@ function redrawMap(): void {
   );
 }
 
+const journalEl = requireElement<HTMLElement>('journal');
+preview.onJournal = (journal, tasks) => {
+  renderJournal(journalEl, tasks, journal, {
+    onEntryClick: (situationId) => {
+      const line = lastSituationLines[situationId];
+      if (line !== undefined) {
+        editor.focusLine(line);
+      }
+    },
+  });
+};
+
 preview.onRender = (info) => {
   statusSituationEl.textContent = `@ ${info.situationId}`;
   statusWorldEl.textContent = info.worldId ? `⬒ ${worldLabel(info.worldId)}` : '';
@@ -556,7 +571,7 @@ requireElement<HTMLButtonElement>('btn-solo-position').addEventListener('click',
 
 for (let i = 0; i < 4; i += 1) {
   const picker = requireElement<HTMLSelectElement>(`panel-picker-${i}`);
-  (['editor', 'play', 'map', 'diagnostics', 'none'] as PanelView[]).forEach((view) => {
+  ([...PANEL_MODULES, 'none'] as PanelView[]).forEach((view) => {
     const option = document.createElement('option');
     option.value = view;
     option.textContent = VIEW_LABELS[view];

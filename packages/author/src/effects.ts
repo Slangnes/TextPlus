@@ -10,6 +10,7 @@
  *   effects := effect (',' effect)*
  *   effect  := quality-id ('+=' | '-=') number
  *            | quality-id '=' (number | 'true' | 'false' | string)
+ *            | 'capture' task-id
  */
 
 import type { GameEngine } from '@textplus/core';
@@ -23,9 +24,11 @@ export class EffectError extends Error {
 
 export type EffectNode =
   | { kind: 'mutate'; qualityId: string; delta: number }
-  | { kind: 'set'; qualityId: string; value: number | boolean | string };
+  | { kind: 'set'; qualityId: string; value: number | boolean | string }
+  | { kind: 'capture'; taskId: string };
 
 const EFFECT_PATTERN = /^([a-zA-Z][\w-]*)\s*(\+=|-=|=)\s*(.+)$/;
+const CAPTURE_PATTERN = /^capture\s+([a-zA-Z][\w-]*)$/;
 
 function parseScalar(raw: string): number | boolean | string {
   if (raw === 'true') {
@@ -54,9 +57,13 @@ export function parseEffects(source: string): EffectNode[] {
 
   return trimmed.split(',').map((part) => {
     const effect = part.trim();
+    const captureMatch = CAPTURE_PATTERN.exec(effect);
+    if (captureMatch) {
+      return { kind: 'capture' as const, taskId: captureMatch[1] };
+    }
     const match = EFFECT_PATTERN.exec(effect);
     if (!match) {
-      throw new EffectError(`Invalid effect "${effect}" (expected "id += n", "id -= n", or "id = value")`);
+      throw new EffectError(`Invalid effect "${effect}" (expected "id += n", "id -= n", "id = value", or "capture task-id")`);
     }
     const [, qualityId, operator, rawValue] = match;
     const value = parseScalar(rawValue.trim());
@@ -81,11 +88,14 @@ export function compileEffects(nodes: EffectNode[]): (game: GameEngine) => void 
       try {
         if (node.kind === 'mutate') {
           game.mutateQuality(node.qualityId, node.delta);
-        } else {
+        } else if (node.kind === 'set') {
           game.setQuality(node.qualityId, node.value);
+        } else {
+          game.capture?.(node.taskId);
         }
       } catch (error) {
-        console.error(`TextPlus effect failed for quality "${node.qualityId}":`, error);
+        const target = node.kind === 'capture' ? `task "${node.taskId}"` : `quality "${node.qualityId}"`;
+        console.error(`TextPlus effect failed for ${target}:`, error);
       }
     });
   };
@@ -93,5 +103,6 @@ export function compileEffects(nodes: EffectNode[]): (game: GameEngine) => void 
 
 /** All quality ids referenced by the effects (for linting). */
 export function collectEffectRefs(nodes: EffectNode[]): string[] {
-  return [...new Set(nodes.map((node) => node.qualityId))];
+  const ids = nodes.flatMap((node) => (node.kind === 'capture' ? [] : [node.qualityId]));
+  return [...new Set(ids)];
 }

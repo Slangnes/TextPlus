@@ -135,6 +135,8 @@ export function lintAST(ast: AuthorGameAst): LintOutput {
 
   // Validate conditions and effects (parse errors, unknown/mistyped qualities)
   const declaredQualities = new Set(Object.keys(ast.qualities));
+  const declaredTasks = new Set((ast.tasks ?? []).map((task) => task.id));
+  const capturedTasks = new Set<string>();
   const structuredRefs = new Set<string>();
 
   const lineOf = (kind: 'links' | 'entryEffects', situationId: string, index: number): number | undefined =>
@@ -157,6 +159,19 @@ export function lintAST(ast: AuthorGameAst): LintOutput {
     }
     collectEffectRefs(nodes).forEach((ref) => structuredRefs.add(ref));
     nodes.forEach((node) => {
+      if (node.kind === 'capture') {
+        capturedTasks.add(node.taskId);
+        if (!declaredTasks.has(node.taskId)) {
+          diagnostics.push({
+            severity: 'warning',
+            code: 'unknown-task-in-capture',
+            message: `${prefix(line)}capture references undeclared task "${node.taskId}"`,
+            situation: situationId,
+            line,
+          });
+        }
+        return;
+      }
       if (!declaredQualities.has(node.qualityId)) {
         diagnostics.push({
           severity: 'warning',
@@ -299,6 +314,19 @@ export function lintAST(ast: AuthorGameAst): LintOutput {
           line,
         });
       }
+    }
+  });
+
+  // Declared tasks should be capturable somewhere
+  (ast.tasks ?? []).forEach((taskNode, index) => {
+    if (!capturedTasks.has(taskNode.id)) {
+      const line = ast.positions?.tasks?.[index];
+      diagnostics.push({
+        severity: 'warning',
+        code: 'unused-task',
+        message: `${prefix(line)}task "${taskNode.id}" is declared but never captured`,
+        line,
+      });
     }
   });
 

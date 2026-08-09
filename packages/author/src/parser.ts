@@ -44,6 +44,12 @@ export interface AuthorWorldNode {
   label?: string;
 }
 
+/** A capturable task declaration ("task forests \"The dying forests\""). */
+export interface AuthorTaskNode {
+  id: string;
+  label?: string;
+}
+
 /** A schedule directive ("every 2 { pressure += 1 }", "at 12 say \"...\""). */
 export interface AuthorScheduleNode {
   kind: 'every' | 'at';
@@ -70,6 +76,8 @@ export interface AuthorPositions {
   worlds: number[];
   /** Parallel to the schedule array. */
   schedule: number[];
+  /** Parallel to the tasks array. */
+  tasks: number[];
 }
 
 export interface AuthorGameAst {
@@ -84,6 +92,8 @@ export interface AuthorGameAst {
   worlds?: AuthorWorldNode[];
   /** Schedule directives in order (undefined when none). */
   schedule?: AuthorScheduleNode[];
+  /** Task declarations in order (undefined when none). */
+  tasks?: AuthorTaskNode[];
   positions?: AuthorPositions;
 }
 
@@ -163,11 +173,13 @@ export function parseGame(source: string): AuthorGameAst {
     themes: [],
     worlds: [],
     schedule: [],
+    tasks: [],
   };
   const hud: AuthorHudNode[] = [];
   const themes: AuthorThemeNode[] = [];
   const worlds: AuthorWorldNode[] = [];
   const schedule: AuthorScheduleNode[] = [];
+  const tasks: AuthorTaskNode[] = [];
 
   let currentSituation: PendingSituation | null = null;
   let expectingSituationTitle = false;
@@ -257,6 +269,17 @@ export function parseGame(source: string): AuthorGameAst {
         message,
       });
       positions.schedule.push(lineNumber);
+      continue;
+    }
+
+    if (!currentSituation && trimmed.startsWith('task ')) {
+      const match = trimmed.match(/^task\s+([a-zA-Z][\w-]*)(?:\s+"([^"]*)")?$/);
+      if (!match) {
+        throw new Error(`Line ${lineNumber}: invalid task declaration (expected: task <id> ["label"])`);
+      }
+      const [, id, label] = match;
+      tasks.push({ id, label });
+      positions.tasks.push(lineNumber);
       continue;
     }
 
@@ -350,6 +373,7 @@ export function parseGame(source: string): AuthorGameAst {
     themes: themes.length > 0 ? themes : undefined,
     worlds: worlds.length > 0 ? worlds : undefined,
     schedule: schedule.length > 0 ? schedule : undefined,
+    tasks: tasks.length > 0 ? tasks : undefined,
     positions,
   };
 }

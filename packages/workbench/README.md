@@ -15,7 +15,8 @@ Browser authoring environment for TextPlus: a 1–4 panel workspace where each p
 | `src/settings.ts` | User preferences and layout persistence (confirm dialogs, word wrap, panel count/views/splitter sizes/solo position), localStorage-backed |
 | `src/modal.ts` | In-app modal dialogs (`confirmAction`, `openImportDialog`, `openSettingsDialog`) — native popups are banned project-wide, see CLAUDE.md |
 | `src/examples.ts` | Blank template + four example stories (DSL tour and adaptations of all three demo games); must always compile clean |
-| `src/main.ts` | DOM glue: editor, compile debounce, toolbar (New / example picker / Import / Export / Restart / layout selector / solo-position / Settings), 1–4 panel layout with drag splitters, status bar, diagnostics with click-to-line |
+| `src/main.ts` | DOM glue: editor, compile debounce, toolbar (New / example picker / Import / Export / Restart / layout selector / solo-position / Settings), 1–4 panel layout with drag splitters, status bar (compile · world · situation · turn · cursor), diagnostics with click-to-line |
+| `src/journal.ts` | Journal panel: task checklist + capture recordings (frozen content snapshots), entries click through to their situation in the editor |
 
 ## Usage
 

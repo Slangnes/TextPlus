@@ -7,7 +7,7 @@
  */
 
 import { createGame, DomRenderer, renderQualities, renderHud, applyHudThemes } from '@textplus/core';
-import type { GameConfig, GameEngine } from '@textplus/core';
+import type { GameConfig, GameEngine, JournalEntry, TaskDefinition } from '@textplus/core';
 
 export interface MountOptions {
   /** Try to keep the current playthrough (situation + qualities). Default true. */
@@ -31,6 +31,16 @@ export class PreviewHost {
 
   /** Invoked after every render with the current position (survives remounts). */
   onRender: ((info: RenderInfo) => void) | null = null;
+
+  /** Invoked whenever the journal/tasks state should be (re)rendered. */
+  onJournal: ((journal: JournalEntry[], tasks: Record<string, TaskDefinition>) => void) | null =
+    null;
+
+  private notifyJournal(): void {
+    if (this.onJournal && this.engine) {
+      this.onJournal(this.engine.getJournal?.() ?? [], this.engine.getTasks?.() ?? {});
+    }
+  }
 
   constructor(container: HTMLElement) {
     this.container = container;
@@ -94,7 +104,11 @@ export class PreviewHost {
         engine.onMessage((event) => this.appendMessage(event.message, event.turn)),
       );
     }
+    if (engine.onJournalChange) {
+      this.unsubscribes.push(engine.onJournalChange(() => this.notifyJournal()));
+    }
     this.render();
+    this.notifyJournal();
   }
 
   /** Let time pass in place, then reflect the new clock in the UI. */
@@ -114,6 +128,7 @@ export class PreviewHost {
     this.engine.reset();
     this.clearMessages();
     this.render();
+    this.notifyJournal();
   }
 
   private render(): void {

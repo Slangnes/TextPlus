@@ -19,6 +19,7 @@ import type {
   ScheduleEntry,
   SituationDefinition,
   SituationLink,
+  TaskDefinition,
   WorldDefinition,
 } from '@textplus/core';
 import type { AuthorGameAst, AuthorLinkNode, AuthorQualityNode, AuthorSituationNode } from './parser';
@@ -223,6 +224,22 @@ export function compileAST(ast: AuthorGameAst, options: CompileAstOptions = {}):
     // linter reports them (empty-world) so the gap is visible, not silent.
   }
 
+  // Compile task declarations (label defaults to a Title-Case of the id)
+  let tasksRecord: Record<string, TaskDefinition> | undefined;
+  if (ast.tasks && ast.tasks.length > 0) {
+    tasksRecord = {};
+    ast.tasks.forEach((node) => {
+      tasksRecord![node.id] = {
+        label:
+          node.label ??
+          node.id
+            .split('-')
+            .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' '),
+      };
+    });
+  }
+
   // Compile the turn-clock schedule
   let scheduleEntries: ScheduleEntry[] | undefined;
   if (ast.schedule && ast.schedule.length > 0) {
@@ -265,6 +282,7 @@ export function compileAST(ast: AuthorGameAst, options: CompileAstOptions = {}):
     hud,
     worlds,
     schedule: scheduleEntries,
+    tasks: tasksRecord,
   };
 
   return {

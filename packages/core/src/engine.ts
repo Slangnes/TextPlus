@@ -8,9 +8,12 @@ import type {
   GameEngine,
   GameMessageEvent,
   GameState,
+  JournalChangeEvent,
+  JournalEntry,
   QualityChangeEvent,
   SituationChangeEvent,
   SituationLink,
+  TaskDefinition,
   WorldChangeEvent
 } from './types';
 import { SAVE_FORMAT_VERSION } from './types';
@@ -28,11 +31,14 @@ export class TextPlusGameEngine implements GameEngine {
   private perWorldPositions: Record<string, string> = {};
   /** Turn clock: 0 at start; every transition (and wait tick) advances it. */
   private turnCount = 0;
+  /** Recorded journal entries, in capture order. */
+  private journal: JournalEntry[] = [];
 
   private situationChangeListeners: EventListener<SituationChangeEvent>[] = [];
   private qualityChangeListeners: EventListener<QualityChangeEvent>[] = [];
   private worldChangeListeners: EventListener<WorldChangeEvent>[] = [];
   private messageListeners: EventListener<GameMessageEvent>[] = [];
+  private journalChangeListeners: EventListener<JournalChangeEvent>[] = [];
 
   constructor(config: GameConfig) {
     if (!config.initialSituation) {
@@ -275,6 +281,34 @@ export class TextPlusGameEngine implements GameEngine {
     return this.turnCount;
   }
 
+  /**
+   * Record the current situation into the journal — content is snapshotted
+   * exactly as it reads now, because dynamic text may depend on state that
+   * later changes. Optionally completes a declared task.
+   */
+  capture(taskId?: string): void {
+    if (taskId !== undefined && !this.config.tasks?.[taskId]) {
+      throw new Error(`Task not found: ${taskId}`);
+    }
+    const entry: JournalEntry = {
+      turn: this.turnCount,
+      world: this.getCurrentWorld(),
+      situationId: this.currentSituationId,
+      taskId,
+      content: this.situationSystem.getContent(this.getCurrentSituation(), this)
+    };
+    this.journal.push(entry);
+    this.emitJournalChange({ entry, timestamp: Date.now() });
+  }
+
+  getJournal(): JournalEntry[] {
+    return [...this.journal];
+  }
+
+  getTasks(): Record<string, TaskDefinition> {
+    return this.config.tasks ?? {};
+  }
+
   /** Let time pass in place: N clock ticks with no movement or lifecycle. */
   wait(turns = 1): void {
     for (let i = 0; i < turns; i += 1) {
@@ -302,6 +336,7 @@ export class TextPlusGameEngine implements GameEngine {
       qualities: this.qualitySystem.exportState(),
       perWorldPositions: { ...this.perWorldPositions },
       turnCount: this.turnCount,
+      journal: this.journal.map((entry) => ({ ...entry })),
       version: SAVE_FORMAT_VERSION,
       timestamp: Date.now()
     };
@@ -333,6 +368,7 @@ export class TextPlusGameEngine implements GameEngine {
     // history.length - 1 IS the true turn count for them — derived, not guessed.
     this.turnCount = state.turnCount ?? Math.max(0, state.situations.history.length - 1);
     this.mirrorTurnQuality();
+    this.journal = (state.journal ?? []).map((entry) => ({ ...entry }));
   }
 
   reset(): void {
@@ -342,6 +378,7 @@ export class TextPlusGameEngine implements GameEngine {
     this.perWorldPositions = {};
     this.trackWorldPosition(this.currentSituationId);
     this.turnCount = 0;
+    this.journal = [];
 
     const situation = this.situationSystem.getSituation(this.currentSituationId);
     if (situation) {
@@ -387,6 +424,16 @@ export class TextPlusGameEngine implements GameEngine {
       const index = this.messageListeners.indexOf(listener);
       if (index >= 0) {
         this.messageListeners.splice(index, 1);
+      }
+    };
+  }
+
+  onJournalChange(listener: EventListener<JournalChangeEvent>): () => void {
+    this.journalChangeListeners.push(listener);
+    return () => {
+      const index = this.journalChangeListeners.indexOf(listener);
+      if (index >= 0) {
+        this.journalChangeListeners.splice(index, 1);
       }
     };
   }
@@ -485,6 +532,16 @@ export class TextPlusGameEngine implements GameEngine {
         listener(event);
       } catch (error) {
         console.error('Error in message listener:', error);
+      }
+    }
+  }
+
+  private emitJournalChange(event: JournalChangeEvent): void {
+    for (const listener of this.journalChangeListeners) {
+      try {
+        listener(event);
+      } catch (error) {
+        console.error('Error in journal change listener:', error);
       }
     }
   }

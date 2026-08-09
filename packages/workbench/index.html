@@ -550,6 +550,59 @@
 
     .map-empty { color: var(--wb-text-dim); }
 
+    /* --- Journal ----------------------------------------------------------- */
+
+    .view-journal {
+      overflow: auto;
+      padding: 16px 20px;
+    }
+
+    .journal-empty { color: var(--wb-text-dim); font-size: 13px; }
+
+    .journal-heading {
+      margin: 0 0 8px 0;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--wb-text-dim);
+    }
+
+    .journal-tasks {
+      list-style: none;
+      margin: 0 0 16px 0;
+      padding: 0;
+    }
+
+    .journal-task { padding: 3px 0; font-size: 14px; }
+    .journal-task[data-task-state='done'] { color: var(--wb-accent-ink); }
+
+    .journal-entries {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    .journal-entry {
+      display: block;
+      width: 100%;
+      text-align: left;
+      background: transparent;
+      border: 1px solid var(--wb-border);
+      border-radius: 6px;
+      color: var(--wb-text);
+      padding: 8px 12px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 13px;
+    }
+
+    .journal-entry__meta {
+      font-size: 11px;
+      color: var(--wb-text-dim);
+      margin-bottom: 4px;
+    }
+
     /* --- Scheduled messages ------------------------------------------------ */
 
     .preview-messages:not(:empty) {
@@ -761,6 +814,9 @@
     </div>
     <div class="view view-diagnostics" id="view-diagnostics">
       <div id="diagnostics" aria-label="Diagnostics" aria-live="polite"></div>
+    </div>
+    <div class="view view-journal" id="view-journal">
+      <div id="journal" aria-label="Journal" aria-live="polite"></div>
     </div>
   </div>
 
