@@ -10,17 +10,17 @@ Story-graph layout and (eventually) Trizbort-style automation. This file is the 
 
 | Module | Notes |
 |---|---|
-| `src/layout.ts` | Layered-BFS grid auto-layout: shortest-path depth columns from the start situation, unique cells, orphans parked in a trailing column with `reachable: false`, terminal (ending) flags |
+| `src/layout.ts` | `layoutGraph(graph, {columnWidth?, rowHeight?})` (defaults 200×72) — layered-BFS grid auto-layout: shortest-path depth columns from the start situation, unique cells, orphans parked in a trailing column with `reachable: false`, terminal (ending) flags |
 | `src/adapter.ts` | `graphFromConfig` — `@textplus/core` GameConfig → neutral `StoryGraph` (parallel links deduplicated) |
 | `src/importer.ts` | `importTranscript(text)` — play transcript → `StoryGraph`: room headers become nodes (unified by name, so revisits converge), commands become edges; headerless responses become linear step nodes. Extracts structure only — prose-preserving conversion belongs to `@textplus/convert` |
-| `src/codegen.ts` | `graphToDsl(graph, {title?})` — compiling TextPlus DSL skeleton from a graph (titles, tags, links, start survive; prose is a placeholder) |
+| `src/codegen.ts` | `graphToDsl(graph, {title?})` — compiling TextPlus DSL skeleton from a graph (titles, tags — emitted comma-form to match the parser — links, and start survive; prose is a placeholder; throws on an empty graph) |
 | `src/index.ts` | Public exports; legacy `autoLayout(rooms)` surface backed by the real engine |
 
 ## Verification
 
 Test standard: the traced Playwright E2E suite is the only test layer. Run from the repository root: `npm run test:all`.
 
-`packages/workbench/e2e/map.spec.ts` asserts the layout's properties through the rendered SVG: shortest-path depth columns, unique cells, orphan rooms parked in the trailing column with the unreachable tooltip, terminal flags on endings, parallel-edge dedup, and self-loop suppression. Node click-to-jump and current-room highlight are covered in `e2e/workbench.spec.ts`. `e2e/map-tools.spec.ts` covers the importer (rooms/edges/start from a transcript) and the full round-trip: imported graph → `graphToDsl` → author CLI compile → `graphFromConfig` → the same nodes, edges, and start.
+`packages/workbench/e2e/map.spec.ts` asserts the layout's properties through the rendered SVG: shortest-path depth columns, unique cells, orphan rooms parked in the trailing column with the unreachable tooltip, terminal flags on endings, parallel-edge dedup, and self-loop suppression. Node click-to-jump and current-room highlight are covered in `e2e/workbench.spec.ts`. `e2e/map-tools.spec.ts` covers the importer (rooms/edges/start from a transcript) and the round-trip: graph → `graphToDsl` → author CLI compile → `graphFromConfig` → the same topology **and tags** (including a start node carrying extra tags — the tag-mangling regression case). Generated DSL and compile reports are attached to those traces. Round-trip fidelity is topology + tags: titles become situation titles; prose is a placeholder by design.
 
 **Not verified**: the legacy `autoLayout(rooms)` surface and custom cell sizing (nothing in the app calls either).
 

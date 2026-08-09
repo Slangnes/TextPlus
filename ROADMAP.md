@@ -3,7 +3,7 @@
 This document tracks the features, deliverables, and milestones for the TextPlus project. Items are organized by component and priority.
 
 **Last Updated**: August 8, 2026  
-**Current Status**: M0–M2 ✅ complete | M3 Map + M4 Convert 🚧 in progress | Test standard: traced Playwright E2E suite (58 scenarios)
+**Current Status**: M0–M2 ✅ complete | M3 Map + M4 Convert 🚧 in progress | Test standard: traced Playwright E2E suite (62 scenarios)
 
 ---
 
@@ -17,6 +17,18 @@ This document tracks the features, deliverables, and milestones for the TextPlus
 | **M3: Map** | 🚧 IN PROGRESS | ~40% | Auto-layout, transcript importer, DSL round-trip done; Trizbort export, Inform 7/Ink codegen, batch ops remain |
 | **M4: Convert** | 🚧 IN PROGRESS | ~45% | Linear DSL, branching multi-transcript merge, `textplus-convert` CLI, workbench Import done; engine formats, HTML/Trizbort generators remain |
 | **M5: Integration** | ⏳ PENDING | ~10% | CLI surfaces landed early; save/load UI, docs site, release remain |
+
+### Known Verification Limits
+
+Honest boundaries of the current test standard, stated so green runs are read correctly:
+
+- **Browser vs Node traces**: browser scenarios' traces carry both vectors (visual film-strip/DOM snapshots + action/console/network log); Node-context scenarios (CLI and map-tool specs) carry the step log with command output and generated artifacts attached — no visual record.
+- **Chromium only** — no Firefox/WebKit projects are configured.
+- **No CI, no retries** — the gate is local and manual; `webServer.reuseExistingServer: true` will silently reuse a stale dev server on :5175, so restart it before a release run.
+- **Demo `game.ts` files** are neither type-checked (outside tsconfig `include`) nor behaviorally tested — only their DSL adaptations in the workbench are.
+- **Core failure-safe paths** (throwing conditions/effects/hooks) are unreachable through the app — author-compiled closures never throw; only hand-written configs hit them.
+- **Map↔DSL round-trip fidelity** is topology + tags; titles map to situation titles, prose is a placeholder by design.
+- **No coverage instrumentation exists** — all percentage figures in milestone history are vitest-era measurements.
 
 ---
 
@@ -100,7 +112,7 @@ Required phase gates:
 - [x] Set up npm monorepo with workspaces
 - [x] Create 6 workspace packages: `core`, `author`, `map`, `convert`, `demo`, `docs` (the `docs` stub was later removed; recreate as a real workspace when the M5 docs site starts)
 - [x] Configure Vite for library builds (ES modules + CommonJS)
-- [x] Configure Vitest for comprehensive testing (unit/integration/E2E)
+- [x] Configure Vitest for comprehensive testing (since removed — the traced Playwright suite replaced it, see the 2026-08-08 changelog)
 - [x] Set up TypeScript strict mode with path aliases
 - [x] Create shared test helpers (`.test-helpers/index.ts`; later removed as unused)
 - [x] Create test templates for all 4 main packages (156 placeholder tests)
@@ -112,12 +124,8 @@ Required phase gates:
 - [x] Create individual Vite configs per package
 - [x] Create `.gitignore` for monorepo
 
-### Infrastructure Status
-✅ **All npm scripts working**:
-- `npm run lint` — TypeScript strict check PASS
-- `npm run test` — 156 placeholder tests PASS
-- `npm run build` — All packages build successfully
-- `npm run test:all` — Full verification workflow PASS
+### Infrastructure Status (M0-era snapshot; current scripts differ)
+✅ All npm scripts working at bootstrap time (`npm run test` then ran 156 vitest placeholders). Today: `lint` = tsc strict, `test` = the traced Playwright suite, `build` = all packages, `test:all` = all three.
 
 **Historical Note**: Bootstrap snapshots still exist in `BOOTSTRAP.md` and `BOOTSTRAP_COMPLETE.md`, but they are archival only and should not be used for live tracking.
 
@@ -126,8 +134,8 @@ Required phase gates:
 ## Milestone 1 — TextPlus Core (Modernizing Undum) ✅ COMPLETE
 
 **Target Duration**: 5-6 weeks  
-**Test Coverage Target**: ≥80% (unit: 85%, integration: 70%, E2E: 3+ scenarios)  
-**Status**: ✅ COMPLETE (100% - All phases delivered with 94.47% coverage)
+**Verification Target**: every claimed behavior has a traced E2E scenario (was: ≥80% vitest coverage — instrumentation since removed)  
+**Status**: ✅ COMPLETE (all phases delivered; 94.47% coverage measured under the vitest-era suite)
 
 ### Phase 1A: Core Engine Implementation
 **Current Status**: Implemented with real unit coverage across engine, qualities, and situation subsystems.
@@ -194,7 +202,7 @@ Required phase gates:
   - [x] Demonstrates conditional text and links
   - [x] Multiple different endings reachable via quality-gated choices
   - [x] HTML harness with styling for playable browser experience
-  - Tests: 18 E2E test scenarios covering all story paths
+  - Tests: 18 E2E test scenarios covering all story paths (vitest-era; since removed)
 
 - [x] **E2E playthrough tests**
   - [x] Start game and verify initial situation displays
@@ -203,7 +211,7 @@ Required phase gates:
   - [x] Quality changes affect displayed text and available options
   - [x] Save mid-game and restore (state persistence)
   - [x] Reach different endings based on choices and qualities
-  - Tests: 18 E2E test scenarios (96/96 tests passing, 94.47% coverage)
+  - Tests: 18 E2E test scenarios (96/96 passing, 94.47% coverage — vitest-era measurements; since removed)
 
 ### Phase 1E: TypeScript Types & Public API
 **No placeholder tests — part of code structure**
@@ -229,10 +237,10 @@ Required phase gates:
 - [x] ~~Maintain ESM with no jQuery~~ → Already designed for Phase 0
 
 **Testing Requirements**:
-- [x] Write 40+ unit tests (engine, quality, situation logic) — **48 implemented**
-- [x] Write 30+ integration tests (DOM, storage, themes) — **30 real tests implemented across DOM and storage; dedicated themes module still pending**
+- [x] Write 40+ unit tests (engine, quality, situation logic) — **48 implemented (vitest-era; since removed)**
+- [x] Write 30+ integration tests (DOM, storage, themes) — **30 implemented across DOM and storage (vitest-era; since removed); dedicated themes module still pending**
 - [x] Write 3+ E2E test scenarios (full playthrough) — **originally 18 vitest scenarios; the vitest suite was later removed and core is now exercised through the workbench Playwright suite (`e2e/engine.spec.ts` and others). Note: `storage.ts` and `engine.validate()` have no E2E surface yet — see M5.**
-- [x] Achieve ≥80% code coverage — **current package-scoped `packages/core/src/**` coverage: 94.47% statements / 94.47% lines / 88.05% branches / 90.41% functions**
+- [x] Achieve ≥80% code coverage — **measured 94.47% statements / 88.05% branches / 90.41% functions under the removed vitest suite; no coverage instrumentation exists today**
 
 **Deliverables**:
 - [x] Working Hello World example game (playable HTML)
@@ -253,12 +261,9 @@ Required phase gates:
 ### Remaining Files To Create/Modify
 
 **Source Code** (`packages/core/src/`):
-- `themes/index.ts` — CSS variable theming (**NEW**)
-- `themes/light.css` — Default light theme (**NEW**)
-- `themes/dark.css` — Default dark theme (**NEW**)
+- `themes/*` — planned CSS-variable theme module; **never built** (theme behavior shipped instead as `hud.ts` rule-driven `data-theme` + `dom.ts` `applyTheme` helpers; the dedicated module is an M5 "Core follow-ups" item)
 
-**Tests** (`packages/core/test/`):
-- `e2e/hello-world.test.ts` — 18 real end-to-end scenarios implemented
+**Tests**: originally `packages/core/test/e2e/hello-world.test.ts` (18 vitest scenarios; directory since removed with the vitest suite)
 
 **Demo** (`packages/demo/hello-world/`):
 - `game.ts` — Core API example game implemented
@@ -279,15 +284,13 @@ Required phase gates:
 
 ### Verification Steps
 
-✅ **All M1 Verification Gates Passed**:
+✅ **All M1 gates passed at completion time** (vitest-era commands like `npm run test:core` no longer exist — today's equivalent gate is `npm run test:all`):
 
-1. **Linting**: `npm run lint` → No TypeScript errors ✓
-2. **Unit Tests**: `npm run test:core` → 40+ tests pass ✓
-3. **Integration Tests**: `npm run test:core` → 30+ tests pass ✓
-4. **E2E Tests**: `npm run test:core` → 18 E2E scenarios pass ✓
-5. **Coverage**: `npm run test` → 94.47% in `packages/core/` ✓
-6. **Build**: `npm run build` → `packages/core/dist/` built (20.93kb ESM, 11.83kb CJS) ✓
-7. **Playable**: Demo game at `packages/demo/hello-world/index.html` playable ✓
+1. Linting: no TypeScript errors ✓
+2. Unit/Integration/E2E: 40+/30+/18 vitest tests passed ✓ (suite since replaced by the traced Playwright suite)
+3. Coverage: 94.47% in `packages/core/` ✓ (vitest-era measurement)
+4. Build: `packages/core/dist/` built ✓
+5. Playable: demo game at `packages/demo/hello-world/index.html` ✓
 
 ---
 
@@ -295,13 +298,11 @@ Required phase gates:
 
 **Completed**: 2026-08-08
 
-**Target Duration**: 5-6 weeks (ready to start, M1 complete)  
+**Target Duration**: 5-6 weeks  
 **Dependency**: M1 Core (base library) ✓ SATISFIED  
-**Test Coverage Target**: ≥80%
+**Verification Target**: every claimed behavior has a traced E2E scenario
 
-**Current Status**: Parser, compiler, linter, and workflow slices implemented with real test coverage.  
-**Current Status Update**: Public API wrappers (`compileGame`, `createScaffold`) now implemented and tested.  
-**Test Inventory**: historically 55 unit + 15 integration vitest tests (suite since removed). The DSL pipeline is verified through the workbench Playwright suite (`e2e/diagnostics.spec.ts`, `e2e/engine.spec.ts`, `e2e/conventions.spec.ts`), and the Node-only surfaces (`createScaffold`, the workflow report formatters, JSON serialization) through the CLI scenarios in `e2e/cli.spec.ts`.
+**Test Inventory**: historically 55 unit + 15 integration vitest tests (suite since removed). The DSL pipeline is verified through the workbench Playwright suite (`e2e/diagnostics.spec.ts`, `e2e/engine.spec.ts`, `e2e/workbench.spec.ts`, `e2e/conventions.spec.ts`), and the Node-only surfaces (`createScaffold`, the workflow report formatters, JSON serialization) through the CLI scenarios in `e2e/cli.spec.ts`.
 
 ### Planned Implementation
 - [x] DSL parser (initial line-based parser implemented)
@@ -316,9 +317,9 @@ Required phase gates:
 ### Phase 2A: Parser, Compiler, & Linter (Implemented)
 - [x] Workflow integration: Unified parse→compile→lint pipeline
 - [x] Report formatters: Human-readable diagnostics + JSON output
-- [x] 15 end-to-end integration tests
-- [x] 70 total real tests covering all M2A functionality
-- [x] 96.49% package coverage on implemented slices
+- [x] 15 end-to-end integration tests (vitest-era; since removed)
+- [x] 70 total real tests covering all M2A functionality (vitest-era; since removed)
+- [x] 96.49% package coverage on implemented slices (vitest-era measurement)
 
 ### Phase 2B: Shipped 2026-08-08
 - [x] Condition parsing in links — safe expression language (`packages/author/src/expression.ts`), compiled to pure closures, evaluated by the engine at runtime
@@ -356,7 +357,7 @@ Required phase gates:
 
 **Target Duration**: 4-5 weeks (can start after M1+M2)  
 **Dependencies**: M2 Author (optional), M4 Convert (optional)  
-**Test Coverage Target**: ≥80%
+**Verification Target**: every claimed behavior has a traced E2E scenario
 
 **Testing**: layout geometry and classification (depth columns, unique cells, orphan parking, terminal flags, edge dedup) are verified through the workbench map panel in `e2e/map.spec.ts`.
 
@@ -365,7 +366,7 @@ Required phase gates:
 - [x] Importer (parse transcripts → room graph) — `importTranscript` in `packages/map/src/importer.ts`
 - [x] Code generator: TextPlus Author DSL — `graphToDsl` in `packages/map/src/codegen.ts` (Inform 7 and Ink still open below)
 - [ ] Batch rename / find-replace
-- [x] Round-trip conversion (map ↔ DSL) — DSL → config → graph → DSL verified in `e2e/map-tools.spec.ts`
+- [x] Round-trip conversion (map ↔ DSL) — transcript → graph → DSL → config → graph verified in `e2e/map-tools.spec.ts` (topology + tags survive; prose is a placeholder)
 
 ### Must Have
 - [x] Auto-layout algorithm
@@ -390,7 +391,7 @@ Required phase gates:
 
 **Target Duration**: 4-5 weeks (can start after M1)  
 **Dependencies**: M1 Core (for output format)  
-**Test Coverage Target**: ≥80%
+**Verification Target**: every claimed behavior has a traced E2E scenario
 
 **Testing**: the transcript slice is verified end-to-end through the workbench Import feature (`e2e/import.spec.ts` — paste → convert → compile clean → play → map). The engine-specific parsers and generators below have no tests yet (their former `it.todo` markers were removed with the vitest suite; this list is their record).
 

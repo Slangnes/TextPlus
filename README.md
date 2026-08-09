@@ -57,8 +57,8 @@ Other entry points:
 
 ```bash
 npm run dev --workspace=@textplus/demo                        # example games on :5174
-npm run build                                                 # build every package
-node packages/author/bin/create-textplus-game.mjs MyGame .    # scaffold a starter game (after build)
+npm run build                                                 # build every package — required before any CLI bin below
+node packages/author/bin/create-textplus-game.mjs MyGame .    # scaffold a starter game
 node packages/author/bin/textplus-author.mjs compile MyGame/game.tp.txt
 node packages/convert/bin/textplus-convert.mjs walk1.txt walk2.txt --check   # merge transcripts into a branching story
 ```
@@ -67,7 +67,7 @@ node packages/convert/bin/textplus-convert.mjs walk1.txt walk2.txt --check   # m
 
 ## Testing
 
-The project's test layer is a **traced Playwright E2E suite** — every test records a `trace.zip` carrying both verification vectors at once: the visual film-strip/DOM snapshots and the code-level log of actions, console, and network. Traces are the release QA artifacts.
+The project's test layer is a **traced Playwright E2E suite** — every test records a `trace.zip`. Browser scenarios carry both verification vectors at once (the visual film-strip/DOM snapshots plus the code-level log of actions, console, and network); Node-context scenarios (the CLI and map-tool specs) carry the step log with command output and generated artifacts attached. Traces are the release QA artifacts.
 
 ```bash
 npm run test:all         # tsc strict lint + all builds + the traced E2E suite

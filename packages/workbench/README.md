@@ -6,15 +6,16 @@ Browser authoring environment for TextPlus: a 1–4 panel workspace where each p
 
 | Module | Responsibility |
 |--------|----------------|
-| `src/editor.ts` | Monaco editor host: TextPlus DSL Monarch grammar (syntax highlighting), palette-matched light/dark themes, wrap-safe line numbers, diagnostic squiggles via model markers |
+| `src/editor.ts` | Monaco editor host: wires up the grammar/themes from `dsl-language.ts`, wrap-safe line numbers, diagnostic squiggles via model markers |
+| `src/dsl-language.ts` | The TextPlus DSL Monarch grammar and palette-matched light/dark editor themes, kept as plain data |
 | `src/controller.ts` | Runs the `@textplus/author` parse→compile→lint workflow, shapes results into a display report with line-number extraction |
 | `src/preview.ts` | `PreviewHost` — mounts compiled `GameConfig`s into a playable preview via `@textplus/core`; preserves the playthrough across recompiles; `onRender` hook for observers |
 | `src/mapview.ts` | SVG story map from `@textplus/map` layouts: rooms, arrows, current-situation highlight, click-to-jump |
 | `src/drafts.ts` | Autosave/restore of DSL source to localStorage (injectable storage) |
-| `src/settings.ts` | User preferences (confirmation dialogs on/off), localStorage-backed |
+| `src/settings.ts` | User preferences and layout persistence (confirm dialogs, word wrap, panel count/views/splitter sizes/solo position), localStorage-backed |
 | `src/modal.ts` | In-app modal dialogs (`confirmAction`, `openImportDialog`, `openSettingsDialog`) — native popups are banned project-wide, see CLAUDE.md |
 | `src/examples.ts` | Blank template + four example stories (DSL tour and adaptations of all three demo games); must always compile clean |
-| `src/main.ts` | DOM glue: editor, compile debounce, toolbar (New / example picker / Import / Export / Restart / Settings), 1–4 panel layout with drag splitters, status bar, diagnostics with click-to-line |
+| `src/main.ts` | DOM glue: editor, compile debounce, toolbar (New / example picker / Import / Export / Restart / layout selector / solo-position / Settings), 1–4 panel layout with drag splitters, status bar, diagnostics with click-to-line |
 
 ## Usage
 
@@ -27,7 +28,11 @@ The layout is 1–4 panels (toolbar selector), each hosting any module — Edito
 
 E2E tests drive the editor through the `window.__workbench` hook (`getSource`/`setSource`/`wordWrapOn`) instead of DOM typing.
 
-E2E runs write a `trace.zip` per test to `test-results/` — the visual QA artifact for releases. Open one with `npx playwright show-trace <path>/trace.zip`, or `npx playwright show-report` for the suite.
+E2E runs write a `trace.zip` per test to `test-results/` — the release QA artifacts (browser scenarios carry the visual film-strip; Node-context specs attach their command output and generated artifacts instead). Open one with `npx playwright show-trace <path>/trace.zip`, or `npx playwright show-report` for the suite.
+
+## Verification
+
+The suite verifies the workbench itself, not just the packages it hosts: toolbar flows (New through the confirm modal with draft persistence, Export filename slugification and payload, Import incl. inline-error and cancel paths), panel/layout behavior (module swap semantics, empty panels, 3-panel solo-edge cycling, 4-panel center-handle alignment, splitter sizes and layout surviving reload), editor behavior (fine-grained tokenization, word-wrap toggle, cursor readout, diagnostic click-to-focus/click-to-line), modal dismissal (Escape and backdrop), and draft autosave across reloads (`e2e/workbench.spec.ts`, `e2e/toolbar.spec.ts`, `e2e/import.spec.ts`).
 
 The `e2e/` directory hosts the **repo-wide** suite, not just workbench scenarios: convention guards (`conventions.spec.ts`), core-through-the-app (`engine.spec.ts`), linting/diagnostics (`diagnostics.spec.ts`), map geometry (`map.spec.ts`), the Import feature (`import.spec.ts`), and Node-context specs for the author/convert CLIs and map tools (`cli.spec.ts`, `convert-cli.spec.ts`, `map-tools.spec.ts`). It lives here because the Playwright config and dev server do.
 
@@ -45,14 +50,14 @@ theme dark when courage < 3
 
 :: start [start]
 Situation Title
-{ courage += 1 }                          # entry effects
+{ courage += 1 }
 Prose with **markdown**, {courage} interpolation,
 and [oneOf: variants | that cycle].
 
 -> Choice text => target ? courage >= 6 { courage -= 1 }
 ```
 
-Conditions evaluate at runtime (links hide until true); effects mutate qualities on choose/entry; the HUD and theme rules react live in the Play panel.
+Conditions evaluate at runtime (links hide until true); effects mutate qualities on choose, and a whole-line `{ … }` block right after the situation title runs on entry (the DSL has no comment syntax); the HUD and theme rules react live in the Play panel. Full DSL reference: `packages/author/README.md`.
 
 ## Known Gaps
 

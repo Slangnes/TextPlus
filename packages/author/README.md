@@ -36,7 +36,7 @@ The Lower Stacks
 | Line | Meaning |
 |---|---|
 | `title: <text>` | Story title (required) |
-| `quality <id> number\|boolean\|string = <default> [min N] [max N]` | Declare a quality; numbers clamp to bounds |
+| `quality <id> number\|boolean\|string = <default> [min N] [max N]` | Declare a quality; numbers clamp to bounds; `min` must precede `max`; string defaults are written bare (`= calm`) |
 | `hud <id> meter\|badge\|readout ["Label"]` | HUD entry bound to a quality (meter: progress bar; badge: shown when truthy; readout: label + value) |
 | `theme <name> when <expr>` | Sets `data-theme="<name>"` on the play surface while the expression holds; last matching rule wins |
 
@@ -44,7 +44,7 @@ The Lower Stacks
 
 | Line | Meaning |
 |---|---|
-| `:: <id> [tag ...]` | Situation header; the `start` tag marks the initial situation (defaults to the first one); tags become CSS classes on the rendered content |
+| `:: <id> [tag, tag]` | Situation header; tags are **comma**-separated; the `start` tag marks the initial situation (defaults to the first one); tags become CSS classes on the rendered content |
 | First line after the header | Situation title |
 | `{ <effects> }` on its own line | Entry effects — run every time the situation is entered |
 | Prose lines | Markdown (`**bold**`, `*emphasis*`, `` `code` ``), `{quality}` interpolation, adaptive spans |
@@ -52,7 +52,7 @@ The Lower Stacks
 
 ### Expressions (conditions)
 
-Safe, eval-free: `== != < > <= >=`, `and or not`, parentheses, literals (numbers, `'strings'`, `true`/`false`), quality references. Unknown qualities read as undefined — comparisons are false except `!=`. Compiled conditions never throw; a gated link is simply hidden.
+Safe, eval-free: `== != < > <= >=`, `and or not` (with `&& || !` accepted as aliases), parentheses, literals (numbers, `'single'`- or `"double"`-quoted strings, `true`/`false`), quality references. Unknown qualities read as undefined — comparisons are false except `!=`. Compiled conditions never throw; a gated link is simply hidden.
 
 ### Effects
 
@@ -62,6 +62,8 @@ Safe, eval-free: `== != < > <= >=`, `and or not`, parentheses, literals (numbers
 
 `[oneOf: a | b | c]` cycles in order per render (spans track independently); `[randomly: …]` picks uniformly; `[frequently: …]` ≈70%, `[rarely: …]` ≈20%. `{quality}` interpolates the live value; unknown placeholders render literally.
 
+**Footgun**: directives (`title:`, `quality`, `hud`, `theme`) are only recognized *before* the first `::` header — placed later they silently become prose. `@textplus/convert` neutralizes directive-lookalike transcript prose for exactly this reason.
+
 ## CLI
 
 ```bash
@@ -69,9 +71,10 @@ npm run build                                                # builds dist/cli.m
 node packages/author/bin/create-textplus-game.mjs MyGame .   # scaffold a starter
 node packages/author/bin/textplus-author.mjs compile MyGame/game.tp.txt [--out report.json]
 node packages/author/bin/textplus-author.mjs lint MyGame/game.tp.txt
+node packages/author/bin/textplus-author.mjs scaffold MyGame .    # same as create-textplus-game
 ```
 
-Exit codes: 0 success (warnings allowed), 1 errors/failure, 2 usage. `--out` writes the serialized workflow report (config + diagnostics) as JSON.
+Exit codes: 0 success (warnings allowed), 1 errors/failure, 2 usage. `--out` writes the serialized workflow report (config + diagnostics) as JSON — note the config's compiled functions (conditions, effects, dynamic content) are dropped by JSON serialization; the report is for inspection, not execution.
 
 ## Library API
 
@@ -96,7 +99,7 @@ Exit codes: 0 success (warnings allowed), 1 errors/failure, 2 usage. `--out` wri
 | `condition-type-mismatch` | warning | Ordered comparison on a declared non-number |
 | `unused-quality` | warning | Declared but never referenced |
 
-Line-numbered messages carry a `Line N:` prefix — the workbench uses it for Monaco squiggles and click-to-line.
+The parse/type/unknown-quality rules carry a `Line N:` prefix — the workbench uses it for Monaco squiggles and click-to-line. `broken-link`, `orphaned-situation`, and `unused-quality` are structural (no single line); clicking them focuses the editor without jumping.
 
 ## Migrating from Raconteur
 

@@ -13,12 +13,12 @@ Transcript-to-story conversion (the Transmatte-inspired workflow). This file is 
 | `src/transcript.ts` | `parseTranscriptText(text)` — segments a transcript into moves (`>` commands, room headers, prose; strips `[Score…]`/`*** … ***` noise). `transcriptToDsl(text, {title?})` — one situation per move, slugified deduped ids, `[start]` tag, links from sentence-cased commands, linkless final situation, directive-lookalike prose neutralized. Throws only on empty input |
 | `src/merge.ts` | `mergeTranscriptsToDsl(texts, {title?})` — merges several playthroughs into one branching story: rooms unify by header name (within and across transcripts), shared rooms gain one link per distinct continuation; headerless moves stay linear (nothing safe to unify on) |
 | `src/cli.ts` + `bin/` | `textplus-convert <transcript...> [--title] [--out] [--check]` — one file converts linearly, several merge; `--check` compiles through `@textplus/author`. Exit codes 0/1/2. Run `bin/textplus-convert.mjs` after `npm run build` |
-| `src/index.ts` | Exports the transcript + merge slices; `parseTranscript` / `generateDSL` / `generateHTML` remain throwing M4 placeholders |
+| `src/index.ts` | Public exports: `parseTranscriptText`, `transcriptToDsl`, `mergeTranscriptsToDsl` (+ types); the `slugify`/`sentenceCase`/`sanitizeProse` helpers stay module-internal; `parseTranscript` / `generateDSL` / `generateHTML` remain throwing M4 placeholders |
 
 ## Accepted transcript format
 
 - Lines starting with `>` are player commands (a bare `>` reads as `wait`).
-- A short (≤50 chars) Title-Case or ALL-CAPS line opening a prose block is treated as a room header; lines ending in sentence punctuation are prose.
+- A short (≤50 chars, ≤6 words for Title-Case) Title-Case or ALL-CAPS line opening a prose block is treated as a room header; lines ending in sentence punctuation are prose.
 - `[bracketed interpreter noise]` and `*** banners ***` are stripped.
 - Prose lines that would lex as DSL directives (`-> `, `:: `, `{ … }`, `title:`, `quality `, `hud `, `theme `) are neutralized with lookalike characters or indentation — a documented limitation.
 
