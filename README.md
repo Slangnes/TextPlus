@@ -32,7 +32,7 @@ npm workspaces monorepo under `packages/*`. Dependency direction: `core` ← `au
 | Package | Upstream inspiration | Status | What it is |
 |---|---|---|---|
 | `@textplus/core` | [Undum](https://github.com/idmillington/undum) | ✅ M1 complete | ES-module runtime: engine, qualities, situations, DOM renderer, HUD/themes, storage |
-| `@textplus/author` | [Raconteur](https://github.com/sequitur/raconteur) | 🚧 M2 feature-complete | Authoring DSL: parser → compiler → linter → workflow, plus the `textplus-author` / `create-textplus-game` CLI |
+| `@textplus/author` | [Raconteur](https://github.com/sequitur/raconteur) | ✅ M2 complete | Authoring DSL: parser → compiler → linter → workflow, plus the `textplus-author` / `create-textplus-game` CLI |
 | `@textplus/map` | [Trizbort.io](https://github.com/henck/trizbort) | 🚧 M3 first slice | Story-graph auto-layout + GameConfig adapter (powers the Workbench map) |
 | `@textplus/convert` | [Transmatte](https://eblong.com/zarf/transmatte/) | 🚧 M4 first slice | Plain-text transcript → compiling TextPlus DSL (the Workbench Import feature) |
 | `@textplus/demo` | — | ✅ | Three playable example games built directly on core |

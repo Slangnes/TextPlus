@@ -26,7 +26,7 @@ This document tracks the features, deliverables, and milestones for the TextPlus
 - **No Roadmap Clones**: Do not create new roadmap summary files for routine updates.
 - **Update Pattern**: Use in-place deltas in the status table and milestone checkboxes.
 - **Change Log Location**: Keep a short in-file changelog section instead of separate update documents.
-- **Package Audit Docs**: Each workspace package keeps a single doc covering public surface, module inventory, verification commands, and known gaps — a package-level `ROADMAP.md` (the `author` pattern, which also carries milestone status) or a short `README.md`. One doc per package; no parallel plan files.
+- **Package Audit Docs**: Each workspace package keeps a single doc — in-progress packages a package-level `ROADMAP.md` (surface, verification, milestone status, open items); completed packages a real `README.md` with usage/reference docs (`author`'s is the pattern). One doc per package; no parallel plan files.
 
 ### Roadmap Changelog
 
@@ -327,7 +327,9 @@ Required phase gates:
 
 ---
 
-## Milestone 2 — TextPlus Author (Modernizing Raconteur) 🚧 IN PROGRESS
+## Milestone 2 — TextPlus Author (Modernizing Raconteur) ✅ COMPLETE
+
+**Completed**: 2026-08-08
 
 **Target Duration**: 5-6 weeks (ready to start, M1 complete)  
 **Dependency**: M1 Core (base library) ✓ SATISFIED  
@@ -371,7 +373,7 @@ Required phase gates:
 - [x] Preserve adaptive text helpers ✓ (oneOf/randomly/frequently/rarely + interpolation)
 - [x] Test coverage — historically 140+ vitest tests; now the DSL pipeline, linter rules, and CLI are exercised by the traced Playwright suite ✓
 - [x] Project scaffold CLI tool ✓
-- [ ] Backward compatibility with Raconteur games (research phase)
+- [x] Backward compatibility with Raconteur games — research resolved 2026-08-08: runtime compatibility is **descoped by design** (Raconteur stories are CoffeeScript/JS programs; executing them would mean a JS sandbox, not a declarative format). Shipped instead as the migration guide in `packages/author/README.md` mapping every Raconteur concept to the DSL
 
 ### Should Have
 - [x] Hot module reloading for dev server — workbench aliases core/author/map sources through Vite HMR
@@ -380,8 +382,9 @@ Required phase gates:
 
 ### Nice to Have
 - [ ] VS Code extension
-- [ ] Live preview pane
+- [x] Live preview pane — the workbench Play panel
 - [ ] EPUB/PDF export
+- [ ] Deterministic surface for adaptive-text randomness rates (seeded RNG exists; nothing verifiable drives it)
 
 ---
 
