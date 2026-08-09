@@ -112,7 +112,8 @@ export function parseTranscriptText(text: string): TranscriptMove[] {
 
 // --- DSL generation ----------------------------------------------------------
 
-function slugify(name: string): string {
+/** Internal helper, shared with merge.ts. */
+export function slugify(name: string): string {
   const slug = name
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
@@ -120,7 +121,8 @@ function slugify(name: string): string {
   return /^[a-z]/.test(slug) ? slug : `room-${slug || 'x'}`;
 }
 
-function sentenceCase(command: string): string {
+/** Internal helper, shared with merge.ts. */
+export function sentenceCase(command: string): string {
   const trimmed = command.trim();
   return trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
 }
@@ -129,7 +131,7 @@ function sentenceCase(command: string): string {
  * Neutralize prose lines that would lex as DSL directives. Documented
  * limitation: leading arrows/braces/etc. become lookalike characters.
  */
-function sanitizeProse(prose: string): string {
+export function sanitizeProse(prose: string): string {
   return prose
     .split('\n')
     .map((line) => {

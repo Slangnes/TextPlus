@@ -4,14 +4,16 @@ Transcript-to-story conversion (the Transmatte-inspired workflow). This file is 
 
 ## Status
 
-🚧 Milestone 4 first slice — plain-text transcript → linear TextPlus DSL, surfaced in the workbench as the **Import** toolbar feature. Engine-specific formats, branch merging, and the other generators remain ahead.
+🚧 Milestone 4 in progress — three slices shipped: plain-text transcript → linear DSL (the workbench **Import** feature), multi-transcript **branching merge**, and the **`textplus-convert` CLI**. Engine-specific formats and the HTML/Trizbort generators remain ahead.
 
 ## Current Surface
 
 | Module | Notes |
 |---|---|
 | `src/transcript.ts` | `parseTranscriptText(text)` — segments a transcript into moves (`>` commands, room headers, prose; strips `[Score…]`/`*** … ***` noise). `transcriptToDsl(text, {title?})` — one situation per move, slugified deduped ids, `[start]` tag, links from sentence-cased commands, linkless final situation, directive-lookalike prose neutralized. Throws only on empty input |
-| `src/index.ts` | Exports the transcript slice; `parseTranscript` / `generateDSL` / `generateHTML` remain throwing M4 placeholders |
+| `src/merge.ts` | `mergeTranscriptsToDsl(texts, {title?})` — merges several playthroughs into one branching story: rooms unify by header name (within and across transcripts), shared rooms gain one link per distinct continuation; headerless moves stay linear (nothing safe to unify on) |
+| `src/cli.ts` + `bin/` | `textplus-convert <transcript...> [--title] [--out] [--check]` — one file converts linearly, several merge; `--check` compiles through `@textplus/author`. Exit codes 0/1/2. Run `bin/textplus-convert.mjs` after `npm run build` |
+| `src/index.ts` | Exports the transcript + merge slices; `parseTranscript` / `generateDSL` / `generateHTML` remain throwing M4 placeholders |
 
 ## Accepted transcript format
 
@@ -24,7 +26,9 @@ Transcript-to-story conversion (the Transmatte-inspired workflow). This file is 
 
 Test standard: the traced Playwright E2E suite is the only test layer. Run from the repository root: `npm run test:all`.
 
-The slice is verified end-to-end through the workbench **Import** feature (`packages/workbench/e2e/import.spec.ts`): a pasted transcript must convert, compile with zero issues, play along its own command path, neutralize directive-lookalike prose, and map one room per move with a single terminal — the round-trip acceptance, running through the real app. The dialog's inline-error (empty transcript) and cancel paths are covered too.
+The linear slice is verified end-to-end through the workbench **Import** feature (`packages/workbench/e2e/import.spec.ts`): a pasted transcript must convert, compile with zero issues, play along its own command path, neutralize directive-lookalike prose, and map one room per move with a single terminal — the round-trip acceptance, running through the real app. The dialog's inline-error (empty transcript) and cancel paths are covered too.
+
+The merge and CLI slices are verified by `e2e/convert-cli.spec.ts`: linear conversion under `--check`, a two-walk merge producing a branch point (the shared room gains both continuations) that compiles clean, `--out`/`--title`, empty-input failure, and usage exit codes.
 
 **Not verified**: individual parser edge rules in isolation (header length/word-count rejection, slug prefixing, id dedup counters) — they're exercised only as far as the fixture transcript reaches them; feed varied real transcripts through the Import path to broaden this (see Ahead).
 
@@ -32,12 +36,11 @@ The slice is verified end-to-end through the workbench **Import** feature (`pack
 
 - [ ] Engine-specific format support: Z-machine variants, Glulx, Inform 7, TADS 3
 - [ ] Object/inventory extraction from transcripts
-- [ ] Multi-transcript merging (detect branching) → branching DSL
 - [ ] Standalone HTML generator (via Core)
 - [ ] Trizbort map generator (pairs with `@textplus/map`)
-- [ ] `textplus-convert` CLI (root ROADMAP M5; the author CLI is the pattern to follow)
-- [ ] Broad transcript-sample coverage through the Import E2E path
-- [ ] Drag-and-drop / file upload in the workbench Import dialog (paste-only today)
+- [ ] Merge unification for headerless moves (currently only room headers unify)
+- [ ] Broad transcript-sample coverage through the Import/CLI E2E paths
+- [ ] Multi-file merge in the workbench Import dialog (CLI-only today); drag-and-drop / file upload
 
 ## Drift Rules
 

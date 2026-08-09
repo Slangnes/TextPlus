@@ -3,15 +3,16 @@
  *
  * Main entry point for TextPlus Map library.
  *
- * Implemented (M3 first slice):
+ * Implemented (M3):
  * - Auto-layout algorithm for room/situation positioning (layered BFS grid)
  * - GameConfig → StoryGraph adapter for graph visualization
+ * - Transcript importer: play transcript → StoryGraph (rooms + connections)
+ * - DSL code generation: StoryGraph → compiling TextPlus Author skeleton
+ *   (round-trip with graphFromConfig)
  *
  * Still to come in Milestone 3:
- * - Import transcripts and auto-populate map
- * - Code generation for Inform 7, Ink, TextPlus Author DSL
+ * - Code generation for Inform 7 and Ink; Trizbort-format export
  * - Batch room renaming and find-replace
- * - Round-trip conversion between formats
  */
 
 export const VERSION = '0.0.1';
@@ -26,6 +27,9 @@ export type {
   LayoutOptions,
 } from './layout';
 export { graphFromConfig } from './adapter';
+export { importTranscript } from './importer';
+export { graphToDsl } from './codegen';
+export type { GraphToDslOptions } from './codegen';
 
 import { layoutGraph } from './layout';
 
@@ -60,6 +64,3 @@ export function autoLayout(rooms: RoomDefinition[]): MapLayout {
   };
 }
 
-export function importTranscript(_transcriptData: unknown): RoomDefinition[] {
-  throw new Error('Not yet implemented - placeholder for M3');
-}

@@ -388,7 +388,7 @@ Required phase gates:
 
 ---
 
-## Milestone 3 — TextPlus Map (Extending Trizbort.io) ⏳ PENDING
+## Milestone 3 — TextPlus Map (Extending Trizbort.io) 🚧 IN PROGRESS
 
 **Target Duration**: 4-5 weeks (can start after M1+M2)  
 **Dependencies**: M2 Author (optional), M4 Convert (optional)  
@@ -398,21 +398,21 @@ Required phase gates:
 
 ### Planned Implementation
 - [x] Auto-layout algorithm (positions rooms without overlaps — layered BFS grid, orphans in trailing column)
-- [ ] Importer (parse transcripts → room definitions)
-- [ ] Code generators (Inform 7, Ink, TextPlus Author DSL)
+- [x] Importer (parse transcripts → room graph) — `importTranscript` in `packages/map/src/importer.ts`
+- [x] Code generator: TextPlus Author DSL — `graphToDsl` in `packages/map/src/codegen.ts` (Inform 7 and Ink still open below)
 - [ ] Batch rename / find-replace
-- [ ] Round-trip conversion (map ↔ DSL)
+- [x] Round-trip conversion (map ↔ DSL) — DSL → config → graph → DSL verified in `e2e/map-tools.spec.ts`
 
 ### Must Have
 - [x] Auto-layout algorithm
 - [x] Layout verification — originally 15 vitest tests (since removed); geometry now asserted via `e2e/map.spec.ts`
-- [ ] Import transcript output
+- [x] Import transcript output — transcript → `StoryGraph` → compiling DSL skeleton
 - [ ] Export to Trizbort format
 
 ### Should Have
 - [ ] Inform 7 code generation
 - [ ] Ink (inkle) code generation
-- [ ] Export to TextPlus Author DSL
+- [x] Export to TextPlus Author DSL — `graphToDsl`
 - [ ] Batch operations (rename, find-replace)
 
 ### Nice to Have
@@ -422,7 +422,7 @@ Required phase gates:
 
 ---
 
-## Milestone 4 — TextPlus Convert (Automating Transmatte) ⏳ PENDING
+## Milestone 4 — TextPlus Convert (Automating Transmatte) 🚧 IN PROGRESS
 
 **Target Duration**: 4-5 weeks (can start after M1)  
 **Dependencies**: M1 Core (for output format)  
@@ -431,12 +431,12 @@ Required phase gates:
 **Testing**: the transcript slice is verified end-to-end through the workbench Import feature (`e2e/import.spec.ts` — paste → convert → compile clean → play → map). The engine-specific parsers and generators below have no tests yet (their former `it.todo` markers were removed with the vitest suite; this list is their record).
 
 ### Planned Implementation
-- [ ] Transcript parser (Z-machine, Glulx, Inform 7, TADS 3)
-- [ ] Multi-transcript merging (detect branching)
-- [ ] Raconteur DSL code generator
+- [ ] Transcript parser: engine-specific formats (Glulx, Inform 7, TADS 3; the plain Z-machine-style path is shipped)
+- [x] Multi-transcript merging (detect branching) — `mergeTranscriptsToDsl` in `packages/convert/src/merge.ts`
+- [x] TextPlus DSL code generator — `transcriptToDsl` (linear) + branching merge output
 - [ ] Standalone HTML code generator
 - [ ] Trizbort map generator
-- [ ] CLI interface (`textplus-convert`)
+- [x] CLI interface (`textplus-convert`) — convert/merge/`--check`, verified by `e2e/convert-cli.spec.ts`
 
 ### Must Have
 - [x] Parse plain-text (Z-machine-style) transcripts — first slice, `packages/convert/src/transcript.ts`
@@ -444,14 +444,14 @@ Required phase gates:
 - [x] Workbench Import UI — paste a transcript in the workbench (`Import` toolbar button) to get a compiling story draft
 - [ ] Output standalone HTML (via Core)
 - [ ] Output Trizbort map
-- [ ] CLI tool
-- [ ] Broad transcript-sample coverage (varied real transcripts through the Import E2E path)
+- [x] CLI tool — `textplus-convert`
+- [ ] Broad transcript-sample coverage (varied real transcripts through the Import/CLI E2E paths)
 - [ ] Engine-specific format support: Glulx, Inform 7, TADS 3
 
 ### Should Have
-- [ ] Multi-transcript merging
+- [x] Multi-transcript merging — branching stories from divergent walks
 - [ ] Map generation
-- [ ] 70+ unit tests across real transcript samples
+- [ ] Broad real-transcript sample coverage
 
 ### Nice to Have
 - [x] Web UI — paste-based import shipped in the workbench; drag-and-drop still open
@@ -467,7 +467,7 @@ Required phase gates:
 ### Deliverables
 - [ ] End-to-end demo (transcript → game → map)
 - [ ] Save/load slot UI in the workbench Play panel — also the missing E2E surface for core `storage.ts`, which is currently unverified
-- [ ] `textplus-convert` CLI (the author CLI shipped in M2 — `textplus-author` / `create-textplus-game`)
+- [x] CLI surfaces — `textplus-author` / `create-textplus-game` (M2) and `textplus-convert` (M4) both shipped with E2E coverage
 - [ ] VitePress documentation site
 - [ ] CONTRIBUTING.md guide
 - [ ] CODE_OF_CONDUCT.md

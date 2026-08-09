@@ -4,7 +4,7 @@ Story-graph layout and (eventually) Trizbort-style automation. This file is the 
 
 ## Status
 
-🚧 Milestone 3 first slice — auto-layout and the GameConfig adapter power the workbench's Map panel. Everything else Trizbort does is still ahead (see the parity gap below).
+🚧 Milestone 3 in progress — auto-layout powers the workbench Map panel; the transcript importer and DSL code generation (round-trip with the adapter) shipped 2026-08-08. Trizbort-format export and the Inform 7/Ink generators are still ahead (see the parity gap below).
 
 ## Current Surface
 
@@ -12,13 +12,15 @@ Story-graph layout and (eventually) Trizbort-style automation. This file is the 
 |---|---|
 | `src/layout.ts` | Layered-BFS grid auto-layout: shortest-path depth columns from the start situation, unique cells, orphans parked in a trailing column with `reachable: false`, terminal (ending) flags |
 | `src/adapter.ts` | `graphFromConfig` — `@textplus/core` GameConfig → neutral `StoryGraph` (parallel links deduplicated) |
-| `src/index.ts` | Public exports; legacy `autoLayout(rooms)` surface backed by the real engine; `importTranscript` still a throwing placeholder |
+| `src/importer.ts` | `importTranscript(text)` — play transcript → `StoryGraph`: room headers become nodes (unified by name, so revisits converge), commands become edges; headerless responses become linear step nodes. Extracts structure only — prose-preserving conversion belongs to `@textplus/convert` |
+| `src/codegen.ts` | `graphToDsl(graph, {title?})` — compiling TextPlus DSL skeleton from a graph (titles, tags, links, start survive; prose is a placeholder) |
+| `src/index.ts` | Public exports; legacy `autoLayout(rooms)` surface backed by the real engine |
 
 ## Verification
 
 Test standard: the traced Playwright E2E suite is the only test layer. Run from the repository root: `npm run test:all`.
 
-`packages/workbench/e2e/map.spec.ts` asserts the layout's properties through the rendered SVG: shortest-path depth columns, unique cells, orphan rooms parked in the trailing column with the unreachable tooltip, terminal flags on endings, parallel-edge dedup, and self-loop suppression. Node click-to-jump and current-room highlight are covered in `e2e/workbench.spec.ts`.
+`packages/workbench/e2e/map.spec.ts` asserts the layout's properties through the rendered SVG: shortest-path depth columns, unique cells, orphan rooms parked in the trailing column with the unreachable tooltip, terminal flags on endings, parallel-edge dedup, and self-loop suppression. Node click-to-jump and current-room highlight are covered in `e2e/workbench.spec.ts`. `e2e/map-tools.spec.ts` covers the importer (rooms/edges/start from a transcript) and the full round-trip: imported graph → `graphToDsl` → author CLI compile → `graphFromConfig` → the same nodes, edges, and start.
 
 **Not verified**: the legacy `autoLayout(rooms)` surface and custom cell sizing (nothing in the app calls either).
 
@@ -31,17 +33,17 @@ Test standard: the traced Playwright E2E suite is the only test layer. Run from 
 - Objects/props inside rooms
 - Code generation: Inform 7, TADS 3, Alan 2/3, Quest, ZIL, YAML
 - Trizbort file format import/export (round-trip with the desktop app and trizbort.io)
-- Transcript import (auto-populate a map from a play session)
 
-Our scope (root ROADMAP M3) is *automation on top of* those ideas — auto-layout (done), transcript import, and code-gen — not a re-implementation of the whole editor. Anything from the list above that TextPlus adopts should be tracked as an explicit item here and in the root roadmap.
+(Transcript import — auto-populating a map from a play session — shipped 2026-08-08 as `importTranscript`.)
+
+Our scope (root ROADMAP M3) is *automation on top of* those ideas — auto-layout (done), transcript import (done), and code-gen — not a re-implementation of the whole editor. Anything from the list above that TextPlus adopts should be tracked as an explicit item here and in the root roadmap.
 
 ## Ahead (M3 remainder)
 
-- [ ] `importTranscript` — parse transcripts → room definitions (pairs with `@textplus/convert`)
-- [ ] Code generators (Inform 7, Ink, TextPlus Author DSL)
+- [ ] Code generators: Inform 7, Ink (TextPlus Author DSL shipped via `graphToDsl`)
 - [ ] Export to Trizbort format
 - [ ] Batch rename / find-replace
-- [ ] Round-trip conversion (map ↔ DSL)
+- [ ] Workbench surfaces for the new tools (map-panel export, import-to-map flow)
 - [ ] Custom cell sizing exposed in the workbench (zoom/density) — would also make it verifiable
 
 ## Drift Rules

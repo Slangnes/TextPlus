@@ -33,8 +33,8 @@ npm workspaces monorepo under `packages/*`. Dependency direction: `core` ← `au
 |---|---|---|---|
 | `@textplus/core` | [Undum](https://github.com/idmillington/undum) | ✅ M1 complete | ES-module runtime: engine, qualities, situations, DOM renderer, HUD/themes, storage |
 | `@textplus/author` | [Raconteur](https://github.com/sequitur/raconteur) | ✅ M2 complete | Authoring DSL: parser → compiler → linter → workflow, plus the `textplus-author` / `create-textplus-game` CLI |
-| `@textplus/map` | [Trizbort.io](https://github.com/henck/trizbort) | 🚧 M3 first slice | Story-graph auto-layout + GameConfig adapter (powers the Workbench map) |
-| `@textplus/convert` | [Transmatte](https://eblong.com/zarf/transmatte/) | 🚧 M4 first slice | Plain-text transcript → compiling TextPlus DSL (the Workbench Import feature) |
+| `@textplus/map` | [Trizbort.io](https://github.com/henck/trizbort) | 🚧 M3 in progress | Auto-layout, transcript→graph importer, and graph→DSL round-trip (powers the Workbench map) |
+| `@textplus/convert` | [Transmatte](https://eblong.com/zarf/transmatte/) | 🚧 M4 in progress | Transcripts → compiling TextPlus DSL: linear (Workbench Import), branching multi-transcript merge, `textplus-convert` CLI |
 | `@textplus/demo` | — | ✅ | Three playable example games built directly on core |
 | `@textplus/workbench` | — | ✅ active | Browser authoring app: Monaco editor, live preview, map, diagnostics, import/export |
 
@@ -60,6 +60,7 @@ npm run dev --workspace=@textplus/demo                        # example games on
 npm run build                                                 # build every package
 node packages/author/bin/create-textplus-game.mjs MyGame .    # scaffold a starter game (after build)
 node packages/author/bin/textplus-author.mjs compile MyGame/game.tp.txt
+node packages/convert/bin/textplus-convert.mjs walk1.txt walk2.txt --check   # merge transcripts into a branching story
 ```
 
 ---

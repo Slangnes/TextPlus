@@ -12,6 +12,9 @@
       "types": "./src/index.ts"
     }
   },
+  "bin": {
+    "textplus-convert": "./bin/textplus-convert.mjs"
+  },
   "scripts": {
     "build": "vite build"
   },

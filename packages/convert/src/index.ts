@@ -14,9 +14,13 @@
 
 export const VERSION = '0.0.1';
 
-// Implemented (M4 first slice): plain-text transcript → linear DSL story.
+// Implemented: plain-text transcript → linear DSL story.
 export { parseTranscriptText, transcriptToDsl } from './transcript';
 export type { TranscriptMove, TranscriptToDslOptions } from './transcript';
+
+// Implemented: multi-transcript merge → branching DSL story.
+export { mergeTranscriptsToDsl } from './merge';
+export type { MergeOptions } from './merge';
 
 export interface TranscriptParseOptions {
   engine?: 'zmachine' | 'glulx' | 'inform7' | 'tads3';
