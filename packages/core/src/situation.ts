@@ -53,7 +53,7 @@ export class SituationSystem {
     for (const situation of this.situations.values()) {
       if (situation.links) {
         for (const link of situation.links) {
-          if (!this.hasSituation(link.target)) {
+          if (link.target !== undefined && !this.hasSituation(link.target)) {
             invalidLinks.push(`${situation.id} → ${link.target}`);
           }
         }

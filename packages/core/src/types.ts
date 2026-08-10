@@ -50,10 +50,16 @@ export type CallbackContext = GameEngine & Record<string, QualityValue>;
  * Link to another situation
  */
 export interface SituationLink {
-  /** Target situation ID to transition to */
-  target: string;
+  /**
+   * Target situation ID to transition to. Omitted on a *blocked* link: the
+   * choice stays visible, but choosing it refuses with `message` instead of
+   * moving — and the attempt still costs a turn (ticks the schedule).
+   */
+  target?: string;
   /** Display text for the link */
   text: string;
+  /** Refusal message for a blocked (target-less) link, emitted as a GameMessageEvent */
+  message?: string;
   /** Condition that must be true to show this link (optional) */
   condition?: (context: CallbackContext) => boolean;
   /** Called when link is clicked, before transition */

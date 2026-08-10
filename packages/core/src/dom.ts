@@ -32,16 +32,16 @@ function renderLink(
 ): void {
   const btn = document.createElement('button');
   btn.type = 'button';
-  btn.className = CSS_CLASS_LINK;
+  btn.className =
+    link.target === undefined ? `${CSS_CLASS_LINK} ${CSS_CLASS_LINK}--blocked` : CSS_CLASS_LINK;
   btn.textContent = link.text;
-  btn.setAttribute('data-target', link.target);
+  if (link.target !== undefined) {
+    btn.setAttribute('data-target', link.target);
+  }
 
-  btn.addEventListener('click', () => {
-    if (link.onChoose) {
-      link.onChoose(engine);
-    }
-    engine.goToSituation(link.target);
-  });
+  // One shared per-move path: the engine's followLink handles onChoose,
+  // blocked-link refusals, and the transition alike.
+  btn.addEventListener('click', () => engine.followLink(link));
 
   linksEl.appendChild(btn);
 }

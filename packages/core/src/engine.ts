@@ -349,6 +349,19 @@ export class TextPlusGameEngine implements GameEngine {
         console.error('Error in link.onChoose handler:', error);
       }
     }
+    if (link.target === undefined) {
+      // A blocked link: the player stays put, the try still costs a turn,
+      // and the link says why nothing happened.
+      this.tickSchedule();
+      if (link.message) {
+        this.emitMessage({
+          message: link.message,
+          turn: this.turnCount,
+          timestamp: Date.now()
+        });
+      }
+      return;
+    }
     this.goToSituation(link.target);
   }
 
@@ -500,7 +513,7 @@ export class TextPlusGameEngine implements GameEngine {
 
     for (const [situationId, situation] of Object.entries(this.config.situations)) {
       for (const link of situation.links ?? []) {
-        if (!this.situationSystem.hasSituation(link.target)) {
+        if (link.target !== undefined && !this.situationSystem.hasSituation(link.target)) {
           errors.push(
             `Invalid link in ${situationId}: target situation \"${link.target}\" does not exist`
           );

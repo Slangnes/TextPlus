@@ -10,7 +10,10 @@ export interface AuthorQualityNode {
 
 export interface AuthorLinkNode {
   text: string;
-  target: string;
+  /** Target situation id; absent on a blocked link (`-> label say "message"`). */
+  target?: string;
+  /** Refusal message of a blocked link (undefined on ordinary links). */
+  message?: string;
   condition?: string;
   /** Raw effects string from a trailing brace block (undefined when absent). */
   effects?: string;
@@ -413,19 +416,39 @@ export function parseGame(source: string): AuthorGameAst {
 
     if (trimmed.startsWith('-> ')) {
       const match = trimmed.match(/^->\s+(.+?)\s+=>\s+([a-zA-Z][\w-]*(?::[a-zA-Z][\w-]*)?)(?:\s+\?\s+(.+?))?(?:\s*\{\s*(.+?)\s*\})?$/);
-      if (!match) {
-        throw new Error(`Line ${lineNumber}: invalid link definition`);
+      if (match) {
+        const [, text, target, condition, effects] = match;
+        currentSituation.links.push({
+          text: text.trim(),
+          target,
+          condition: condition?.trim(),
+          effects: effects?.trim(),
+        });
+        currentSituation.linkLines.push(lineNumber);
+        continue;
       }
 
-      const [, text, target, condition, effects] = match;
-      currentSituation.links.push({
-        text: text.trim(),
-        target,
-        condition: condition?.trim(),
-        effects: effects?.trim(),
-      });
-      currentSituation.linkLines.push(lineNumber);
-      continue;
+      // Blocked link: no destination, just a refusal — the try costs a turn.
+      // Only attempted when the line has no `=>`, so a malformed target link
+      // still gets the target-link error instead of parsing as a refusal.
+      if (!/\s=>\s/.test(trimmed)) {
+        const blocked = trimmed.match(/^->\s+(.+?)\s+say\s+"([^"]*)"(?:\s+\?\s+(.+?))?(?:\s*\{\s*(.+?)\s*\})?$/);
+        if (blocked) {
+          const [, text, message, condition, effects] = blocked;
+          currentSituation.links.push({
+            text: text.trim(),
+            message,
+            condition: condition?.trim(),
+            effects: effects?.trim(),
+          });
+          currentSituation.linkLines.push(lineNumber);
+          continue;
+        }
+      }
+
+      throw new Error(
+        `Line ${lineNumber}: invalid link definition (expected "-> label => target" or "-> label say \"message\"")`,
+      );
     }
 
     const entryEffect = /^\{\s*(.+?)\s*\}$/.exec(trimmed);

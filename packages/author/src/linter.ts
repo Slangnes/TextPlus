@@ -85,7 +85,7 @@ function findReachable(ast: AuthorGameAst): Set<string> {
     }
 
     situation.links.forEach((link) => {
-      if (!reachable.has(link.target)) {
+      if (link.target !== undefined && !reachable.has(link.target)) {
         queue.push(link.target);
       }
     });
@@ -118,10 +118,10 @@ export function lintAST(ast: AuthorGameAst): LintOutput {
     }
   });
 
-  // Check for broken links (targets don't exist)
+  // Check for broken links (targets don't exist; blocked links have none)
   Object.entries(ast.situations).forEach(([situationId, situation]) => {
     situation.links.forEach((link, index) => {
-      if (!ast.situations[link.target]) {
+      if (link.target !== undefined && !ast.situations[link.target]) {
         diagnostics.push({
           severity: 'error',
           code: 'broken-link',

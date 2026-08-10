@@ -66,6 +66,9 @@ function compileLink(node: AuthorLinkNode, errors: CompileError[], situationId: 
     text: node.text,
     target: node.target,
   };
+  if (node.message !== undefined) {
+    link.message = node.message;
+  }
 
   if (node.condition) {
     try {
@@ -150,10 +153,10 @@ export function compileAST(ast: AuthorGameAst, options: CompileAstOptions = {}):
     situationsRecord[situationNode.id] = compileSituation(situationNode, errors, rng);
   });
 
-  // Validation: check all link targets exist
+  // Validation: check all link targets exist (blocked links have none)
   Object.entries(ast.situations).forEach(([situationId, situation]) => {
     situation.links.forEach((link, index) => {
-      if (!ast.situations[link.target]) {
+      if (link.target !== undefined && !ast.situations[link.target]) {
         errors.push({
           type: 'unresolved_link',
           message: `Situation "${situationId}": Link ${index} targets undefined situation "${link.target}"`,
