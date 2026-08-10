@@ -8,10 +8,13 @@
  * 2. Every example in the examples menu compiles with zero errors and zero
  *    warnings, verified through the real app: load it, watch the status bar
  *    and diagnostics panel.
+ * 3. The shell stays semantic: one h1, labelled landmarks and live regions,
+ *    real dialogs, and panels that name the module they host.
  */
 
 import { test, expect } from '@playwright/test';
 import type { Page } from '@playwright/test';
+import { setSource } from './helpers';
 import { readdirSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
@@ -72,5 +75,45 @@ test.describe('conventions', () => {
       await page.locator('#example-select').selectOption(id);
       await expectCompiledClean(page);
     }
+  });
+
+  test('the shell is semantic: landmarks, live regions, and real dialogs', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.locator('#status')).toContainText('✓');
+
+    // One heading names the app; the action cluster is a labelled toolbar.
+    await expect(page.locator('h1')).toHaveCount(1);
+    await expect(page.locator('h1')).toContainText('TextPlus');
+    await expect(page.locator('header [role="toolbar"]')).toHaveAttribute('aria-label', 'Story actions');
+
+    // The status bar announces compile results; the message feed is a log.
+    await expect(page.locator('#status')).toHaveAttribute('role', 'status');
+    await expect(page.locator('#preview-messages')).toHaveAttribute('role', 'log');
+
+    // Diagnostics render as a list of findings (a broken link is reported by
+    // both the linter and the compiler — two rows, both inside the list).
+    await setSource(page, 'title: Broken\n\n:: start [start]\nStart\n\n-> Go => nowhere\n');
+    await expect(page.locator('.diag-list li .diag--error')).toHaveCount(2);
+    await expect(page.locator('.diag--error')).toHaveCount(2); // none render outside the list
+
+    // Modals are real dialogs, named by their title.
+    await page.locator('#btn-import').click();
+    const dialog = page.locator('.modal');
+    await expect(dialog).toHaveAttribute('role', 'dialog');
+    await expect(dialog).toHaveAttribute('aria-modal', 'true');
+    await expect(dialog).toHaveAttribute('aria-label', 'Import Transcript');
+    await page.keyboard.press('Escape');
+    await expect(page.locator('.modal-backdrop')).toHaveCount(0);
+  });
+
+  test('panels advertise the module they host in their accessible name', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.locator('#status')).toContainText('✓');
+    await expect(page.locator('#panel-0')).toHaveAttribute('aria-label', 'Panel 1 — Editor');
+    await expect(page.locator('#panel-3')).toHaveAttribute('aria-label', 'Panel 4 — Diagnostics');
+
+    await page.locator('#panel-picker-3').selectOption('journal');
+    await expect(page.locator('#panel-3')).toHaveAttribute('aria-label', 'Panel 4 — Journal');
+    await expect(page.locator('#panel-3')).toHaveAttribute('data-module', 'journal');
   });
 });

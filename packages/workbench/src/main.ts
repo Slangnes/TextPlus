@@ -144,6 +144,10 @@ function applyLayout(): void {
     const picker = requireElement<HTMLSelectElement>(`panel-picker-${i}`);
     const view = views[i];
     picker.value = view;
+    // The section's accessible name says what it hosts, not just where it sits.
+    const panel = requireElement(`panel-${i}`);
+    panel.setAttribute('data-module', view);
+    panel.setAttribute('aria-label', view === 'none' ? `Panel ${i + 1}` : `Panel ${i + 1} — ${VIEW_LABELS[view]}`);
     requireElement(`panel-empty-${i}`).hidden = view !== 'none';
     if (view !== 'none') {
       const viewEl = viewElements[view];
@@ -292,6 +296,8 @@ function renderDiagnostics(report: WorkbenchReport): void {
     return;
   }
 
+  const list = document.createElement('ul');
+  list.className = 'diag-list';
   report.issues.forEach((issue) => {
     const item = document.createElement('button');
     item.type = 'button';
@@ -304,8 +310,11 @@ function renderDiagnostics(report: WorkbenchReport): void {
         editor.focus();
       }
     });
-    diagnosticsEl.appendChild(item);
+    const row = document.createElement('li');
+    row.appendChild(item);
+    list.appendChild(row);
   });
+  diagnosticsEl.appendChild(list);
 }
 
 // --- Map ---------------------------------------------------------------------
