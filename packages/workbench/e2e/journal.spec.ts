@@ -116,6 +116,23 @@ Nothing here.
     ).toBeVisible();
   });
 
+  test('an empty quoted label falls back to the Title-Case default', async ({ page }) => {
+    await setSource(
+      page,
+      `title: Blank Label
+
+task first-look ""
+
+:: start [start]
+Start
+Here.
+
+-> Snap => start { capture first-look }
+`,
+    );
+    await expect(page.locator('.journal-task[data-task-id="first-look"]')).toContainText('First Look');
+  });
+
   test('a parse-failing effects block still counts its captures — no bogus unused-task', async ({ page }) => {
     await page.locator('#panel-picker-3').selectOption('diagnostics'); // journal swapped it out
     await setSource(

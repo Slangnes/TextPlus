@@ -60,4 +60,63 @@ test.describe('core state', () => {
     expect(reHomed.getCurrentWorld()).toBe('cams');
     expect(unchanged.currentSituation).toBe('feed');
   });
+
+  test('loadState re-mirrors the world quality for the restored position', async () => {
+    // Save from a config with no `world` quality declared — the save carries none.
+    const plain = createGame(storyWithFeedIn('cams'));
+    plain.goToSituation('feed');
+    const save = plain.getSaveState();
+
+    // Load it into a config that declares the engine-maintained mirror (the
+    // live-edit path: the constructor mirrors the initial world, and without
+    // a re-mirror the restored position would keep that stale value).
+    const mirrored: GameConfig = {
+      ...storyWithFeedIn('cams'),
+      qualities: { world: { name: 'world', type: 'string', default: '' } },
+    };
+    const engine = createGame(mirrored); // mirrors 'office' at construction
+    engine.loadState(save);
+
+    await test.info().attach('world-mirror.json', {
+      body: JSON.stringify(
+        { currentWorld: engine.getCurrentWorld(), worldQuality: engine.getQuality('world') },
+        null,
+        2,
+      ),
+      contentType: 'application/json',
+    });
+    expect(engine.getCurrentWorld()).toBe('cams');
+    expect(engine.getQuality('world')).toBe('cams');
+  });
+
+  test('a schedule effect that re-enters the clock cannot double-fire entries', async () => {
+    let everyFired = 0;
+    const config: GameConfig = {
+      title: 'Reentrant Clock',
+      initialSituation: 'a',
+      qualities: {},
+      situations: {
+        a: { id: 'a', title: 'A', content: 'a.' },
+        b: { id: 'b', title: 'B', content: 'b.' },
+      },
+      schedule: [
+        { at: 1, effects: (game) => game.wait?.(1) }, // re-enters tickSchedule mid-dispatch
+        {
+          every: 1,
+          effects: () => {
+            everyFired += 1;
+          },
+        },
+      ],
+    };
+    const engine = createGame(config);
+    engine.goToSituation('b'); // turn 1: the at-1 effect waits a turn mid-dispatch
+
+    await test.info().attach('reentrancy.json', {
+      body: JSON.stringify({ turn: engine.getTurn(), everyFired }, null, 2),
+      contentType: 'application/json',
+    });
+    expect(engine.getTurn()).toBe(2); // the inner tick still advances the clock
+    expect(everyFired).toBe(1); // dispatched once, by the outermost pass only
+  });
 });

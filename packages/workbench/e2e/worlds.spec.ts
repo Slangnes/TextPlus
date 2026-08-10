@@ -108,6 +108,40 @@ test.describe('worlds', () => {
     ).toHaveCount(1);
   });
 
+  test('entry effects see the world being entered — a capture records the new world', async ({ page }) => {
+    await setSource(
+      page,
+      `title: Mirror Order
+
+world office "The Office"
+world cams "The Cameras"
+
+quality world string = nowhere
+
+task scene "First glimpse"
+
+:: office:desk [start]
+The Desk
+Quiet here.
+
+-> Jack in => cams:feed
+
+:: cams:feed
+The Feed
+{ capture scene }
+Watching from {world}.
+
+-> Unplug => office:desk
+`,
+    );
+    await page.locator('.tp-link', { hasText: 'Jack in' }).click();
+    // The capture ran during onEnter; its frozen snapshot must name the world
+    // being entered, matching the entry's own world field — not the one left.
+    await page.locator('#panel-picker-3').selectOption('journal');
+    await expect(page.locator('.journal-entry__content')).toContainText('Watching from cams.');
+    await expect(page.locator('.journal-entry__meta')).toContainText('cams');
+  });
+
   test('world resume points survive a recompile', async ({ page }) => {
     await page.locator('.tp-link', { hasText: 'Study the console' }).click();
     await setWorld(page, 'comm');

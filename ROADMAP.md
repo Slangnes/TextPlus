@@ -3,7 +3,7 @@
 This document tracks the features, deliverables, and milestones for the TextPlus project. Items are organized by component and priority.
 
 **Last Updated**: August 9, 2026  
-**Current Status**: M0–M2 ✅ complete | M3 Map + M4 Convert 🚧 in progress | Test standard: traced Playwright E2E suite (97 scenarios)
+**Current Status**: M0–M2 ✅ complete | M3 Map + M4 Convert 🚧 in progress | Test standard: traced Playwright E2E suite (102 scenarios)
 
 ---
 
@@ -13,7 +13,7 @@ This document tracks the features, deliverables, and milestones for the TextPlus
 |-----------|--------|----------|--------|
 | **M0: Bootstrap** | ✅ COMPLETE | 100% | Project setup infrastructure |
 | **M1: Core** | ✅ COMPLETE | 100% | Runtime + Beyond Text HUD/theme slices; `storage.ts` awaits its M5 UI surface |
-| **M2: Author** | ✅ COMPLETE | 100% | DSL, linter (15 diagnostic codes), workflow, CLI (`textplus-author` / `create-textplus-game`); Raconteur compat resolved as a migration guide |
+| **M2: Author** | ✅ COMPLETE | 100% | DSL, linter (16 diagnostic codes), workflow, CLI (`textplus-author` / `create-textplus-game`); Raconteur compat resolved as a migration guide |
 | **M3: Map** | 🚧 IN PROGRESS | ~75% | Compass layout, zoom/pan, ZIL+transcript importers, gated-edge dev view, in-game dungeon map, Trizbort export; hand-editing, Trizbort import, Inform 7/Ink codegen remain |
 | **M4: Convert** | 🚧 IN PROGRESS | ~70% | Deconstruction (prose, gates, globals, multi-file worlds) + conversion report, transcripts + branching merge + CLI; objects, blocked-link construct, engine formats, .z5 remain |
 | **M5: Integration** | ⏳ PENDING | ~15% | CLI surfaces + showcase example landed early; save/load UI, docs site, release remain |
@@ -51,6 +51,7 @@ Honest boundaries of the current test standard, stated so green runs are read co
 
 ### Roadmap Changelog
 
+- **2026-08-09 (verification closeout)**: The five review findings whose adversarial verification had been cut off by session limits were re-verified against the current tree (all five confirmed) and fixed: the world quality mirror now syncs *before* `onEnter` in every path (entry-effect captures record the world being entered), `loadState` re-mirrors the world for the restored position (live-edit path), `tickSchedule` gained a re-entrancy guard with a stable due-turn (a schedule effect calling `wait()`/`goToSituation()` can no longer double-fire or skip entries — and can't recurse), an explicitly empty `""` task/world label now falls back to the default instead of rendering blank, and a new `undeclared-world` lint warning catches typo'd world prefixes that would silently mint a phantom world (16 lint codes). Suite: 102 traced scenarios.
 - **2026-08-09 (semantic shell)**: Workbench UX pass — the shell is now semantic and guard-enforced: the brand is the page's one `h1`, the action cluster is a labelled `role="toolbar"`, the compile status is a `role="status"` live region, the message feed a `role="log"`, panels carry module-aware accessible names (`Panel 4 — Journal`) and `data-module`, diagnostics render as a real list, keyboard focus gets a visible gold outline, and `prefers-reduced-motion` is honored. Microcopy made eloquent (empty-panel invitation, map legend in sentences). Two new conventions scenarios pin the semantic contract. Suite: 97 traced scenarios.
 - **2026-08-09 (review fixes)**: Adversarial-review findings closed: `at 0` schedule directives are now parse errors (the clock starts at 0; moments are checked from turn 1), preamble directives placed after the first `:: ` header surface as `misplaced-directive` lint warnings instead of silently reading as prose/titles, `loadState` drops per-world resume points whose situation no longer lives in that world (reachable only via hand-written configs), and a parse-failing effects block no longer fabricates `unused-task` for tasks it plainly captures. Suite: 95 traced scenarios (incl. the new Node-context `core-state.spec.ts`, the first spec driving core with a hand-written config).
 - **2026-08-08 (later)**: Testing standard changed by project decision: the vitest layer was removed; the traced Playwright E2E suite (58 scenarios, trace.zip per test) is the only test layer, including Node-context specs for the CLIs. Toolchain slimmed (root owns devDeps; scripts 25→7; terser/@vitest extras dropped). M2 completed: `textplus-author`/`create-textplus-game` CLI, quality-type-consistency lint rules, Raconteur compat resolved as a migration guide (runtime compat descoped by design). M4 advanced: workbench Import feature, `mergeTranscriptsToDsl` branching merge, `textplus-convert` CLI. M3 advanced: `importTranscript` (transcript → StoryGraph) and `graphToDsl` (round-trip with `graphFromConfig`). Doc convention: one doc per package — completed packages a real `README.md`, in-progress a package `ROADMAP.md`.

@@ -371,6 +371,34 @@ export function lintAST(ast: AuthorGameAst): LintOutput {
     }
   });
 
+  // The mirror check: once any world is declared, a discovered prefix that
+  // matches no declaration is almost certainly a typo — left silent, it
+  // mints a phantom world with its own map tab. Declaration-free stories
+  // (prefix-only worlds) stay clean by design.
+  const declaredWorldIds = new Set((ast.worlds ?? []).map((world) => world.id));
+  if (declaredWorldIds.size > 0) {
+    const reportedWorlds = new Set<string>();
+    Object.keys(ast.situations).forEach((situationId) => {
+      const colon = situationId.indexOf(':');
+      if (colon === -1) {
+        return;
+      }
+      const worldId = situationId.slice(0, colon);
+      if (declaredWorldIds.has(worldId) || reportedWorlds.has(worldId)) {
+        return;
+      }
+      reportedWorlds.add(worldId);
+      const line = ast.positions?.situations?.[situationId];
+      diagnostics.push({
+        severity: 'warning',
+        code: 'undeclared-world',
+        message: `${prefix(line)}situation "${situationId}" creates undeclared world "${worldId}" (typo of a declared world?)`,
+        situation: situationId,
+        line,
+      });
+    });
+  }
+
   // Check for unused qualities (defined but never referenced)
   const usedQualities = new Set<string>();
   Object.values(ast.situations).forEach((situation) => {

@@ -202,6 +202,32 @@ task evidence "The evidence"
     await expect(page.locator('.tp-title')).toHaveText('world cams "Security Cameras"');
   });
 
+  test("a typo'd world prefix warns instead of silently minting a phantom world", async ({ page }) => {
+    await setSource(
+      page,
+      `title: Typo World
+
+world comm "Communications"
+
+:: comm:hub [start]
+The Hub
+Signals hum.
+
+-> Cross => comn:feed
+
+:: comn:feed
+The Feed
+Static.
+
+-> Back => comm:hub
+`,
+    );
+    await expect(
+      page.locator('.diag--warning', { hasText: 'creates undeclared world "comn"' }),
+    ).toBeVisible();
+    await expect(page.locator('#status')).toHaveClass(/status--warning/);
+  });
+
   test('blank source shows the empty state, not an error', async ({ page }) => {
     await setSource(page, '');
     await expect(page.locator('#status')).toHaveClass(/status--empty/);

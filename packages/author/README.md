@@ -42,7 +42,7 @@ The Lower Stacks
 | `every <n> [in <world>] [{ effects }] [say "msg"]` | Fire effects and/or a message on every Nth turn of the game clock (each transition and `wait()` tick is one turn) |
 | `at <n> [in <world>] [{ effects }] [say "msg"]` | Fire exactly once when the clock reaches turn N. World-scoped entries only fire while the player is there — a missed moment stays missed. Declaring `quality turn number = 0` gets the clock engine-maintained for conditions/HUD/interpolation. `at 0` is a parse error — the clock starts at 0, so moments fire from turn 1 |
 | `map dungeon` | Ship a player-facing in-game map: fog-of-war reveal of visited rooms, a you-are-here marker, fast-travel to rooms already seen. Distinct from the workbench's developer map |
-| `task <id> ["label"]` | Declare a capturable task/scene; `{ capture <id> }` effects complete it, recording the situation's content into the journal exactly as it read at capture time |
+| `task <id> ["label"]` | Declare a capturable task/scene; `{ capture <id> }` effects complete it, recording the situation's content into the journal exactly as it read at capture time. An empty `""` label (here and on `world`) reads as no label — the Title-Case / id default applies |
 | `world <id> ["Label"]` | Declare a world/mode. Situations join it via qualified ids (`:: <world>:<id>`); links may target any world's situations (`=> comm:feed-a`), and crossing worlds is an ordinary transition. Each world resumes at its last-visited situation; the current world is exposed as `data-world` on the play surface and, when you declare `quality world string = ...`, mirrored into that quality for conditions/HUD/themes |
 
 ### Situations
@@ -102,6 +102,7 @@ Exit codes: 0 success (warnings allowed), 1 errors/failure, 2 usage. `--out` wri
 | `orphaned-situation` | warning | Unreachable from the start |
 | `empty-world` | warning | A declared world has no situations |
 | `unknown-world-in-schedule` | warning | A schedule entry is scoped to a world that doesn't exist |
+| `undeclared-world` | warning | A situation's `world:` prefix matches no declared world, when worlds are declared at all — a typo would otherwise silently mint a phantom world (prefix-only stories with no declarations stay clean) |
 | `unknown-task-in-capture` | warning | A `capture` effect names an undeclared task |
 | `unused-task` | warning | A task is declared but no effect ever captures it (well-formed `capture`s inside a parse-failing block still count) |
 | `misplaced-directive` | warning | A full directive-shaped line sits inside a situation, where it reads as prose or the title |

@@ -354,7 +354,9 @@ export function parseGame(source: string): AuthorGameAst {
         throw new Error(`Line ${lineNumber}: invalid task declaration (expected: task <id> ["label"])`);
       }
       const [, id, label] = match;
-      tasks.push({ id, label });
+      // An explicitly empty "" label reads as no label at all, so the
+      // compiler's Title-Case default applies instead of a blank checklist row.
+      tasks.push({ id, label: label || undefined });
       positions.tasks.push(lineNumber);
       continue;
     }
@@ -365,7 +367,8 @@ export function parseGame(source: string): AuthorGameAst {
         throw new Error(`Line ${lineNumber}: invalid world declaration (expected: world <id> ["label"])`);
       }
       const [, id, label] = match;
-      worlds.push({ id, label });
+      // Same normalization as tasks: "" means "use the default label".
+      worlds.push({ id, label: label || undefined });
       positions.worlds.push(lineNumber);
       continue;
     }

@@ -36,6 +36,7 @@ The three demo games (`packages/demo/`) are the reference for direct-core usage:
 - **Clamping is the engine's**, not the display's: mutations respect declared `min`/`max` before any HUD rounding (E2E-asserted via `{quality}` interpolation).
 - **Failure-safe interactivity by design**: throwing link conditions hide the link; failing effects and lifecycle hooks are logged, never take down the UI. *Caveat*: author-compiled conditions/effects never throw, so these paths are unreachable from the app and currently unverified — they matter only for hand-written configs.
 - **State survives recompiles** in the workbench: the preview snapshots `getSaveState()` and replays it after a recompile. Note the split of responsibility: `loadState` itself **throws** when the save's current situation is missing from the config — the graceful fall-back-to-start lives in the workbench's `preview.ts`, not in core.
+- **The engine-maintained mirrors are never stale where code can see them**: `world`/`turn` qualities sync *before* `onEnter` runs (constructor, transitions, and reset alike), so entry effects — and anything they `capture` — observe the world being entered; `loadState` re-mirrors both for the restored position. The schedule dispatcher is re-entrancy-guarded: an entry's effects may call `wait()`/`goToSituation()` (the inner tick advances the clock), but entries dispatch only from the outermost pass, against that pass's own turn number.
 
 ## Verification
 

@@ -31,6 +31,8 @@ export class TextPlusGameEngine implements GameEngine {
   private perWorldPositions: Record<string, string> = {};
   /** Turn clock: 0 at start; every transition (and wait tick) advances it. */
   private turnCount = 0;
+  /** True while schedule entries are dispatching (re-entrancy guard). */
+  private tickingSchedule = false;
   /** Recorded journal entries, in capture order. */
   private journal: JournalEntry[] = [];
 
@@ -60,13 +62,15 @@ export class TextPlusGameEngine implements GameEngine {
     this.currentSituationId = config.initialSituation;
     this.history = [this.currentSituationId];
     this.trackWorldPosition(this.currentSituationId);
+    // Mirrors sync before onEnter so entry effects (and anything they
+    // capture) see the world/turn they are entering, not stale defaults.
+    this.mirrorWorldQuality();
+    this.mirrorTurnQuality();
 
     const initialSituation = this.situationSystem.getSituation(this.currentSituationId);
     if (initialSituation) {
       this.situationSystem.callOnEnter(initialSituation, this);
     }
-    this.mirrorWorldQuality();
-    this.mirrorTurnQuality();
   }
 
   /**
@@ -92,33 +96,47 @@ export class TextPlusGameEngine implements GameEngine {
   private tickSchedule(): void {
     this.turnCount += 1;
     this.mirrorTurnQuality();
-    for (const entry of this.config.schedule ?? []) {
-      if (entry.world && entry.world !== this.getCurrentWorld()) {
-        continue;
-      }
-      const due =
-        entry.at !== undefined
-          ? entry.at === this.turnCount
-          : entry.every !== undefined
-            ? entry.every > 0 && this.turnCount % entry.every === 0
-            : false;
-      if (!due) {
-        continue;
-      }
-      if (entry.effects) {
-        try {
-          entry.effects(this);
-        } catch (error) {
-          console.error('Error in scheduled effects:', error);
+    // A schedule effect may re-enter the clock (wait() and goToSituation()
+    // are both on the engine surface it receives). The inner tick still
+    // advances the count, but only the outermost pass dispatches entries —
+    // otherwise a re-entrant tick double-fires `every` entries, skips `at`
+    // moments mid-loop, and an unconditional wait() would recurse forever.
+    if (this.tickingSchedule) {
+      return;
+    }
+    const dueTurn = this.turnCount;
+    this.tickingSchedule = true;
+    try {
+      for (const entry of this.config.schedule ?? []) {
+        if (entry.world && entry.world !== this.getCurrentWorld()) {
+          continue;
+        }
+        const due =
+          entry.at !== undefined
+            ? entry.at === dueTurn
+            : entry.every !== undefined
+              ? entry.every > 0 && dueTurn % entry.every === 0
+              : false;
+        if (!due) {
+          continue;
+        }
+        if (entry.effects) {
+          try {
+            entry.effects(this);
+          } catch (error) {
+            console.error('Error in scheduled effects:', error);
+          }
+        }
+        if (entry.message) {
+          this.emitMessage({
+            message: entry.message,
+            turn: dueTurn,
+            timestamp: Date.now()
+          });
         }
       }
-      if (entry.message) {
-        this.emitMessage({
-          message: entry.message,
-          turn: this.turnCount,
-          timestamp: Date.now()
-        });
-      }
+    } finally {
+      this.tickingSchedule = false;
     }
   }
 
@@ -242,12 +260,14 @@ export class TextPlusGameEngine implements GameEngine {
     this.currentSituationId = situationId;
     this.history.push(situationId);
     this.trackWorldPosition(situationId);
+    // The world mirror syncs before onEnter so entry effects (and anything
+    // they capture) see the world being entered, not the one left behind.
+    this.mirrorWorldQuality();
 
     const newDefinition = this.situationSystem.getSituation(situationId);
     if (newDefinition) {
       this.situationSystem.callOnEnter(newDefinition, this);
     }
-    this.mirrorWorldQuality();
     // The clock ticks after arrival (schedule sees the post-move world) and
     // before the situation-change emit, so one render shows post-event state.
     this.tickSchedule();
@@ -373,6 +393,10 @@ export class TextPlusGameEngine implements GameEngine {
     // every transition was exactly one turn (wait() didn't exist), so
     // history.length - 1 IS the true turn count for them — derived, not guessed.
     this.turnCount = state.turnCount ?? Math.max(0, state.situations.history.length - 1);
+    // Re-mirror both engine-maintained qualities for the restored position:
+    // the save may predate a `world` declaration (live edit), leaving the
+    // constructor's initial-world value stale for where the player actually is.
+    this.mirrorWorldQuality();
     this.mirrorTurnQuality();
     this.journal = (state.journal ?? []).map((entry) => ({ ...entry }));
   }
@@ -385,13 +409,14 @@ export class TextPlusGameEngine implements GameEngine {
     this.trackWorldPosition(this.currentSituationId);
     this.turnCount = 0;
     this.journal = [];
+    // Same order as the constructor: mirrors before onEnter.
+    this.mirrorWorldQuality();
+    this.mirrorTurnQuality();
 
     const situation = this.situationSystem.getSituation(this.currentSituationId);
     if (situation) {
       this.situationSystem.callOnEnter(situation, this);
     }
-    this.mirrorWorldQuality();
-    this.mirrorTurnQuality();
   }
 
   onQualityChange(listener: EventListener<QualityChangeEvent>): () => void {
