@@ -114,4 +114,10 @@ test.describe('schedule', () => {
     await expect(page.locator('#status-turn')).toHaveText('⏱ 2');
     await expect(page.locator('.tp-body')).toContainText('at turn 2');
   });
+
+  test('at 0 is a compile error — the clock starts at 0, moments fire from turn 1', async ({ page }) => {
+    await setSource(page, CLOCKWORK.replace('at 3 say', 'at 0 say'));
+    await expect(page.locator('#status')).toContainText('✗');
+    await expect(page.locator('.diag--error', { hasText: '"at 0" can never fire' })).toBeVisible();
+  });
 });

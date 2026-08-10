@@ -28,7 +28,8 @@ export type EffectNode =
   | { kind: 'capture'; taskId: string };
 
 const EFFECT_PATTERN = /^([a-zA-Z][\w-]*)\s*(\+=|-=|=)\s*(.+)$/;
-const CAPTURE_PATTERN = /^capture\s+([a-zA-Z][\w-]*)$/;
+/** Exported for the linter: a failed block parse still needs its captures found. */
+export const CAPTURE_PATTERN = /^capture\s+([a-zA-Z][\w-]*)$/;
 
 function parseScalar(raw: string): number | boolean | string {
   if (raw === 'true') {

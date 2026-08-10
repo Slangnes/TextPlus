@@ -115,4 +115,23 @@ Nothing here.
       page.locator('.diag--warning', { hasText: 'task "ghost-scene" is declared but never captured' }),
     ).toBeVisible();
   });
+
+  test('a parse-failing effects block still counts its captures — no bogus unused-task', async ({ page }) => {
+    await page.locator('#panel-picker-3').selectOption('diagnostics'); // journal swapped it out
+    await setSource(
+      page,
+      `title: Broken Capture
+
+task forests "The dying forests"
+
+:: start [start]
+Start
+Nothing here.
+
+-> Snap => start { capture forests, courage ++ 1 }
+`,
+    );
+    await expect(page.locator('.diag--error', { hasText: '[effect-parse-error]' })).toBeVisible();
+    await expect(page.locator('.diag--warning', { hasText: 'never captured' })).toHaveCount(0);
+  });
 });

@@ -60,6 +60,21 @@ export interface AuthorScheduleNode {
   message?: string;
 }
 
+/**
+ * A preamble-shaped line found inside a situation, where it reads as prose
+ * or the title instead of parsing. Recorded so the linter can surface it —
+ * a declaration must never just vanish into content.
+ */
+export interface AuthorMisplacedDirective {
+  /** The directive keyword the line matches ("world", "at", "title:", …). */
+  keyword: string;
+  situationId: string;
+  /** True when the line was consumed as the situation's title. */
+  asTitle: boolean;
+  /** 1-based source line. */
+  line: number;
+}
+
 /** 1-based source line numbers, kept out of the nodes so AST deep-equals stay stable. */
 export interface AuthorPositions {
   qualities: Record<string, number>;
@@ -96,7 +111,52 @@ export interface AuthorGameAst {
   tasks?: AuthorTaskNode[];
   /** Player-facing in-game map opt-in ("map dungeon"). */
   map?: { style: 'dungeon' };
+  /** Directive-shaped lines swallowed as prose/titles (undefined when none). */
+  misplacedDirectives?: AuthorMisplacedDirective[];
   positions?: AuthorPositions;
+}
+
+const QUALITY_DIRECTIVE = /^quality\s+([a-zA-Z][\w-]*)\s+(number|boolean|string)\s*=\s*(.+?)(?:\s+min\s+(-?\d+(?:\.\d+)?))?(?:\s+max\s+(-?\d+(?:\.\d+)?))?$/;
+const HUD_DIRECTIVE = /^hud\s+([a-zA-Z][\w-]*)\s+(meter|badge|readout)(?:\s+"([^"]*)")?$/;
+const THEME_DIRECTIVE = /^theme\s+([a-zA-Z][\w-]*)\s+when\s+(.+)$/;
+const SCHEDULE_DIRECTIVE = /^(every|at)\s+(\d+)(?:\s+in\s+([a-zA-Z][\w-]*))?(?:\s*\{\s*(.+?)\s*\})?(?:\s+say\s+"([^"]*)")?$/;
+const MAP_DIRECTIVE = /^map\s+(dungeon)$/;
+const TASK_DIRECTIVE = /^task\s+([a-zA-Z][\w-]*)(?:\s+"([^"]*)")?$/;
+const WORLD_DIRECTIVE = /^world\s+([a-zA-Z][\w-]*)(?:\s+"([^"]*)")?$/;
+
+/**
+ * The preamble keyword this line would parse as, if any. Directives are only
+ * recognized before the first `:: ` header; the same text later reads as
+ * prose or a title. Only complete directive shapes count — a keyword prefix
+ * alone would flag ordinary prose like "world peace felt a room away."
+ */
+function misplacedDirectiveKeyword(trimmed: string): string | undefined {
+  if (trimmed.startsWith('title:') && trimmed.slice('title:'.length).trim()) {
+    return 'title:';
+  }
+  const schedule = SCHEDULE_DIRECTIVE.exec(trimmed);
+  if (schedule && (schedule[4] !== undefined || schedule[5] !== undefined)) {
+    return schedule[1];
+  }
+  if (QUALITY_DIRECTIVE.test(trimmed)) {
+    return 'quality';
+  }
+  if (HUD_DIRECTIVE.test(trimmed)) {
+    return 'hud';
+  }
+  if (THEME_DIRECTIVE.test(trimmed)) {
+    return 'theme';
+  }
+  if (MAP_DIRECTIVE.test(trimmed)) {
+    return 'map';
+  }
+  if (TASK_DIRECTIVE.test(trimmed)) {
+    return 'task';
+  }
+  if (WORLD_DIRECTIVE.test(trimmed)) {
+    return 'world';
+  }
+  return undefined;
 }
 
 function parseScalar(rawValue: string, type: AuthorQualityType, lineNumber: number): string | number | boolean {
@@ -182,6 +242,7 @@ export function parseGame(source: string): AuthorGameAst {
   const worlds: AuthorWorldNode[] = [];
   const schedule: AuthorScheduleNode[] = [];
   const tasks: AuthorTaskNode[] = [];
+  const misplacedDirectives: AuthorMisplacedDirective[] = [];
   let mapStyle: 'dungeon' | undefined;
 
   let currentSituation: PendingSituation | null = null;
@@ -208,7 +269,7 @@ export function parseGame(source: string): AuthorGameAst {
     }
 
     if (!currentSituation && trimmed.startsWith('quality ')) {
-      const match = trimmed.match(/^quality\s+([a-zA-Z][\w-]*)\s+(number|boolean|string)\s*=\s*(.+?)(?:\s+min\s+(-?\d+(?:\.\d+)?))?(?:\s+max\s+(-?\d+(?:\.\d+)?))?$/);
+      const match = trimmed.match(QUALITY_DIRECTIVE);
       if (!match) {
         throw new Error(`Line ${lineNumber}: invalid quality declaration`);
       }
@@ -226,7 +287,7 @@ export function parseGame(source: string): AuthorGameAst {
     }
 
     if (!currentSituation && trimmed.startsWith('hud ')) {
-      const match = trimmed.match(/^hud\s+([a-zA-Z][\w-]*)\s+(meter|badge|readout)(?:\s+"([^"]*)")?$/);
+      const match = trimmed.match(HUD_DIRECTIVE);
       if (!match) {
         throw new Error(`Line ${lineNumber}: invalid hud declaration (expected: hud <quality-id> meter|badge|readout ["label"])`);
       }
@@ -237,7 +298,7 @@ export function parseGame(source: string): AuthorGameAst {
     }
 
     if (!currentSituation && trimmed.startsWith('theme ')) {
-      const match = trimmed.match(/^theme\s+([a-zA-Z][\w-]*)\s+when\s+(.+)$/);
+      const match = trimmed.match(THEME_DIRECTIVE);
       if (!match) {
         throw new Error(`Line ${lineNumber}: invalid theme rule (expected: theme <name> when <condition>)`);
       }
@@ -248,9 +309,7 @@ export function parseGame(source: string): AuthorGameAst {
     }
 
     if (!currentSituation && (trimmed.startsWith('every ') || trimmed.startsWith('at '))) {
-      const match = trimmed.match(
-        /^(every|at)\s+(\d+)(?:\s+in\s+([a-zA-Z][\w-]*))?(?:\s*\{\s*(.+?)\s*\})?(?:\s+say\s+"([^"]*)")?$/,
-      );
+      const match = trimmed.match(SCHEDULE_DIRECTIVE);
       if (!match) {
         throw new Error(
           `Line ${lineNumber}: invalid schedule directive (expected: every|at <turns> [in <world>] [{ effects }] [say "message"])`,
@@ -260,6 +319,11 @@ export function parseGame(source: string): AuthorGameAst {
       const turns = Number(rawTurns);
       if (kind === 'every' && turns < 1) {
         throw new Error(`Line ${lineNumber}: "every ${rawTurns}" must be at least every 1 turn`);
+      }
+      if (kind === 'at' && turns < 1) {
+        throw new Error(
+          `Line ${lineNumber}: "at 0" can never fire — the clock starts at 0 and moments are checked from turn 1`,
+        );
       }
       if (!effects && !message) {
         throw new Error(`Line ${lineNumber}: schedule directive needs effects and/or say "message"`);
@@ -276,7 +340,7 @@ export function parseGame(source: string): AuthorGameAst {
     }
 
     if (!currentSituation && trimmed.startsWith('map ')) {
-      const match = trimmed.match(/^map\s+(dungeon)$/);
+      const match = trimmed.match(MAP_DIRECTIVE);
       if (!match) {
         throw new Error(`Line ${lineNumber}: invalid map directive (only "map dungeon" is implemented)`);
       }
@@ -285,7 +349,7 @@ export function parseGame(source: string): AuthorGameAst {
     }
 
     if (!currentSituation && trimmed.startsWith('task ')) {
-      const match = trimmed.match(/^task\s+([a-zA-Z][\w-]*)(?:\s+"([^"]*)")?$/);
+      const match = trimmed.match(TASK_DIRECTIVE);
       if (!match) {
         throw new Error(`Line ${lineNumber}: invalid task declaration (expected: task <id> ["label"])`);
       }
@@ -296,7 +360,7 @@ export function parseGame(source: string): AuthorGameAst {
     }
 
     if (!currentSituation && trimmed.startsWith('world ')) {
-      const match = trimmed.match(/^world\s+([a-zA-Z][\w-]*)(?:\s+"([^"]*)")?$/);
+      const match = trimmed.match(WORLD_DIRECTIVE);
       if (!match) {
         throw new Error(`Line ${lineNumber}: invalid world declaration (expected: world <id> ["label"])`);
       }
@@ -335,6 +399,10 @@ export function parseGame(source: string): AuthorGameAst {
     }
 
     if (expectingSituationTitle) {
+      const keyword = misplacedDirectiveKeyword(trimmed);
+      if (keyword) {
+        misplacedDirectives.push({ keyword, situationId: currentSituation.id, asTitle: true, line: lineNumber });
+      }
       currentSituation.title = trimmed;
       expectingSituationTitle = false;
       continue;
@@ -364,6 +432,10 @@ export function parseGame(source: string): AuthorGameAst {
       continue;
     }
 
+    const keyword = misplacedDirectiveKeyword(trimmed);
+    if (keyword) {
+      misplacedDirectives.push({ keyword, situationId: currentSituation.id, asTitle: false, line: lineNumber });
+    }
     currentSituation.contentLines.push(rawLine);
   }
 
@@ -387,6 +459,7 @@ export function parseGame(source: string): AuthorGameAst {
     schedule: schedule.length > 0 ? schedule : undefined,
     tasks: tasks.length > 0 ? tasks : undefined,
     map: mapStyle ? { style: mapStyle } : undefined,
+    misplacedDirectives: misplacedDirectives.length > 0 ? misplacedDirectives : undefined,
     positions,
   };
 }

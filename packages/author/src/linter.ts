@@ -9,7 +9,7 @@ import type { AuthorGameAst } from './parser';
 import { resolveInitialSituation } from './parser';
 import { parseExpression, collectQualityRefs } from './expression';
 import type { ExprNode } from './expression';
-import { parseEffects, collectEffectRefs } from './effects';
+import { parseEffects, collectEffectRefs, CAPTURE_PATTERN } from './effects';
 import { collectInterpolationRefs } from './content';
 
 const ORDERED_OPS = new Set(['<', '>', '<=', '>=']);
@@ -148,6 +148,15 @@ export function lintAST(ast: AuthorGameAst): LintOutput {
     try {
       nodes = parseEffects(source);
     } catch (error) {
+      // The block failed, but any well-formed captures in it still name
+      // their tasks — otherwise the parse error would also fabricate an
+      // unused-task warning for a task the author plainly captures.
+      source.split(',').forEach((part) => {
+        const captured = CAPTURE_PATTERN.exec(part.trim());
+        if (captured) {
+          capturedTasks.add(captured[1]);
+        }
+      });
       diagnostics.push({
         severity: 'error',
         code: 'effect-parse-error',
@@ -247,6 +256,22 @@ export function lintAST(ast: AuthorGameAst): LintOutput {
     });
 
     collectInterpolationRefs(situation.content).forEach((ref) => structuredRefs.add(ref));
+  });
+
+  // Directive-shaped lines the parser had to read as prose or a title:
+  // surfacing them is the contract — a declaration placed after the first
+  // ":: " header must never just vanish into content.
+  (ast.misplacedDirectives ?? []).forEach((node) => {
+    const readsAs = node.asTitle
+      ? `the title of situation "${node.situationId}"`
+      : `prose in situation "${node.situationId}"`;
+    diagnostics.push({
+      severity: 'warning',
+      code: 'misplaced-directive',
+      message: `Line ${node.line}: "${node.keyword}" only parses before the first ":: " header — here it reads as ${readsAs}`,
+      situation: node.situationId,
+      line: node.line,
+    });
   });
 
   // Validate hud declarations and theme rules

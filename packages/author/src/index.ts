@@ -48,11 +48,15 @@ export type {
   AuthorGameAst,
   AuthorHudNode,
   AuthorLinkNode,
+  AuthorMisplacedDirective,
   AuthorPositions,
   AuthorQualityNode,
   AuthorQualityType,
+  AuthorScheduleNode,
   AuthorSituationNode,
+  AuthorTaskNode,
   AuthorThemeNode,
+  AuthorWorldNode,
 } from './parser';
 export type { CompileError, CompileOutput, CompileAstOptions } from './compiler';
 export type { LintDiagnostic, LintOutput, LintSeverity } from './linter';

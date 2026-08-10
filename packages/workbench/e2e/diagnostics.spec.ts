@@ -172,6 +172,36 @@ Courage hums here.
     await expect(page.locator('#status')).toContainText('✗');
   });
 
+  test('preamble directives inside a situation warn instead of silently reading as prose', async ({ page }) => {
+    await setSource(
+      page,
+      `title: Lost Declarations
+
+:: start [start]
+world cams "Security Cameras"
+The room hums.
+world peace felt a room away.
+task evidence "The evidence"
+
+-> Look again => start
+`,
+    );
+    // Only full directive shapes flag: two hits, not the prose on line 6.
+    await expect(
+      page.locator('.diag--warning', { hasText: 'only parses before the first ":: " header' }),
+    ).toHaveCount(2);
+    await expect(
+      page.locator('.diag--warning', { hasText: 'Line 4: "world" only parses' }),
+    ).toContainText('reads as the title of situation "start"');
+    await expect(
+      page.locator('.diag--warning', { hasText: 'Line 7: "task" only parses' }),
+    ).toContainText('reads as prose in situation "start"');
+
+    // Warnings never block — the story mounts, swallowed directive and all.
+    await expect(page.locator('#status')).toHaveClass(/status--warning/);
+    await expect(page.locator('.tp-title')).toHaveText('world cams "Security Cameras"');
+  });
+
   test('blank source shows the empty state, not an error', async ({ page }) => {
     await setSource(page, '');
     await expect(page.locator('#status')).toHaveClass(/status--empty/);

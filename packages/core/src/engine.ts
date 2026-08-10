@@ -83,7 +83,12 @@ export class TextPlusGameEngine implements GameEngine {
     }
   }
 
-  /** Advance the clock one tick and fire any due scheduled entries. */
+  /**
+   * Advance the clock one tick and fire any due scheduled entries. The tick
+   * lands before the compare, so `at` moments are seen from turn 1 on — turn
+   * 0 is the start state, and an `at: 0` entry can never fire (the author
+   * parser rejects it outright).
+   */
   private tickSchedule(): void {
     this.turnCount += 1;
     this.mirrorTurnQuality();
@@ -354,11 +359,12 @@ export class TextPlusGameEngine implements GameEngine {
     this.currentSituationId = state.currentSituation;
     this.history = [...state.situations.history];
 
-    // Restore world resume points, dropping any that reference situations
-    // no longer present (a live edit may have removed them).
+    // Restore world resume points, dropping any whose situation is gone or
+    // no longer lives in that world (an edit may have removed or re-homed
+    // it — a stale entry would misroute goToWorld forever).
     this.perWorldPositions = {};
     Object.entries(state.perWorldPositions ?? {}).forEach(([world, situationId]) => {
-      if (this.situationSystem.hasSituation(situationId)) {
+      if (this.situationSystem.getSituation(situationId)?.world === world) {
         this.perWorldPositions[world] = situationId;
       }
     });

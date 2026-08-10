@@ -40,7 +40,7 @@ The Lower Stacks
 | `hud <id> meter\|badge\|readout ["Label"]` | HUD entry bound to a quality (meter: progress bar; badge: shown when truthy; readout: label + value) |
 | `theme <name> when <expr>` | Sets `data-theme="<name>"` on the play surface while the expression holds; last matching rule wins |
 | `every <n> [in <world>] [{ effects }] [say "msg"]` | Fire effects and/or a message on every Nth turn of the game clock (each transition and `wait()` tick is one turn) |
-| `at <n> [in <world>] [{ effects }] [say "msg"]` | Fire exactly once when the clock reaches turn N. World-scoped entries only fire while the player is there — a missed moment stays missed. Declaring `quality turn number = 0` gets the clock engine-maintained for conditions/HUD/interpolation |
+| `at <n> [in <world>] [{ effects }] [say "msg"]` | Fire exactly once when the clock reaches turn N. World-scoped entries only fire while the player is there — a missed moment stays missed. Declaring `quality turn number = 0` gets the clock engine-maintained for conditions/HUD/interpolation. `at 0` is a parse error — the clock starts at 0, so moments fire from turn 1 |
 | `map dungeon` | Ship a player-facing in-game map: fog-of-war reveal of visited rooms, a you-are-here marker, fast-travel to rooms already seen. Distinct from the workbench's developer map |
 | `task <id> ["label"]` | Declare a capturable task/scene; `{ capture <id> }` effects complete it, recording the situation's content into the journal exactly as it read at capture time |
 | `world <id> ["Label"]` | Declare a world/mode. Situations join it via qualified ids (`:: <world>:<id>`); links may target any world's situations (`=> comm:feed-a`), and crossing worlds is an ordinary transition. Each world resumes at its last-visited situation; the current world is exposed as `data-world` on the play surface and, when you declare `quality world string = ...`, mirrored into that quality for conditions/HUD/themes |
@@ -67,7 +67,7 @@ Safe, eval-free: `== != < > <= >=`, `and or not` (with `&& || !` accepted as ali
 
 `[oneOf: a | b | c]` cycles in order per render (spans track independently); `[randomly: …]` picks uniformly; `[frequently: …]` ≈70%, `[rarely: …]` ≈20%. `{quality}` interpolates the live value; unknown placeholders render literally.
 
-**Footgun**: directives (`title:`, `quality`, `hud`, `theme`) are only recognized *before* the first `::` header — placed later they silently become prose. `@textplus/convert` neutralizes directive-lookalike transcript prose for exactly this reason.
+**Footgun**: directives (`title:`, `quality`, `hud`, `theme`, `world`, `task`, `map`, `every`/`at`) are only recognized *before* the first `::` header — placed later they read as prose (or the situation's title). The linter surfaces full directive-shaped lines there as `misplaced-directive` warnings; `@textplus/convert` additionally neutralizes directive-lookalike transcript prose.
 
 ## CLI
 
@@ -103,7 +103,8 @@ Exit codes: 0 success (warnings allowed), 1 errors/failure, 2 usage. `--out` wri
 | `empty-world` | warning | A declared world has no situations |
 | `unknown-world-in-schedule` | warning | A schedule entry is scoped to a world that doesn't exist |
 | `unknown-task-in-capture` | warning | A `capture` effect names an undeclared task |
-| `unused-task` | warning | A task is declared but no effect ever captures it |
+| `unused-task` | warning | A task is declared but no effect ever captures it (well-formed `capture`s inside a parse-failing block still count) |
+| `misplaced-directive` | warning | A full directive-shaped line sits inside a situation, where it reads as prose or the title |
 | `unknown-quality-in-effect` / `-condition` / `-hud` | warning | Reference to an undeclared quality |
 | `condition-type-mismatch` | warning | Ordered comparison on a declared non-number |
 | `unused-quality` | warning | Declared but never referenced |

@@ -2,8 +2,8 @@
 
 This document tracks the features, deliverables, and milestones for the TextPlus project. Items are organized by component and priority.
 
-**Last Updated**: August 8, 2026  
-**Current Status**: M0–M2 ✅ complete | M3 Map + M4 Convert 🚧 in progress | Test standard: traced Playwright E2E suite (91 scenarios)
+**Last Updated**: August 9, 2026  
+**Current Status**: M0–M2 ✅ complete | M3 Map + M4 Convert 🚧 in progress | Test standard: traced Playwright E2E suite (95 scenarios)
 
 ---
 
@@ -13,7 +13,7 @@ This document tracks the features, deliverables, and milestones for the TextPlus
 |-----------|--------|----------|--------|
 | **M0: Bootstrap** | ✅ COMPLETE | 100% | Project setup infrastructure |
 | **M1: Core** | ✅ COMPLETE | 100% | Runtime + Beyond Text HUD/theme slices; `storage.ts` awaits its M5 UI surface |
-| **M2: Author** | ✅ COMPLETE | 100% | DSL, linter (9 rules), workflow, CLI (`textplus-author` / `create-textplus-game`); Raconteur compat resolved as a migration guide |
+| **M2: Author** | ✅ COMPLETE | 100% | DSL, linter (15 diagnostic codes), workflow, CLI (`textplus-author` / `create-textplus-game`); Raconteur compat resolved as a migration guide |
 | **M3: Map** | 🚧 IN PROGRESS | ~75% | Compass layout, zoom/pan, ZIL+transcript importers, gated-edge dev view, in-game dungeon map, Trizbort export; hand-editing, Trizbort import, Inform 7/Ink codegen remain |
 | **M4: Convert** | 🚧 IN PROGRESS | ~70% | Deconstruction (prose, gates, globals, multi-file worlds) + conversion report, transcripts + branching merge + CLI; objects, blocked-link construct, engine formats, .z5 remain |
 | **M5: Integration** | ⏳ PENDING | ~15% | CLI surfaces + showcase example landed early; save/load UI, docs site, release remain |
@@ -51,6 +51,7 @@ Honest boundaries of the current test standard, stated so green runs are read co
 
 ### Roadmap Changelog
 
+- **2026-08-09 (review fixes)**: Adversarial-review findings closed: `at 0` schedule directives are now parse errors (the clock starts at 0; moments are checked from turn 1), preamble directives placed after the first `:: ` header surface as `misplaced-directive` lint warnings instead of silently reading as prose/titles, `loadState` drops per-world resume points whose situation no longer lives in that world (reachable only via hand-written configs), and a parse-failing effects block no longer fabricates `unused-task` for tasks it plainly captures. Suite: 95 traced scenarios (incl. the new Node-context `core-state.spec.ts`, the first spec driving core with a hand-written config).
 - **2026-08-08 (later)**: Testing standard changed by project decision: the vitest layer was removed; the traced Playwright E2E suite (58 scenarios, trace.zip per test) is the only test layer, including Node-context specs for the CLIs. Toolchain slimmed (root owns devDeps; scripts 25→7; terser/@vitest extras dropped). M2 completed: `textplus-author`/`create-textplus-game` CLI, quality-type-consistency lint rules, Raconteur compat resolved as a migration guide (runtime compat descoped by design). M4 advanced: workbench Import feature, `mergeTranscriptsToDsl` branching merge, `textplus-convert` CLI. M3 advanced: `importTranscript` (transcript → StoryGraph) and `graphToDsl` (round-trip with `graphFromConfig`). Doc convention: one doc per package — completed packages a real `README.md`, in-progress a package `ROADMAP.md`.
 - **2026-08-08**: Phase 2B shipped: DSL conditions now evaluate at runtime (safe expression language, no eval), links and situations mutate qualities via `{ effects }` brace blocks, markdown (escape-first, built-in) and adaptive text (`[oneOf|randomly|frequently|rarely]`, `{quality}` interpolation) compile into content. Declarative HUD (`hud <quality> meter|badge|readout`) and state-driven theming (`theme <name> when <expr>`) land in core (`renderHud`/`applyHudThemes`) and the workbench preview. Fine-grained Monarch grammar extracted to `dsl-language.ts` (unit-tested as data). M4 first slice: `transcriptToDsl` converts plain-text transcripts to compiling DSL (round-trip acceptance test). All four workbench examples now exercise the full surface.
 - **2026-08-07**: Workbench editor upgraded to Monaco (monaco-editor 0.56): TextPlus DSL syntax highlighting (Monarch grammar), palette-matched light/dark themes, line numbers that stay correct under word wrap, diagnostic squiggles from the lint pipeline. Verified Transmatte's license factually (public domain) in CREDITS.md; documented the Trizbort parity gap in the map package doc (now `packages/map/ROADMAP.md`). Added "Beyond Text" vision section (rich interfaces, HUDs).
